@@ -258,3 +258,20 @@ one thing before the plan freeze: given those 30 tasks put together, infer if th
 "The 30 tasks cover the components of the original request," that's all we need. don't worry about bulletproofing. we will address every single one of them as we process each task. 
 now, I approve tasks.md's delverable 2 sections 09 and 10. thus you can freeze plan.md (mark it as feature freezed on top of the document), do the same for tasks.md (status updates only allowed from now).
 then go and commit per rules. 
+
+## Prompt 38
+
+one follow up I forgot in regards of the plan.md - this document should contain 2 sections:
+
+1. is the original request verbatim (it already contains it
+2. the documented plan of all tasks combined in tasks.md (so the 2 documents can be symmetric)  (in human readable form)
+
+get this done, then I'll take a look at it 
+
+## Prompt 39
+
+good job. I have spotted this "React or Angular are acceptable; neither is selected yet. " I select angular 
+
+## Prompt 40
+
+you can commit it now 
