@@ -77,3 +77,184 @@ also please update AGENTS.md with task.md related change (update the document to
 ## Prompt 10
 
 all looks good. approving prep steps 01-15. next, I will provide the initial project goals.  
+
+## Prompt 11
+
+right. hereby I provide the initial project goals:
+
+""We want users to be able to set up alerts so they get notified when something important happens in the world — like breaking news, market movements, natural disasters, that kind of thing. Should work for both email and Slack. Make it flexible enough that we can add more channels later. We need an admin view too." "
+
+before we even start to get into the planning, we must brainstorm on what this thing wants to be,
+as there is no pre-existing solution or system to integrate this, all we have is this repository we are currently sitting on.
+
+to summarize:
+
+- no tech stack / language constraints, no existing system available
+- whatever the goals require, we must ship it, this is a strategical angle
+- some terms are not clear and might found undefined. me as a human and you as an agent are here to 
+carve it out via brainstorming. 
+- planning this will be crucial, as it decides the fate of the entire solution. once the 
+planning (research) has been made, we will freeze plan.md, as we won't add any adhoc definitions later on.
+
+if there is anything I missed, or if there is anything I must answer to you, please.
+note that I have only the same information as you have from this prompt, I have no more info other than that 
+
+## Prompt 12
+
+skip such questions (no easy answers for them), let's get to have you start first 
+
+## Prompt 13
+
+let us review those risks first. interview me in forms of questions if you need decision or advice on them 
+
+## Prompt 14
+
+I think you found a grain of sand in the desert - don't get distracted by it: there are almost infinitely more sources to select from out there. 
+I'm pretty sure we can figure the fitting providers. first things first:
+
+1. yes, worldwide coverage, major and all disaster types across all regions. 
+2. look up such feed providers on these categories. there are plenty of aggregators out there
+3. all of the initially defined "important things" must be included, and potentially more as "important" is not a concrete matter
+4. github might be a good place to look for such providers. we won't register into such services for api keys and so on.  
+
+## Prompt 15
+
+(1) event-data providers only. (2) I'm not sure of. is it possible to user such services without api keys? e.g. sending a slack notification witout us having a slack api key? 
+
+## Prompt 16
+
+sounds good and doable. for a moment, let us drive back to the first part of the original requirement, that is "We want users to be able to set up alerts so they get notified when something important happens in the world — like breaking news, market movements, natural disasters, that kind of thing. " - can we assess, how much we gathered for this?  
+
+## Prompt 17
+
+goal: approved
+sources: focus only on gathering these sources and actually use them. this is an inhouse project for me, not for a large audience, plus it is not for monetization purposes. 
+alert behavior: just think of a CNN feed or a reddit trending. these mediums always display relevant (hence "important") news in regards to these events
+evidence to freeze the plan: coverage matrix only needed for the original requirement for now. we carve out the plan from it, then the tasks.md will act as a coverage matrix when the plan will be frooze
+
+## Prompt 18
+
+collect more into requirement-coverage.md so:
+
+1. worldwide coverage could be reached
+2. whichever service you probed refuses to talk, blacklist them. then find the next suitable provider candidate for the given source feed type
+
+## Prompt 19
+
+one thing I noticed in the meanwhile. the plan.md document's first section must contain the original requirement prompt verbatim (with quote symbols), as it acts as the root requirement of the soon-to-be defined detailed requirement.
+I noticed that major hazard coverage is missing things like "war", "politics", and other types of "breaking news" candidates. need to fine tune on that. then print a summary matrix here on what is the current worldwide coverage per
+"We want users to be able to set up alerts so they get notified when something important happens in the world — like breaking news, market movements, natural disasters, that kind of thing. "  
+
+## Prompt 20
+
+fine. now print a coverage matrix on what we have so far, and also expands on it as what is considered "important" news in the world (globally). from 
+that we can identify the missing gaps and add them
+
+## Prompt 21
+
+a few things I would like to align:
+
+1. "Cyber and critical infrastructure" : AI, breaches, acquisitions might be relevant here
+2. "High-impact science and technology" : breakthroughs (multi-year), genuinely innovative inventions (like something was invented will having an effect on the world)
+
+plus also include in a reprinted matrix after the alignments above have been done that:
+
+1. plus one extra column with the aggregation sources listed
+2. importance score (truncated (0,..,1)
+
+## Prompt 22
+
+this looks exciting, amazing. I think we are about to have all the info needed for "We want users to be able to set up alerts so they get notified when something important happens in the world — like breaking
+news, market movements, natural disasters, that kind of thing. ", right?  
+
+## Prompt 23
+
+I approve the coverage matrix, I think we killed it with all the important categories and source feeds. next, we should identify where all these we create will take place, in what form, where or how will it run, etc. 
+
+## Prompt 24
+
+account switch happened. verify that you know where we were at and what is the very next step must be fulfilled. 
+
+## Prompt 25
+
+let's focus on "where the system will run and in what form. it will help us planning the rest of the original requirement, which was "“We want users to be able to set up alerts so they get notified " and  "Should work for both email and Slack. Make it flexible enough that we can add more channels later. We need an admin view too.". again, we aren't developing a commercial product here, nor we have to serve on scale. you can consider the most lightweight, yet workign architecture these might require. I'm open to suggestions.  
+
+## Prompt 26
+
+I'm considering deploying it to github (for hosting) so if someone wants to try it out, they can without the hassle of building it and hosting it locally. what is your opinion on that?
+to reflect to the rest of your proposal:
+
+1. SQLite, I love it, proposal accepted
+2. SMTP and slack approach previously clarified, no API key needed, approved.
+3. the original requirement mentions "we need an admin view too", it means we will need some sort of frontend for this
+4. for the code part, my proposal is c# as that's the one I have experience with
+
+## Prompt 27
+
+oh, I didn't know that. in that regards, I undo my github hosting proposal. I'm proposing another strategy. there should be a run.sh (or .ps) equivalent
+in the repo root (do not implement them yet, we are purely in the planning phase), that would launch the entire deploy (build -> test -> run) pipeline locally (github actions turned off)
+so the user could just launch the script and start using this application without any hastle. it should be containerized and should work idempotently on both windows and linux. 
+in respect to all of these, how are we complying with the ""where the system will run and in what form. it will help us planning the rest of the original requirement, which was "“We want users to be able to set up alerts so they get notified " and  "Should work for both email and Slack. Make it flexible enough that we can add more channels later. We need an admin view too.". " requirements. aren't my proposals far fetched? my aim is something lightweight as well without the overkill 
+
+## Prompt 28
+
+each person running their own local copy. rest is agreed. 
+
+## Prompt 29
+
+this is misleading: "Provide root-level Linux and Windows launch scripts" this could be read as requiring root privileges. however, what I said was these scripts will be placed in the repo dir's root. fix these. 
+
+## Prompt 30
+
+thank you. now please print a coverage matrix per original requirement as where we are standing right now and what details left to be planned out 
+
+## Prompt 31
+
+okay, I will aid you through the rest of the uncut ties:
+
+1. "Users set up alerts" : simple as that. once they subbed to an event type (see event type coverage matrix), they get notified on configured channels once something important happens 
+2. "Breaking news worldwide" : I think we are having a great coverage on all types globally. breaking news must be inferred algorithmically and deterministically by taking various factors into account. use metadata to help these algorithms determine what is breaking news (important) and importance scoring. I cannot provide details beyond that.
+3. "Market movements" same applies as for 2.
+4. "Natural disasters worldwide" same applies as for 2. 
+5. "“Something important” and other event kinds" already been discussed
+6. "Users get notified" - timing: each 5 min after a subbed important news item appears. try not to bomb the user with a large amount of notifications at once. retries allowed, although should not be excessive and should be reasonable.
+7. "More channels later" more notification channels should be supported out of the box without requiring production code change. e.g I would like to receive notifications on other platforms we have not pre-coded our application to
+8. "Admin view" - it should include everything such application might need to put behind an admin wall
+9. "Where and how it runs" - perfect so far. the frontend can be react or angular, I don't mind. 
+
+to add these to the plan: 
+
+1. plan tests as well - non-trivial methods will be unit tested, major functions will receive integration tests. 
+2. feature inventory - we will measure what is really tested by either unit and integration tests. a simple agentic matrix
+3. documentation - each implemented user facing feature must be documented in a user guide as we progress 
+4. evidence - every task which contributes to implementing the original request (tasks.md as a whole) must also provide evidence along the way (logs, screenshots) 
+
+## Prompt 32
+
+a notification must be served under 5 minutes after an important event occurs in the world. yes, even if the feed reports it late. if the computer was off, skip those. we only care about those when the application is running.
+are we ready to define the tasks making what we just defined so far? I think the picture starts assembling together 
+
+## Prompt 33
+
+make the application look up important news in the previous 24 hours so the user won't miss a thing even if the thing was offline. to answer your other question: send it as a normal notification. we can be a bit lazy with time here. the goal is to not blow the user up with large amount of notifications at once plus not leaving the user out of the loop in case the app was just started or if a feed published an important news item late 
+
+## Prompt 34
+
+" I’ll keep the catch-up scope tied to “important news” as you worded it, rather than silently extending it to market and disaster alerts." make no mistake on that. I didn't say that you must restrict the scope. this applies to all categories, market and disaster (and others defined) as well. it was just a way of phrasing my thought. 
+
+## Prompt 35
+
+so, are you ready to have tasks.md detailing tasks required for implementing the entire thing based on what we discussed so far?
+I also approve the following from deliverable 2: 01-08. 
+09 is not done yet as the plan is not ready to be frozen. 
+10 is the upcoming task just asked you about above. 
+
+## Prompt 36
+
+one thing before the plan freeze: given those 30 tasks put together, infer if the original request will be satisfied? 
+
+## Prompt 37
+
+"The 30 tasks cover the components of the original request," that's all we need. don't worry about bulletproofing. we will address every single one of them as we process each task. 
+now, I approve tasks.md's delverable 2 sections 09 and 10. thus you can freeze plan.md (mark it as feature freezed on top of the document), do the same for tasks.md (status updates only allowed from now).
+then go and commit per rules. 
