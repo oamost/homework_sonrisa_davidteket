@@ -1,5 +1,6 @@
 using Microsoft.Data.Sqlite;
 using WorldAlerts.Api.News;
+using WorldAlerts.Api.Subscriptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,12 @@ var databasePath = Path.GetFullPath(string.IsNullOrWhiteSpace(configuredPath)
 var database = new SqliteDatabase(databasePath);
 database.TryInitialize();
 builder.Services.AddSingleton(database);
+
+// Subscriptions share the same configured SQLite file and are initialized
+// best-effort so a broken database cannot abort host startup.
+var subscriptionStore = new SubscriptionStore(databasePath);
+subscriptionStore.TryInitialize();
+builder.Services.AddSingleton(subscriptionStore);
 
 // News and health share the one configured SQLite file; there is no second default.
 var newsOptions = builder.Configuration.GetSection("WorldAlerts:News").Get<NewsOptions>() ?? new NewsOptions();
@@ -39,9 +46,59 @@ app.MapGet("/api/news", async (NewsStore store, int? limit, CancellationToken ca
     return Results.Ok(items);
 });
 
+app.MapGet("/api/subscriptions", async (SubscriptionStore store, string? eventType, CancellationToken cancellationToken) =>
+{
+    var items = await store.ListAsync(Subscription.DefaultUserId, eventType, cancellationToken);
+    return Results.Ok(items);
+});
+app.MapPost("/api/subscriptions", async (
+    SubscriptionRequest? request,
+    SubscriptionStore store,
+    CancellationToken cancellationToken) =>
+{
+    if (request is null
+        || string.IsNullOrWhiteSpace(request.EventType)
+        || string.IsNullOrWhiteSpace(request.Channel))
+    {
+        return Results.BadRequest(new SubscriptionError("eventType and channel are required."));
+    }
+
+    try
+    {
+        var stored = await store.UpsertAsync(
+            new Subscription
+            {
+                EventType = request.EventType,
+                Channel = request.Channel,
+                Destination = request.Destination,
+                Enabled = request.Enabled ?? true,
+            },
+            cancellationToken);
+        return Results.Ok(stored);
+    }
+    catch (ArgumentException)
+    {
+        // Do not echo the submitted body: it may contain an opaque destination.
+        return Results.BadRequest(new SubscriptionError("eventType and channel are required."));
+    }
+});
+app.MapDelete("/api/subscriptions/{id:long}", async (
+    long id,
+    SubscriptionStore store,
+    CancellationToken cancellationToken) =>
+    await store.DeleteAsync(id, cancellationToken) ? Results.NoContent() : Results.NotFound());
+
 app.Run();
 
 internal sealed record HealthResponse(string Status);
+
+internal sealed record SubscriptionRequest(
+    string? EventType,
+    string? Channel,
+    string? Destination,
+    bool? Enabled);
+
+internal sealed record SubscriptionError(string Error);
 
 /// <summary>
 /// Owns the local SQLite file. Initialization failure is recorded, not thrown, so the API still starts
