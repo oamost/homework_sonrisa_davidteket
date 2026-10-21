@@ -40,6 +40,15 @@ describe('AdminComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('failed: unavailable');
   });
 
+  it('shows the sent counter separately from queued and failed deliveries', async () => {
+    const fixture = TestBed.createComponent(AdminComponent);
+    fixture.detectChanges();
+    TestBed.inject(HttpTestingController).expectOne('/api/admin/status').flush({sources: [],
+      delivery: {status: 'available', queued: 0, failed: 0, sent: 2}});
+    await fixture.whenStable(); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('sent: 2');
+  });
+
   it('uses a same-origin server-issued CSRF token to sign out and removes the private snapshot', async () => {
     const fixture = TestBed.createComponent(AdminComponent);
     fixture.detectChanges();

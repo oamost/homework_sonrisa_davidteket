@@ -24,6 +24,18 @@ describe('Important news landing page', () => {
     return fixture;
   }
 
+  it('shows recent provider headlines separately without falsely labelling them important', async () => {
+    const fixture = page();
+    http.expectOne('/api/news/important').flush({ evaluatedUtc: '2026-10-21T12:00:00Z', omittedCount: 0, items: [],
+      latestHeadlines: [{title: 'Recent source update', link: 'https://example.org/latest',
+        sourceName: 'BBC World', publishedUtc: '2026-10-21T11:00:00Z', topic: 'world-news'}] });
+    await fixture.whenStable(); fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('[data-testid="latest-provider-headlines"]')).not.toBeNull();
+    expect(el.textContent).toContain('Recent source update');
+    expect(el.textContent).toContain('NOT classified as important');
+  });
+
   it('shows only event cards by default and keeps the test action behind Debug', async () => {
     const fixture = page();
     http.expectOne('/api/news/important').flush({evaluatedUtc: '2026-10-21T12:00:00Z', omittedCount: 0,

@@ -178,7 +178,7 @@ app.MapGet("/api/test-events/token", (HttpContext context, IAntiforgery antiforg
     return Results.Ok(new { csrfToken = antiforgery.GetAndStoreTokens(context).RequestToken });
 });
 app.MapPost("/api/test-events", async (HttpContext context, IAntiforgery antiforgery,
-    TestEventService tests, CancellationToken ct) =>
+    TestEventService tests, NotificationDispatcher dispatcher, TimeProvider clock, CancellationToken ct) =>
 {
     context.Response.Headers.CacheControl = "no-store";
     var origin = context.Request.Headers.Origin.ToString();
@@ -191,6 +191,14 @@ app.MapPost("/api/test-events", async (HttpContext context, IAntiforgery antifor
     if (!await antiforgery.IsRequestValidAsync(context))
         return Results.BadRequest(new { message = "Security token missing or expired. Reload and try again." });
     var (limited, message) = await tests.EmitAsync(ct);
+    if (!limited && message.Contains("queued", StringComparison.OrdinalIgnoreCase))
+    {
+        // Attempt only freshly queued synthetic-test messages now, not unrelated
+        // real alerts. Failure is durably retained in the queue for paced retry.
+        await dispatcher.DispatchAsync(clock.GetUtcNow(), startupBurst: true,
+            cancellationToken: ct, testOnly: true);
+        message = "TEST delivery attempted now. Check inbox/Slack and the admin delivery queue; provider acceptance does not guarantee inbox delivery.";
+    }
     return Results.Json(new { message }, statusCode: limited ? StatusCodes.Status429TooManyRequests : StatusCodes.Status200OK);
 });
 

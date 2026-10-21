@@ -124,6 +124,34 @@ public sealed class TestEventEndpointTests : IDisposable
         Assert.Contains(jobs, job => job.Channel == "slack");
     }
 
+    [Fact]
+    public async Task Synthetic_test_uses_current_private_channels_despite_disabled_old_same_type_rows()
+    {
+        var path = _temp.File("stale-legacy-routing.sqlite");
+        var prefs = new EventTypePreferenceStore(path); prefs.Initialize();
+        var subscriptions = new SubscriptionStore(path); subscriptions.Initialize();
+        await subscriptions.UpsertAsync(new Subscription { EventType = "world-news", Channel = "email",
+            Destination = "old@example.test", Enabled = false });
+        await subscriptions.UpsertAsync(new Subscription { EventType = "world-news", Channel = "slack",
+            Destination = "channel:#old", Enabled = false });
+        var protection = DataProtectionProvider.Create("test");
+        var emails = new EmailSettingsStore(path, protection);
+        await emails.SaveAsync(new EmailSettings("smtp.gmail.com", 587, "StartTls", "sender", "secret",
+            "sender@example.test", true) { RecipientAddress = "new@example.test" });
+        var slacks = new SlackSettingsStore(path, protection);
+        await slacks.SaveAsync(new SlackSettings("https://hooks.slack.com/services/T/B/TEST", true));
+        var queue = new NotificationQueueStore(path); queue.Initialize();
+        var service = new TestEventService(path, prefs, subscriptions, emails, slacks, queue,
+            new MutableTimeProvider(new DateTimeOffset(2026, 10, 21, 12, 0, 0, TimeSpan.Zero)));
+        service.Initialize();
+        Assert.Contains("queued", (await service.EmitAsync()).Message);
+        var jobs = await queue.SnapshotAsync();
+        Assert.Equal(2, jobs.Count);
+        Assert.Contains(jobs, job => job.Channel == "email" && job.Destination == "new@example.test");
+        Assert.Contains(jobs, job => job.Channel == "slack");
+        Assert.DoesNotContain(jobs, job => job.Destination == "old@example.test");
+    }
+
     private sealed record TestToken(string CsrfToken);
     private sealed class MutableTimeProvider(DateTimeOffset now) : TimeProvider
     {

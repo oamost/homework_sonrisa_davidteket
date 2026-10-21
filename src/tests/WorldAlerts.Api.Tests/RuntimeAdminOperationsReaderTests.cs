@@ -22,6 +22,7 @@ public sealed class RuntimeAdminOperationsReaderTests
         Assert.Equal("failed", Assert.Single(snapshot.Sources).PollStatus);
         Assert.Equal(1, snapshot.Delivery.Queued);
         Assert.Equal(0, snapshot.Delivery.Failed);
+        Assert.Equal(0, snapshot.Delivery.Sent);
         Assert.DoesNotContain("secret-recipient", System.Text.Json.JsonSerializer.Serialize(snapshot));
     }
 

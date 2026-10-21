@@ -24,3 +24,23 @@
 5. A `scripts/smoke.py` **nem küld** valódi emailt/Slack üzenetet, ezért önmagában nem igazolja a kézbesítést.
 
 **Biztonsági figyelmeztetés:** ez az előre ismert `admin` jelszó kizárólag 127.0.0.1-re bindolt, lokális demóra szolgál. Semmilyen formában ne tedd publikusan elérhetővé!
+
+## 2026-10-21: aktuális helyi SMTP + Slack és friss hírek (kiegészítés)
+
+**Az admin 0 queued / 0 failed értéke nem hiba.** Azt jelenti, hogy akkor nincs sorban álló vagy végleg hibás/„uncertain” küldés. Az új **Sent** mező a fogadó által elfogadott küldések számát mutatja (nem kézbesítési vagy olvasási visszaigazolás).
+
+**Gmail példa:** `/subscriptions` → Private email delivery setup:
+- SMTP host: `smtp.gmail.com`; port: `587` (STARTTLS)
+- Username és From address: `januspannonius1011@gmail.com`
+- Password: a Google-fiókhoz létrehozott **alkalmazásjelszó**, nem a normál bejelentkezési jelszó. Google-fiók > Biztonság > Kétlépcsős azonosítás (ha szükséges), majd https://myaccount.google.com/apppasswords. A lehetőség fióktípustól / biztonsági beállításoktól függhet.
+- Send alerts to: `januspannonius1011@gmail.com`, Enable automatic email delivery: BE → **Save SMTP settings**.
+- Test destination: `januspannonius1011@gmail.com` → **Send test email**. Nézd meg az Inbox, Spam és Összes levél mappát is. Ha 502 jön vissza, először a hostot, 587-es portot, app-jelszót, a kiszolgáló internetkapcsolatát és a STARTTLS-kapcsolatot ellenőrizd.
+- Soha ne másold a titkos jelszót chatbe, commitba, konzolnaplóba vagy képernyőképre.
+
+**Slack:** https://api.slack.com/apps → Create New App → From scratch → válassz saját workspace-t → Incoming Webhooks → Activate → Add New Webhook to Workspace → célcsatorna kiválasztása → Allow. A kapott `https://hooks.slack.com/services/...` **titok**, csak az alkalmazás `/subscriptions` → Private Slack delivery setup mezőjébe másold. A Channel label pl. `#alerts` csak megjelenítési felirat; a tényleges célcsatornát a Slack-webhook létrehozásakor választottad ki. Kapcsold be az automatikus értesítést → Save Slack settings → jelöld be a kifejezett tesztküldési hozzájárulást → Send one test to Slack. Keresd az üzenetet **abban a Slack csatornában** (nem szükségszerűen privát DM-ben).
+
+**A teljes lánc tesztje:** a fenti két önálló teszt sikeres fogadása után `http://127.0.0.1:8080/subscriptions` → World news tag legyen kiválasztva és mentve. A főoldalon Debug → **Send TEST event**. Az új patch azonnal megkísérli a kizárólag tesztüzenetek kézbesítését; a `/admin` Sent számlálójának növekednie kell (30 mp-enként frissül), majd meg kell érkeznie egy TEST üzenetnek a Gmailbe és a Slack csatornába is. Ha Sent nem nő és Queued nő, küldési hiba történt; szükség szerint egy perc múlva háttérben újrapróbálja. A védett gombot legfeljebb percenként egyszer használd.
+
+**Hírek:** `/api/news/important` csak a 24 órán belül jogosult, explicit fontossági szabályokon átment eseményeket jelöli Importantnak. A fontos hírek között nem jelenhet meg duplikált cím. Az új **Latest published reports** rész 20 valódi, maximum 24 órás, forrásidőbélyeggel rendelkező hírt mutat, amelyek lehetnek *nem Important* cikkek; ezek automatikus értesítést nem indítanak. A hiányzó piaci vagy katasztrófaesemény nem helyettesíthető kitalált adattal. Az API JSON-ban a `familyDiagnostics` mezőből ellenőrizhető, hogy melyik családot miért nem jelölték Importantnak. A háttérforrások elérhetősége nem garantált, a friss hírszekció sem garantál minden kategóriában mai fontos eseményt.
+
+**Futtatás:** patch másolása után `./run.sh up`, majd `python3 scripts/smoke.py`. 4200-as régi dev instance esetén `./run.sh clean-dev` vagy ellenőrzött `sudo fuser -k 4200/tcp`. A 8080-as helyi portot használd. A patch meglévő lokális `.env` és védett beállításait meg kell tartani. Éles Gmail/Slack kézbesítést csak a fiók tulajdonosa tudja végponttól végpontig igazolni.

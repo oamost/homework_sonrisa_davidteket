@@ -60,23 +60,29 @@ public sealed class TestEventService(string databasePath, EventTypePreferenceSto
         var configuredEmail = await emailSettings.ReadAsync(ct);
         var configuredSlack = await slackSettings.ReadAsync(ct);
         var targets = new List<(string Channel, string Destination, string Subscriber)>();
-        foreach (var row in legacy.Where(row => row.EventType == "world-news" && row.Enabled
-            && (row.Channel == "email" && configuredEmail?.Enabled == true
-                || row.Channel == "slack" && configuredSlack?.Enabled == true)))
-            targets.Add((row.Channel, row.Channel == "email" ? row.Destination ?? "" : "", $"local:{row.Id}"));
 
-        // Enabled private channel settings are explicit opt-in even when an
-        // unrelated old legacy subscription exists.
+        // The explicitly enabled private channel setup wins for a synthetic test.
+        // A stale/disabled old subscription must not silently suppress the
+        // administrator's request to test the current configured destination.
+        if (configuredEmail is { Enabled: true, RecipientAddress: { Length: > 0 } } email)
+            targets.Add(("email", email.RecipientAddress, "local:configured:email"));
+        if (configuredSlack is { Enabled: true })
+            targets.Add(("slack", "", "local:configured:slack"));
+        if (webhookSettings is not null)
+            foreach (var webhook in (await webhookSettings.ListAsync(ct)).Where(item => item.Enabled))
+                targets.Add(("webhook", webhook.Id, $"local:configured:webhook:{webhook.Id}"));
+
+        // A legacy destination is a fallback only when that channel has no
+        // enabled private destination. Never double-send a test to the same channel.
+        foreach (var row in legacy.Where(row => row.EventType == "world-news" && row.Enabled))
         {
-            if (!legacy.Any(row => row.EventType == "world-news" && row.Channel == "email")
-                && configuredEmail is { Enabled: true, RecipientAddress: { Length: > 0 } } email)
-                targets.Add(("email", email.RecipientAddress, "local:configured:email"));
-            if (!legacy.Any(row => row.EventType == "world-news" && row.Channel == "slack")
-                && configuredSlack is { Enabled: true })
-                targets.Add(("slack", "", "local:configured:slack"));
-            if (webhookSettings is not null)
-                foreach (var webhook in (await webhookSettings.ListAsync(ct)).Where(item => item.Enabled))
-                    targets.Add(("webhook", webhook.Id, $"local:configured:webhook:{webhook.Id}"));
+            if (row.Channel == "email" && configuredEmail?.Enabled == true
+                && !targets.Any(target => target.Channel == "email")
+                && !string.IsNullOrWhiteSpace(row.Destination))
+                targets.Add(("email", row.Destination, $"local:{row.Id}"));
+            if (row.Channel == "slack" && configuredSlack?.Enabled == true
+                && !targets.Any(target => target.Channel == "slack"))
+                targets.Add(("slack", "", $"local:{row.Id}"));
         }
 
         var enqueued = 0;

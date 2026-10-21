@@ -10,6 +10,34 @@ public sealed class ImportantNewsDiversityTests
             [type], DateTimeOffset.Parse("2026-10-21T12:00:00Z"), score);
 
     [Fact]
+    public void Recent_headlines_are_provider_dated_deduplicated_and_not_fabricated()
+    {
+        var now = new DateTimeOffset(2026, 10, 21, 13, 0, 0, TimeSpan.Zero);
+        WorldAlerts.Api.News.NewsItem Story(string title, DateTimeOffset? published, string link) =>
+            new("bbc-world", "BBC World", link, title, link, published, now, "world-news",
+                [], "https://feeds.bbci.co.uk/news/world/rss.xml");
+        var result = ImportantNewsService.LatestProviderHeadlines([
+            Story("Earthquake today", now.AddHours(-1), "https://example.org/a"),
+            Story("Earthquake today", now.AddHours(-2), "https://example.org/b"),
+            Story("Yesterday", now.AddHours(-25), "https://example.org/c"),
+            Story("Unknown timestamp", null, "https://example.org/d"),
+            Story("Future timestamp", now.AddHours(1), "https://example.org/e"),
+        ], now);
+        var item = Assert.Single(result);
+        Assert.Equal("Earthquake today", item.Title);
+        Assert.Equal(now.AddHours(-1), item.PublishedUtc);
+    }
+
+    [Fact]
+    public void Important_preview_deduplicates_same_headline_from_multiple_feeds()
+    {
+        var first = Item("Government announces policy", "News", "politics", 0.9);
+        var second = first with { SourceId = "bbc-health", SourceName = "BBC Health" };
+        var result = ImportantNewsService.ChooseDiverse([first, second], 100);
+        Assert.Single(result);
+    }
+
+    [Fact]
     public void No_family_or_approved_event_type_is_starved_by_many_news_items()
     {
         var input = Enumerable.Range(0, 150)

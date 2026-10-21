@@ -94,7 +94,7 @@ public static class AdminExtensions
             var sources = string.Join("", snapshot.Sources.Select(source =>
                 $"<tr><td>{Escape(source.SourceId)}</td><td>{Escape(source.Health)}</td><td>{Escape(source.PollStatus)}</td><td>{Escape(source.LastPollUtc?.ToString("u"))}</td></tr>"));
             var delivery = snapshot.Delivery;
-            return Html(context, $"<h1>Operations</h1><h2>Source health and polling</h2><table><thead><tr><th>Source</th><th>Health</th><th>Poll status</th><th>Last poll UTC</th></tr></thead><tbody>{sources}</tbody></table><h2>Delivery queue and failed sends</h2><p>Status: {Escape(delivery.Status)}; queued: {Escape(delivery.Queued?.ToString())}; failed: {Escape(delivery.Failed?.ToString())}</p><form action='/admin/logout' method='post'><input type='hidden' name='csrf' value=\"{Escape(token)}\"><button type='submit'>Sign out</button></form>");
+            return Html(context, $"<h1>Operations</h1><h2>Source health and polling</h2><table><thead><tr><th>Source</th><th>Health</th><th>Poll status</th><th>Last poll UTC</th></tr></thead><tbody>{sources}</tbody></table><h2>Delivery queue and failed sends</h2><p>Status: {Escape(delivery.Status)}; queued: {Escape(delivery.Queued?.ToString())}; failed: {Escape(delivery.Failed?.ToString())}; sent: {Escape(delivery.Sent?.ToString())}</p><form action='/admin/logout' method='post'><input type='hidden' name='csrf' value=\"{Escape(token)}\"><button type='submit'>Sign out</button></form>");
         }).RequireAuthorization();
         return app;
     }

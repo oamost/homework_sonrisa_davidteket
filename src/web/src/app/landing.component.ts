@@ -30,9 +30,18 @@ interface FamilyDiagnostics {
     importantEligibleCount: number }[];
 }
 
+interface LatestHeadline {
+  title: string;
+  link: string;
+  sourceName: string;
+  publishedUtc: string;
+  topic: string;
+}
+
 interface ImportantNewsResponse {
   evaluatedUtc: string;
   items: ImportantNewsItem[];
+  latestHeadlines?: LatestHeadline[];
   omittedCount: number;
   missingMarketBaselineCount?: number;
   omittedRejectedCount?: number;

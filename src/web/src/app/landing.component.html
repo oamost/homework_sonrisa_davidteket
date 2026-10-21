@@ -78,4 +78,20 @@
       }
     </div>
   }
+  @if (response(); as current) {
+    @if (current.latestHeadlines?.length) {
+    <section class="mt-5" aria-labelledby="latest-heading" data-testid="latest-provider-headlines">
+      <h2 id="latest-heading" class="h4">Latest published reports (last 24 hours)</h2>
+      <p class="small text-secondary">Recent source reports, even when they do not meet our strict Important threshold. These are NOT classified as important and will not trigger an alert by themselves.</p>
+      <div class="row row-cols-1 row-cols-lg-2 g-2">
+        @for (story of current.latestHeadlines ?? []; track story.title + story.sourceName) {
+          <div class="col"><div class="card h-100"><div class="card-body py-2">
+            <a [href]="story.link" target="_blank" rel="noopener noreferrer">{{ story.title }}</a>
+            <p class="small text-secondary mb-0">{{ story.sourceName }} · {{ story.topic }} · {{ story.publishedUtc | date:'medium':'UTC' }} UTC</p>
+          </div></div></div>
+        }
+      </div>
+    </section>
+    }
+  }
 </section>

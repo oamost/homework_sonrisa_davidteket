@@ -1,10 +1,12 @@
 using WorldAlerts.Api.Queue;
+using WorldAlerts.Api.News;
+using WorldAlerts.Api.Scoring;
 using WorldAlerts.Api.Subscriptions;
 
 namespace WorldAlerts.Api.Selection;
 
 /// <summary>Public read-only cross-family preview, independent of subscriptions and delivery.</summary>
-public sealed class ImportantNewsService(AlertSelectionService selection, TestEventService? tests = null)
+public sealed class ImportantNewsService(AlertSelectionService selection, TestEventService? tests = null, NewsStore? newsStore = null)
 {
     private const int DisplayLimit = 100;
 
@@ -20,11 +22,33 @@ public sealed class ImportantNewsService(AlertSelectionService selection, TestEv
         var synthetic = tests is null ? [] : await tests.RecentAsync(cancellationToken);
         var slots = Math.Max(0, DisplayLimit - synthetic.Count);
         var realItems = ChooseDiverse(eligible, slots);
+        IReadOnlyList<LatestHeadline> latest = newsStore is null ? [] : LatestProviderHeadlines(
+            await newsStore.GetRecentAsync(NewsStore.MaxLimit, cancellationToken), preview.EvaluatedUtc);
         return new ImportantNewsResponse(preview.EvaluatedUtc,
             synthetic.Concat(realItems).Take(DisplayLimit).ToArray(),
-            Math.Max(0, eligible.Length - realItems.Count), preview.Limitations,
+            Math.Max(0, eligible.DistinctBy(item => string.Join("|", item.Family, ScoringText.Normalize(item.Title))).Count() - realItems.Count), preview.Limitations,
             preview.MissingMarketBaselineCount, preview.OmittedRejectedCount,
-            preview.FamilyDiagnostics ?? []);
+            preview.FamilyDiagnostics ?? []) { LatestHeadlines = latest };
+    }
+
+    /// <summary>
+    /// Fresh provider-published stories for transparency when the strict importance
+    /// classifier rejects most current articles. This is a separate, plainly
+    /// labeled collection; no item receives a made-up importance score or alert.
+    /// </summary>
+    public static IReadOnlyList<LatestHeadline> LatestProviderHeadlines(
+        IReadOnlyList<NewsItem> items, DateTimeOffset nowUtc)
+    {
+        var start = nowUtc.AddHours(-24);
+        return items.Where(item => item.PublishedUtc is { } published && published >= start && published <= nowUtc
+                && !string.IsNullOrWhiteSpace(item.Title) && Uri.TryCreate(item.Link, UriKind.Absolute, out var uri)
+                && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+            .OrderByDescending(item => item.PublishedUtc)
+            .DistinctBy(item => ScoringText.Normalize(item.Title))
+            .Take(20)
+            .Select(item => new LatestHeadline(item.Title, item.Link, item.SourceName,
+                item.PublishedUtc!.Value, item.Family))
+            .ToArray();
     }
 
     /// <summary>
@@ -42,7 +66,9 @@ public sealed class ImportantNewsService(AlertSelectionService selection, TestEv
         var ranked = eligible.OrderByDescending(item => item.PublishedUtc ?? item.EventTimeUtc)
             .ThenByDescending(item => item.ImportanceScore)
             .ThenBy(item => item.SourceId, StringComparer.Ordinal)
-            .ThenBy(item => item.SourceItemId, StringComparer.Ordinal).ToArray();
+            .ThenBy(item => item.SourceItemId, StringComparer.Ordinal)
+            .DistinctBy(item => string.Join("|", item.Family, ScoringText.Normalize(item.Title)))
+            .ToArray();
         var output = new List<ImportantNewsItem>(Math.Min(limit, ranked.Length));
         var covered = new HashSet<string>(StringComparer.Ordinal);
         var approved = new HashSet<string>(EventTypePreferenceStore.ApprovedTypes, StringComparer.Ordinal);
@@ -78,7 +104,8 @@ public sealed class ImportantNewsService(AlertSelectionService selection, TestEv
             if (output.Count == limit) break;
             if (selected.Add(item)) output.Add(item);
         }
-        return output;
+        return output.OrderByDescending(item => item.PublishedUtc ?? item.EventTimeUtc)
+            .ThenByDescending(item => item.ImportanceScore).ToArray();
     }
 }
 
@@ -87,7 +114,13 @@ public sealed record ImportantNewsItem(string Title, string? Summary, string Sou
     DateTimeOffset? PublishedUtc, string ImportanceRuleId, IReadOnlyList<string> Reasons,
     string Family, IReadOnlyList<string> EventTypes, DateTimeOffset? EventTimeUtc, double ImportanceScore);
 
+public sealed record LatestHeadline(string Title, string Link, string SourceName,
+    DateTimeOffset PublishedUtc, string Topic);
+
 public sealed record ImportantNewsResponse(DateTimeOffset EvaluatedUtc,
     IReadOnlyList<ImportantNewsItem> Items, int OmittedCount, IReadOnlyList<string> Limitations,
     int MissingMarketBaselineCount, int OmittedRejectedCount,
-    IReadOnlyList<SelectionFamilyDiagnostics> FamilyDiagnostics);
+    IReadOnlyList<SelectionFamilyDiagnostics> FamilyDiagnostics)
+{
+    public IReadOnlyList<LatestHeadline> LatestHeadlines { get; init; } = [];
+}

@@ -732,3 +732,11 @@ ez még mindig fut: [https://127.0.0.1:4200/](https://127.0.0.1:4200/) - dockere
 ## Prompt 138 — webes ChatGPT (agentic kreditlimit elérése után)
 
 de nem kell kérni admin password beállitást a run-on keresztül
+
+## 2026-10-21 – webes ChatGPT (agentic kreditlimit elérése után) – user runtime screenshots, Gmail/Slack and live-news follow-up
+
+> User: A build és a local admin belépés működik, HTTP 200 `/api/health`. A képernyőképen kevés mai fontos hír, duplikált BBC-sztori, az adminban nulla queued/failed; Gmail-értesítést kérek a `januspannonius1011@gmail.com` címre, és a saját Slack csatornámra, valamint a Debug TEST event megnyomásakor valódi kézbesítést. Mellékeltem a privát mail/Slack beállítási képernyőt.
+
+Agent instruction: Investigate the attached runtime evidence without treating 0 queued or provider-accepted sends as an end-to-end success. Separate strict importance from fresh but unqualified RSS articles; do not invent missing important news. Check the synthetic TEST queue for same-type disabled legacy rows, and make explicit TEST attempts immediate without dispatching unrelated real alerts. Document Gmail STARTTLS app-password and Slack Incoming Webhook setup; never solicit or persist the user's tokens in the repository.
+
+Agent verification: Angular tests (42/42), Angular production build, added xUnit regression tests. Real .NET/Docker build and live provider delivery still require user verification.

@@ -6,6 +6,22 @@ namespace WorldAlerts.Api.Tests;
 public sealed class NotificationQueueTests
 {
     [Fact]
+    public async Task Immediate_test_claims_only_synthetic_jobs_not_real_news()
+    {
+        using var temp = new TempDirectory();
+        var store = new NotificationQueueStore(temp.File("test-only.sqlite"));
+        store.Initialize();
+        var now = new DateTimeOffset(2026, 10, 21, 12, 0, 0, TimeSpan.Zero);
+        await store.EnqueueAsync("real:story", "v1", "test", "email", "real@example.test", "real", "body", now);
+        await store.EnqueueAsync("synthetic-test:3", "test", "test", "slack", "", "TEST", "body", now);
+        var claimed = await store.ClaimAsync(now, 50, startupBurst: true, testOnly: true);
+        Assert.Single(claimed);
+        Assert.Equal("synthetic-test:3", claimed[0].IdentityKey);
+        var pending = Assert.Single(await store.SnapshotAsync(), j => j.IdentityKey == "real:story");
+        Assert.Equal("pending", pending.State);
+    }
+
+    [Fact]
     public async Task Restart_preserves_ack_and_quarantines_unacknowledged_external_send()
     {
         var path = Path.Combine(Path.GetTempPath(), "worldalerts-queue-" + Guid.NewGuid() + ".sqlite");

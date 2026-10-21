@@ -18,6 +18,7 @@ public sealed class RuntimeAdminOperationsReader(CollectionStateStore sources, N
                 row.LastAttemptUtc is null ? "not-polled" : row.ConsecutiveFailures > 0 ? "failed" : "succeeded",
                 row.LastAttemptUtc)).ToArray(),
             new AdminDeliverySnapshot("available", jobs.Count(j => j.State is "pending" or "sending"),
-                jobs.Count(j => j.State is "failed" or "uncertain")));
+                jobs.Count(j => j.State is "failed" or "uncertain"))
+            { Sent = jobs.Count(j => j.State == "sent") });
     }
 }

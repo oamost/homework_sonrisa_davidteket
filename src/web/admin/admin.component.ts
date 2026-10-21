@@ -11,7 +11,7 @@ interface SourceStatus {
 
 interface Operations {
   sources: SourceStatus[];
-  delivery: { status: string; queued: number | null; failed: number | null };
+  delivery: { status: string; queued: number | null; failed: number | null; sent?: number | null };
 }
 
 // Standalone Angular view: parent may embed it in the existing app. The API
@@ -30,9 +30,10 @@ interface Operations {
       @if (operations() && stale()) { <p data-testid="admin-stale" class="alert alert-warning" role="status">Status may be stale. Last updated: {{ lastUpdated() }}. Automatic refresh will retry.</p> }
       @if (operations(); as state) {
         <div class="row g-3 mb-4">
-          <div class="col-12 col-sm-4"><div class="card border-0 shadow-sm h-100"><div class="card-body p-4"><h2 class="h6 text-secondary">Delivery status</h2><p class="h4 mb-0">{{ state.delivery.status }}</p></div></div></div>
-          <div class="col-6 col-sm-4"><div class="card border-0 shadow-sm h-100"><div class="card-body p-4"><h2 class="h6 text-secondary">Queued</h2><p class="h4 mb-0">queued: {{ state.delivery.queued ?? 'unavailable' }}</p></div></div></div>
-          <div class="col-6 col-sm-4"><div class="card border-0 shadow-sm h-100"><div class="card-body p-4"><h2 class="h6 text-secondary">Failed sends</h2><p class="h4 mb-0">failed: {{ state.delivery.failed ?? 'unavailable' }}</p></div></div></div>
+          <div class="col-12 col-sm-3"><div class="card border-0 shadow-sm h-100"><div class="card-body p-4"><h2 class="h6 text-secondary">Delivery status</h2><p class="h4 mb-0">{{ state.delivery.status }}</p></div></div></div>
+          <div class="col-6 col-sm-3"><div class="card border-0 shadow-sm h-100"><div class="card-body p-4"><h2 class="h6 text-secondary">Queued</h2><p class="h4 mb-0">queued: {{ state.delivery.queued ?? 'unavailable' }}</p></div></div></div>
+          <div class="col-6 col-sm-3"><div class="card border-0 shadow-sm h-100"><div class="card-body p-4"><h2 class="h6 text-secondary">Sent</h2><p class="h4 mb-0">sent: {{ state.delivery.sent ?? 'unavailable' }}</p></div></div></div>
+          <div class="col-6 col-sm-3"><div class="card border-0 shadow-sm h-100"><div class="card-body p-4"><h2 class="h6 text-secondary">Failed sends</h2><p class="h4 mb-0">failed: {{ state.delivery.failed ?? 'unavailable' }}</p></div></div></div>
         </div>
         <div class="card border-0 shadow-sm"><div class="card-body p-4">
           <h2 class="h5 mb-3">Source health and polling</h2>

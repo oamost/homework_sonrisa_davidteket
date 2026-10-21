@@ -81,13 +81,33 @@ public sealed class ImportantNewsEndpointTests : IDisposable
         var store = new NewsStore(path);
         store.Initialize();
         await store.InsertAsync(Enumerable.Range(0, 105)
-            .Select(i => Story($"important-{i}", "Breaking conflict", Now.AddMinutes(-i))).ToArray());
+            .Select(i => Story($"important-{i}", $"Breaking conflict report {i}", Now.AddMinutes(-i))).ToArray());
 
         using var factory = Api(path);
         using var client = factory.CreateClient();
         using var document = JsonDocument.Parse(await client.GetStringAsync("/api/news/important"));
         Assert.Equal(100, document.RootElement.GetProperty("items").GetArrayLength());
         Assert.Equal(5, document.RootElement.GetProperty("omittedCount").GetInt32());
+    }
+
+    [Fact]
+    public async Task Repeated_important_headlines_count_as_one_display_story_not_omitted_items()
+    {
+        var path = _temp.File("duplicate-headlines.sqlite");
+        var store = new NewsStore(path);
+        store.Initialize();
+        await store.InsertAsync(new[]
+        {
+            Story("same-title-1", "Breaking conflict", Now.AddMinutes(-1)),
+            Story("same-title-2", "Breaking conflict", Now.AddMinutes(-2)),
+        });
+
+        using var factory = Api(path);
+        using var client = factory.CreateClient();
+        using var document = JsonDocument.Parse(await client.GetStringAsync("/api/news/important"));
+        var item = Assert.Single(document.RootElement.GetProperty("items").EnumerateArray());
+        Assert.Equal("Breaking conflict", item.GetProperty("title").GetString());
+        Assert.Equal(0, document.RootElement.GetProperty("omittedCount").GetInt32());
     }
 
     [Fact]
