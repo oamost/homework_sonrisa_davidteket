@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using WorldAlerts.Api.Collection;
 
 namespace WorldAlerts.Api.News;
 
@@ -16,17 +17,23 @@ public sealed class NewsIngestionService
     private readonly NewsStore _store;
     private readonly NewsOptions _options;
     private readonly ILogger<NewsIngestionService> _logger;
+    private readonly CollectionStateStore? _progress;
+    private readonly TimeProvider _clock;
 
     public NewsIngestionService(
         HttpClient httpClient,
         NewsStore store,
         NewsOptions options,
-        ILogger<NewsIngestionService> logger)
+        ILogger<NewsIngestionService> logger,
+        CollectionStateStore? progress = null,
+        TimeProvider? clock = null)
     {
         _httpClient = httpClient;
         _store = store;
         _options = options;
         _logger = logger;
+        _progress = progress;
+        _clock = clock ?? TimeProvider.System;
 
         if (!_httpClient.DefaultRequestHeaders.UserAgent.Any())
         {
@@ -41,12 +48,21 @@ public sealed class NewsIngestionService
             return NewsPollResult.Empty;
         }
 
-        var firstSeenUtc = DateTimeOffset.UtcNow;
+        var firstSeenUtc = _clock.GetUtcNow();
         var results = new List<FeedPollResult>(_options.Feeds.Count);
         foreach (var feed in _options.Feeds)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            results.Add(await PollFeedAsync(feed, firstSeenUtc, cancellationToken).ConfigureAwait(false));
+            if (_progress is null)
+                results.Add(await PollFeedAsync(feed, firstSeenUtc, cancellationToken).ConfigureAwait(false));
+            else
+                await _progress.PollAsync(feed.Id, "news", SourceCadence.Effective(_options.PollInterval, feed.PollMinutes),
+                    _clock, async ct =>
+                    {
+                        var result = await PollFeedAsync(feed, firstSeenUtc, ct);
+                        results.Add(result);
+                        return result.ErrorType;
+                    }, cancellationToken);
         }
 
         return new NewsPollResult(results);

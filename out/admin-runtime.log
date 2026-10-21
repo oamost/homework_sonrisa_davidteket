@@ -1,0 +1,18 @@
+info: WorldAlerts.Api.Disasters.DisasterPollingService[0]
+      Disaster polling is disabled; no outbound disaster requests will be made.
+info: WorldAlerts.Api.News.NewsPollingService[0]
+      News polling is disabled; no outbound news requests will be made.
+info: WorldAlerts.Api.Advisories.AdvisoryPollingService[0]
+      Advisory polling is disabled; no outbound advisory requests will be made.
+info: WorldAlerts.Api.Markets.MarketPollingService[0]
+      Market polling is disabled; no outbound market requests will be made.
+warn: Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServer[8]
+      The ASP.NET Core developer certificate is not trusted. For information about trusting the ASP.NET Core developer certificate, see https://aka.ms/aspnet/https-trust-dev-cert
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: https://localhost:7021
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /prod/sonrisa_homework/src/api

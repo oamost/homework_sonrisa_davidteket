@@ -1,7 +1,12 @@
 using Microsoft.Data.Sqlite;
-using WorldAlerts.Api.News;
+using WorldAlerts.Api.Admin;
+using WorldAlerts.Api.Advisories;
+using WorldAlerts.Api.Collection;
 using WorldAlerts.Api.Disasters;
 using WorldAlerts.Api.Markets;
+using WorldAlerts.Api.News;
+using WorldAlerts.Api.Queue;
+using WorldAlerts.Api.Selection;
 using WorldAlerts.Api.Subscriptions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +25,33 @@ builder.Services.AddSingleton(database);
 var subscriptionStore = new SubscriptionStore(databasePath);
 subscriptionStore.TryInitialize();
 builder.Services.AddSingleton(subscriptionStore);
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<AlertSelectionService>();
+var collectionStore = new CollectionStateStore(databasePath);
+collectionStore.TryInitialize();
+builder.Services.AddSingleton(collectionStore);
+var queueStore = new NotificationQueueStore(databasePath);
+try { queueStore.Initialize(); }
+catch (Exception exception) when (exception is SqliteException or IOException)
+{
+    Console.Error.WriteLine($"SQLite notification queue initialization failed: {exception.GetType().Name}");
+}
+builder.Services.AddSingleton(queueStore);
+builder.Services.AddSingleton<IAdminOperationsReader, RuntimeAdminOperationsReader>();
+builder.Services.AddAdminWall();
+
+// News and health share the one configured SQLite file; there is no second default.
+var newsOptions = builder.Configuration.GetSection("WorldAlerts:News").Get<NewsOptions>() ?? new NewsOptions();
+var newsStore = new NewsStore(databasePath);
+newsStore.TryInitialize();
+builder.Services.AddSingleton(newsOptions);
+builder.Services.AddSingleton(newsStore);
+builder.Services.AddHttpClient<NewsIngestionService>((services, client) =>
+{
+    var options = services.GetRequiredService<NewsOptions>();
+    client.Timeout = options.RequestTimeout;
+});
+builder.Services.AddHostedService<NewsPollingService>();
 
 var marketOptions = builder.Configuration.GetSection("WorldAlerts:Markets").Get<MarketOptions>() ?? new MarketOptions();
 var marketStore = new MarketStore(databasePath);
@@ -45,34 +77,36 @@ builder.Services.AddHttpClient<DisasterIngestionService>((services, client) =>
 });
 builder.Services.AddHostedService<DisasterPollingService>();
 
-
-// News and health share the one configured SQLite file; there is no second default.
-var newsOptions = builder.Configuration.GetSection("WorldAlerts:News").Get<NewsOptions>() ?? new NewsOptions();
-var newsStore = new NewsStore(databasePath);
-newsStore.TryInitialize();
-builder.Services.AddSingleton(newsOptions);
-builder.Services.AddSingleton(newsStore);
-builder.Services.AddHttpClient<NewsIngestionService>((services, client) =>
+var advisoryOptions = builder.Configuration.GetSection("WorldAlerts:Advisories").Get<AdvisoryOptions>() ?? new AdvisoryOptions();
+var advisoryStore = new AdvisoryStore(databasePath);
+advisoryStore.TryInitialize();
+builder.Services.AddSingleton(advisoryOptions);
+builder.Services.AddSingleton(advisoryStore);
+builder.Services.AddHttpClient<AdvisoryIngestionService>((services, client) =>
 {
-    var options = services.GetRequiredService<NewsOptions>();
+    var options = services.GetRequiredService<AdvisoryOptions>();
     client.Timeout = options.RequestTimeout;
 });
-builder.Services.AddHostedService<NewsPollingService>();
+builder.Services.AddHostedService<AdvisoryPollingService>();
 
 var app = builder.Build();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapAdminWall();
 
 app.MapGet("/", () => "World Alerts API");
 app.MapGet("/api/health", async (SqliteDatabase db, CancellationToken cancellationToken) =>
     await db.CanConnectAsync(cancellationToken)
         ? Results.Ok(new HealthResponse("ok"))
         : Results.Json(new HealthResponse("unavailable"), statusCode: StatusCodes.Status503ServiceUnavailable));
+app.MapGet("/api/alerts/selection", async (AlertSelectionService selection, CancellationToken cancellationToken) =>
+    Results.Ok(await selection.SelectAsync(cancellationToken)));
 app.MapGet("/api/news", async (NewsStore store, int? limit, CancellationToken cancellationToken) =>
 {
     var clamped = Math.Clamp(limit ?? NewsStore.DefaultLimit, NewsStore.MinLimit, NewsStore.MaxLimit);
     var items = await store.GetRecentAsync(clamped, cancellationToken);
     return Results.Ok(items);
 });
-
 app.MapGet("/api/markets", async (MarketStore store, int? limit, string? source, CancellationToken cancellationToken) =>
 {
     var clamped = Math.Clamp(limit ?? MarketStore.DefaultLimit, MarketStore.MinLimit, MarketStore.MaxLimit);
@@ -82,6 +116,12 @@ app.MapGet("/api/markets", async (MarketStore store, int? limit, string? source,
 app.MapGet("/api/disasters", async (DisasterStore store, int? limit, string? source, CancellationToken cancellationToken) =>
 {
     var clamped = Math.Clamp(limit ?? DisasterStore.DefaultLimit, DisasterStore.MinLimit, DisasterStore.MaxLimit);
+    var items = await store.GetRecentAsync(clamped, source, cancellationToken);
+    return Results.Ok(items);
+});
+app.MapGet("/api/advisories", async (AdvisoryStore store, int? limit, string? source, CancellationToken cancellationToken) =>
+{
+    var clamped = Math.Clamp(limit ?? AdvisoryStore.DefaultLimit, AdvisoryStore.MinLimit, AdvisoryStore.MaxLimit);
     var items = await store.GetRecentAsync(clamped, source, cancellationToken);
     return Results.Ok(items);
 });

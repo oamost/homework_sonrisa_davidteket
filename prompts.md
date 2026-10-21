@@ -354,3 +354,133 @@ excellent job. how could I test 06 by myself quickly?
 ## Prompt 57
 
 could you launch it, then give me curl commands I could use in my terminal to see some output? (testing) 
+
+## Prompt 58
+
+in regards to qwen's 09 finding: then we need to fall back to yahoo. if that won't work, you need to look for keyless free alternatives on the internet. 
+
+## Prompt 59
+
+in that case if yahoo fails too, let's go with option 3.: "narrow market scope to documented keyless crypto + FX,"
+in paralell, can we progress iwht task 07 as well with a separate subagent? 
+
+## Prompt 60
+
+integrate "2. Validated but not yet integrated" into the app. (subagent-1, deepseek)
+also integrate "3. Probed, responded, not adopted" into the app as well. (subagent-1, deepseek)
+retrieve reliable sources for "5. Still uncovered" and integrate them into the app (qwen) 
+
+## Prompt 61
+
+while these subagents at work, pick up task 03 and start implementing it 
+
+## Prompt 62
+
+I noticed that there are uncommited changes for the done items. commit them. (one commit, one done item).
+could you print another coverage matrix plus api request samples? then we can move on with task 14, 15 and 16. 
+also a separate subagent should start working on task 18, then another one on setting up infra required for task 20 and 21
+
+## Prompt 63
+
+yeah I understand. don't forget to commit them once it finishes. plus of course "print the new coverage matrix and live request samples." too
+
+## Prompt 64
+
+for task 14, 15 and 16, you should spawn 3 separate agents, let them research and implement the requirements. you must sync their results at the end so their proposals will end up being consistent 
+for the scoring algorithm.
+
+for the coverage matrix, I see that there are critical limitations. e.g. we don't receive important news event from the last 24 hours (human readable), or totally obsololete or technically unfitting ones. 
+we must eliminate these and find better sources instead of them. keep going until all these bleeding issues are tackled one-by-one. 
+
+I reviewed the api responses, they are promising, but the above limitations I described to you are major issues.
+
+## Prompt 65
+
+meanwhile delegate task 12 to qwen
+
+## Prompt 66
+
+then, delegate task 13 for GPT 6 sol medium
+
+## Prompt 67
+
+I have re-logged into gpt, so it should be fine now
+
+## Prompt 68
+
+I have reached deepseek rate limit, so from now we must rely on gpt 6 sol, openrouter free models and local qwen
+
+## Prompt 69
+
+while these agents at work, make sure to print what is available for testing, on how could I manual test them. or, if you can print runtime test proof, please do so.
+
+## Prompt 70
+
+I see that the obsolete data fetching issue has been resolved. please commit each task's related changesets one by one. what's up with wip tasks?
+
+## Prompt 71
+
+the commited task's status can be set to done.
+
+## Prompt 72
+
+whatsup with 14, 15, 16 and 04?
+
+## Prompt 73
+
+well, that's a problem. wire them into runtime alert selection
+
+## Prompt 74
+
+I will need live samples after thats been done
+
+## Prompt 75
+
+is task 01 closeable?
+
+## Prompt 76
+
+fix 1. and I approve 2
+
+## Prompt 77
+
+many leftovers in the tree left uncommited...
+
+## Prompt 78
+
+commited tasks can be set as done
+
+## Prompt 79
+
+whatsup with the wip ones?
+
+## Prompt 80
+
+please spawn 3 agents to implement the following tasks:
+
+task 26
+task 24
+
+plus:
+
+wip tasks must be fully implemented and integrated. once those are done as well, commit them per rule. set task 17 to testing and provide some samples from its live running implementation.
+
+## Prompt 81
+
+there are still many many uncommited changes in the tree
+
+## Prompt 82
+
+right, 17 can be set to done, superior work!
+
+## Prompt 83
+
+launch it so I can test it, to add, use bootstrap css lib to build a simple but modern interface that implements what is required for the view
+
+## Prompt 84
+
+fix those in task 26
+
+## Prompt 85
+
+plus please commit uncommited changes from the git tree. you forgot to commit them along the way. commit = task as defined per global rule

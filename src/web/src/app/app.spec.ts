@@ -1,7 +1,9 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
 import { App } from './app';
+import { appRoutes } from './app.routes';
 
 describe('App', () => {
   let httpMock: HttpTestingController;
@@ -9,7 +11,7 @@ describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter(appRoutes)],
     }).compileComponents();
 
     httpMock = TestBed.inject(HttpTestingController);
@@ -36,6 +38,23 @@ describe('App', () => {
     expect(fixture.nativeElement.querySelector('h1')?.textContent).toContain('World Alerts');
 
     httpMock.expectOne('/api/health').flush({ status: 'ok' });
+  });
+
+  it('exposes a navigable admin route without replacing the existing shell', async () => {
+    const fixture = createApp();
+    httpMock.expectOne('/api/health').flush({ status: 'ok' });
+    await TestBed.inject(Router).navigateByUrl('/admin');
+    fixture.detectChanges();
+    httpMock.expectOne('/api/admin/status').flush({
+      sources: [{ sourceId: 'news', health: 'unavailable', pollStatus: 'poll failed', lastPollUtc: null }],
+      delivery: { status: 'available', queued: 3, failed: 1 },
+    });
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="backend-status"]')).toBeTruthy();
+    expect(fixture.nativeElement.textContent).toContain('poll failed');
+    expect(fixture.nativeElement.textContent).toContain('queued: 3');
+    expect(fixture.nativeElement.querySelector('form[data-testid="admin-login"]')).toBeNull();
   });
 
   it('reports connecting while the backend health check is pending', () => {

@@ -29,6 +29,8 @@ public sealed class MarketOptions
 /// </summary>
 public sealed class MarketSource
 {
+    /// <summary>Optional longer per-source cadence; never shorter than the family polling interval.</summary>
+    public int? PollMinutes { get; set; }
     public string Id { get; set; } = string.Empty;
 
     public string Name { get; set; } = string.Empty;

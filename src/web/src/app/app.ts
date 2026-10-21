@@ -1,10 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
+import { RouterLink, RouterOutlet } from '@angular/router';
 
 type BackendStatus = 'Connecting' | 'Available' | 'Unavailable';
 
 @Component({
-  imports: [],
+  imports: [RouterLink, RouterOutlet],
   selector: 'app-root',
   styleUrl: './app.css',
   templateUrl: './app.html',

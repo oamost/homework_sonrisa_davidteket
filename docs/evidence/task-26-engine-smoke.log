@@ -1,0 +1,84 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 973B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for mcr.microsoft.com/dotnet/sdk:10.0
+#2 ...
+
+#3 [internal] load metadata for mcr.microsoft.com/dotnet/aspnet:10.0
+#3 DONE 0.4s
+
+#2 [internal] load metadata for mcr.microsoft.com/dotnet/sdk:10.0
+#2 DONE 0.4s
+
+#4 [stage-1 1/4] FROM mcr.microsoft.com/dotnet/aspnet:10.0@sha256:d5633778c754e89a386882eddf8dbee6942447a8a4b8267c19cf1e1158d0b0ac
+#4 resolve mcr.microsoft.com/dotnet/aspnet:10.0@sha256:d5633778c754e89a386882eddf8dbee6942447a8a4b8267c19cf1e1158d0b0ac 0.0s done
+#4 DONE 0.0s
+
+#5 [stage-1 2/4] WORKDIR /app
+#5 CACHED
+
+#6 [verified 1/6] FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:0d99ebf1ccad15037b5c98c9fe8979d6b8dbac23812feae2277a0b277b5c5ffa
+#6 resolve mcr.microsoft.com/dotnet/sdk:10.0@sha256:0d99ebf1ccad15037b5c98c9fe8979d6b8dbac23812feae2277a0b277b5c5ffa 0.0s done
+#6 DONE 0.0s
+
+#7 [verified 2/6] WORKDIR /work
+#7 CACHED
+
+#8 [internal] load build context
+#8 transferring context: 29.09kB done
+#8 DONE 0.0s
+
+#9 [verified 3/6] COPY src/WorldAlerts.sln src/WorldAlerts.sln
+#9 DONE 0.0s
+
+#10 [verified 4/6] COPY src/api/ src/api/
+#10 DONE 0.1s
+
+#11 [verified 5/6] COPY src/tests/WorldAlerts.Api.Tests/ src/tests/WorldAlerts.Api.Tests/
+#11 DONE 0.1s
+
+#12 [verified 6/6] RUN dotnet restore src/WorldAlerts.sln     && dotnet build src/WorldAlerts.sln --configuration Release --no-restore     && dotnet test src/WorldAlerts.sln --configuration Release --no-build --no-restore     && dotnet publish src/api/WorldAlerts.Api.csproj --configuration Release --no-build --no-restore --output /publish
+#12 1.030   Determining projects to restore...
+#12 25.16   Restored /work/src/api/WorldAlerts.Api.csproj (in 23.73 sec).
+#12 26.78   Restored /work/src/tests/WorldAlerts.Api.Tests/WorldAlerts.Api.Tests.csproj (in 25.35 sec).
+#12 31.29   WorldAlerts.Api -> /work/src/api/bin/Release/net10.0/WorldAlerts.Api.dll
+#12 32.83 /work/src/tests/WorldAlerts.Api.Tests/CollectionStateIntegrationTests.cs(22,19): error CS1061: 'NewsFeed' does not contain a definition for 'PollMinutes' and no accessible extension method 'PollMinutes' accepting a first argument of type 'NewsFeed' could be found (are you missing a using directive or an assembly reference?) [/work/src/tests/WorldAlerts.Api.Tests/WorldAlerts.Api.Tests.csproj]
+#12 32.83 /work/src/tests/WorldAlerts.Api.Tests/CollectionStateIntegrationTests.cs(32,27): error CS1729: 'NewsIngestionService' does not contain a constructor that takes 6 arguments [/work/src/tests/WorldAlerts.Api.Tests/WorldAlerts.Api.Tests.csproj]
+#12 32.83 /work/src/tests/WorldAlerts.Api.Tests/CollectionStateIntegrationTests.cs(41,23): error CS1729: 'NewsIngestionService' does not contain a constructor that takes 6 arguments [/work/src/tests/WorldAlerts.Api.Tests/WorldAlerts.Api.Tests.csproj]
+#12 32.85 
+#12 32.85 Build FAILED.
+#12 32.85 
+#12 32.85 /work/src/tests/WorldAlerts.Api.Tests/CollectionStateIntegrationTests.cs(22,19): error CS1061: 'NewsFeed' does not contain a definition for 'PollMinutes' and no accessible extension method 'PollMinutes' accepting a first argument of type 'NewsFeed' could be found (are you missing a using directive or an assembly reference?) [/work/src/tests/WorldAlerts.Api.Tests/WorldAlerts.Api.Tests.csproj]
+#12 32.85 /work/src/tests/WorldAlerts.Api.Tests/CollectionStateIntegrationTests.cs(32,27): error CS1729: 'NewsIngestionService' does not contain a constructor that takes 6 arguments [/work/src/tests/WorldAlerts.Api.Tests/WorldAlerts.Api.Tests.csproj]
+#12 32.85 /work/src/tests/WorldAlerts.Api.Tests/CollectionStateIntegrationTests.cs(41,23): error CS1729: 'NewsIngestionService' does not contain a constructor that takes 6 arguments [/work/src/tests/WorldAlerts.Api.Tests/WorldAlerts.Api.Tests.csproj]
+#12 32.85     0 Warning(s)
+#12 32.85     3 Error(s)
+#12 32.85 
+#12 32.85 Time Elapsed 00:00:05.79
+#12 ERROR: process "/bin/sh -c dotnet restore src/WorldAlerts.sln     && dotnet build src/WorldAlerts.sln --configuration Release --no-restore     && dotnet test src/WorldAlerts.sln --configuration Release --no-build --no-restore     && dotnet publish src/api/WorldAlerts.Api.csproj --configuration Release --no-build --no-restore --output /publish" did not complete successfully: exit code: 1
+------
+ > [verified 6/6] RUN dotnet restore src/WorldAlerts.sln     && dotnet build src/WorldAlerts.sln --configuration Release --no-restore     && dotnet test src/WorldAlerts.sln --configuration Release --no-build --no-restore     && dotnet publish src/api/WorldAlerts.Api.csproj --configuration Release --no-build --no-restore --output /publish:
+32.85 
+32.85 Build FAILED.
+32.85 
+32.85 /work/src/tests/WorldAlerts.Api.Tests/CollectionStateIntegrationTests.cs(22,19): error CS1061: 'NewsFeed' does not contain a definition for 'PollMinutes' and no accessible extension method 'PollMinutes' accepting a first argument of type 'NewsFeed' could be found (are you missing a using directive or an assembly reference?) [/work/src/tests/WorldAlerts.Api.Tests/WorldAlerts.Api.Tests.csproj]
+32.85 /work/src/tests/WorldAlerts.Api.Tests/CollectionStateIntegrationTests.cs(32,27): error CS1729: 'NewsIngestionService' does not contain a constructor that takes 6 arguments [/work/src/tests/WorldAlerts.Api.Tests/WorldAlerts.Api.Tests.csproj]
+32.85 /work/src/tests/WorldAlerts.Api.Tests/CollectionStateIntegrationTests.cs(41,23): error CS1729: 'NewsIngestionService' does not contain a constructor that takes 6 arguments [/work/src/tests/WorldAlerts.Api.Tests/WorldAlerts.Api.Tests.csproj]
+32.85     0 Warning(s)
+32.85     3 Error(s)
+32.85 
+32.85 Time Elapsed 00:00:05.79
+------
+Dockerfile:6
+--------------------
+   5 |     COPY src/tests/WorldAlerts.Api.Tests/ src/tests/WorldAlerts.Api.Tests/
+   6 | >>> RUN dotnet restore src/WorldAlerts.sln \
+   7 | >>>     && dotnet build src/WorldAlerts.sln --configuration Release --no-restore \
+   8 | >>>     && dotnet test src/WorldAlerts.sln --configuration Release --no-build --no-restore \
+   9 | >>>     && dotnet publish src/api/WorldAlerts.Api.csproj --configuration Release --no-build --no-restore --output /publish
+  10 |     
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c dotnet restore src/WorldAlerts.sln     && dotnet build src/WorldAlerts.sln --configuration Release --no-restore     && dotnet test src/WorldAlerts.sln --configuration Release --no-build --no-restore     && dotnet publish src/api/WorldAlerts.Api.csproj --configuration Release --no-build --no-restore --output /publish" did not complete successfully: exit code: 1

@@ -1,5 +1,6 @@
 using System.Globalization;
 using Microsoft.Extensions.Logging;
+using WorldAlerts.Api.Collection;
 
 namespace WorldAlerts.Api.Disasters;
 
@@ -18,17 +19,23 @@ public sealed class DisasterIngestionService
     private readonly DisasterOptions _options;
     private readonly ILogger<DisasterIngestionService> _logger;
     private readonly SemaphoreSlim _singleFlight = new(1, 1);
+    private readonly CollectionStateStore? _progress;
+    private readonly TimeProvider _clock;
 
     public DisasterIngestionService(
         HttpClient httpClient,
         DisasterStore store,
         DisasterOptions options,
-        ILogger<DisasterIngestionService> logger)
+        ILogger<DisasterIngestionService> logger,
+        CollectionStateStore? progress = null,
+        TimeProvider? clock = null)
     {
         _httpClient = httpClient;
         _store = store;
         _options = options;
         _logger = logger;
+        _progress = progress;
+        _clock = clock ?? TimeProvider.System;
 
         if (!_httpClient.DefaultRequestHeaders.UserAgent.Any())
         {
@@ -55,7 +62,16 @@ public sealed class DisasterIngestionService
             foreach (var source in _options.Sources)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                results.Add(await PollSourceAsync(source, cancellationToken).ConfigureAwait(false));
+                if (_progress is null)
+                    results.Add(await PollSourceAsync(source, cancellationToken).ConfigureAwait(false));
+                else
+                    await _progress.PollAsync(source.Id, "disasters", SourceCadence.Effective(_options.PollInterval, source.PollMinutes),
+                        _clock, async ct =>
+                        {
+                            var result = await PollSourceAsync(source, ct);
+                            results.Add(result);
+                            return result.ErrorType;
+                        }, cancellationToken);
             }
 
             return new DisasterPollResult(results);

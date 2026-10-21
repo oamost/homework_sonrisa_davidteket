@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using WorldAlerts.Api.Collection;
 
 namespace WorldAlerts.Api.Markets;
 
@@ -18,17 +19,23 @@ public sealed class MarketIngestionService
     private readonly MarketOptions _options;
     private readonly ILogger<MarketIngestionService> _logger;
     private readonly SemaphoreSlim _singleFlight = new(1, 1);
+    private readonly CollectionStateStore? _progress;
+    private readonly TimeProvider _clock;
 
     public MarketIngestionService(
         HttpClient httpClient,
         MarketStore store,
         MarketOptions options,
-        ILogger<MarketIngestionService> logger)
+        ILogger<MarketIngestionService> logger,
+        CollectionStateStore? progress = null,
+        TimeProvider? clock = null)
     {
         _httpClient = httpClient;
         _store = store;
         _options = options;
         _logger = logger;
+        _progress = progress;
+        _clock = clock ?? TimeProvider.System;
 
         if (!_httpClient.DefaultRequestHeaders.UserAgent.Any())
         {
@@ -55,7 +62,16 @@ public sealed class MarketIngestionService
             foreach (var source in _options.Sources)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                results.Add(await PollSourceAsync(source, cancellationToken).ConfigureAwait(false));
+                if (_progress is null)
+                    results.Add(await PollSourceAsync(source, cancellationToken).ConfigureAwait(false));
+                else
+                    await _progress.PollAsync(source.Id, "markets", SourceCadence.Effective(_options.PollInterval, source.PollMinutes),
+                        _clock, async ct =>
+                        {
+                            var result = await PollSourceAsync(source, ct);
+                            results.Add(result);
+                            return result.ErrorType;
+                        }, cancellationToken);
             }
 
             return new MarketPollResult(results);

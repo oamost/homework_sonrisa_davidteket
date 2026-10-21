@@ -212,9 +212,15 @@ public sealed class DisasterStore
     public async Task<IReadOnlyList<DisasterEvent>> GetRecentAsync(
         int limit,
         string? sourceId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        await ReadAsync(Math.Clamp(limit, MinLimit, MaxLimit), sourceId, cancellationToken);
+
+    /// <summary>Reads all persisted events without the public endpoint's display cap.</summary>
+    public Task<IReadOnlyList<DisasterEvent>> GetForSelectionAsync(CancellationToken cancellationToken = default) =>
+        ReadAsync(-1, null, cancellationToken);
+
+    private async Task<IReadOnlyList<DisasterEvent>> ReadAsync(int limit, string? sourceId, CancellationToken cancellationToken)
     {
-        var clamped = Math.Clamp(limit, MinLimit, MaxLimit);
         var normalizedSource = string.IsNullOrWhiteSpace(sourceId) ? null : sourceId.Trim();
 
         await using var connection = new SqliteConnection(_connectionString);
@@ -232,7 +238,7 @@ public sealed class DisasterStore
             ORDER BY (EventTimeUtc IS NULL), EventTimeUtc DESC, Id DESC
             LIMIT $limit;
             """;
-        command.Parameters.AddWithValue("$limit", clamped);
+        command.Parameters.AddWithValue("$limit", limit);
         command.Parameters.AddWithValue("$sourceId", normalizedSource ?? (object)DBNull.Value);
 
         var events = new List<DisasterEvent>();

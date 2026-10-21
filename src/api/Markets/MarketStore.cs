@@ -169,9 +169,15 @@ public sealed class MarketStore
     public async Task<IReadOnlyList<MarketObservation>> GetRecentAsync(
         int limit,
         string? sourceId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        await ReadAsync(Math.Clamp(limit, MinLimit, MaxLimit), sourceId, cancellationToken);
+
+    /// <summary>Reads all persisted observations, including older baseline history, without a display cap.</summary>
+    public Task<IReadOnlyList<MarketObservation>> GetForSelectionAsync(CancellationToken cancellationToken = default) =>
+        ReadAsync(-1, null, cancellationToken);
+
+    private async Task<IReadOnlyList<MarketObservation>> ReadAsync(int limit, string? sourceId, CancellationToken cancellationToken)
     {
-        var clamped = Math.Clamp(limit, MinLimit, MaxLimit);
         var normalizedSource = string.IsNullOrWhiteSpace(sourceId) ? null : sourceId.Trim();
 
         await using var connection = new SqliteConnection(_connectionString);
@@ -187,7 +193,7 @@ public sealed class MarketStore
             ORDER BY ObservationUtc DESC, Id DESC
             LIMIT $limit;
             """;
-        command.Parameters.AddWithValue("$limit", clamped);
+        command.Parameters.AddWithValue("$limit", limit);
         command.Parameters.AddWithValue("$sourceId", normalizedSource ?? (object)DBNull.Value);
 
         var observations = new List<MarketObservation>();

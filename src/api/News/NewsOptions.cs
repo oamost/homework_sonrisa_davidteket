@@ -25,6 +25,8 @@ public sealed class NewsOptions
 /// <summary>One configured RSS feed. All feeds are keyless public URLs.</summary>
 public sealed class NewsFeed
 {
+    /// <summary>Optional longer per-feed cadence; never shorter than the family polling interval.</summary>
+    public int? PollMinutes { get; set; }
     public string Id { get; set; } = string.Empty;
 
     public string Name { get; set; } = string.Empty;

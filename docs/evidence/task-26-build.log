@@ -1,0 +1,82 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 973B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for mcr.microsoft.com/dotnet/sdk:10.0
+#2 ...
+
+#3 [internal] load metadata for mcr.microsoft.com/dotnet/aspnet:10.0
+#3 DONE 0.3s
+
+#2 [internal] load metadata for mcr.microsoft.com/dotnet/sdk:10.0
+#2 DONE 0.3s
+
+#4 [stage-1 1/4] FROM mcr.microsoft.com/dotnet/aspnet:10.0@sha256:d5633778c754e89a386882eddf8dbee6942447a8a4b8267c19cf1e1158d0b0ac
+#4 resolve mcr.microsoft.com/dotnet/aspnet:10.0@sha256:d5633778c754e89a386882eddf8dbee6942447a8a4b8267c19cf1e1158d0b0ac 0.0s done
+#4 DONE 0.0s
+
+#5 [stage-1 2/4] WORKDIR /app
+#5 CACHED
+
+#6 [verified 1/6] FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:0d99ebf1ccad15037b5c98c9fe8979d6b8dbac23812feae2277a0b277b5c5ffa
+#6 resolve mcr.microsoft.com/dotnet/sdk:10.0@sha256:0d99ebf1ccad15037b5c98c9fe8979d6b8dbac23812feae2277a0b277b5c5ffa 0.0s done
+#6 DONE 0.0s
+
+#7 [internal] load build context
+#7 transferring context: 91.11kB done
+#7 DONE 0.0s
+
+#8 [verified 2/6] WORKDIR /work
+#8 CACHED
+
+#9 [verified 3/6] COPY src/WorldAlerts.sln src/WorldAlerts.sln
+#9 CACHED
+
+#10 [verified 4/6] COPY src/api/ src/api/
+#10 DONE 0.1s
+
+#11 [verified 5/6] COPY src/tests/WorldAlerts.Api.Tests/ src/tests/WorldAlerts.Api.Tests/
+#11 DONE 0.1s
+
+#12 [verified 6/6] RUN dotnet restore src/WorldAlerts.sln     && dotnet build src/WorldAlerts.sln --configuration Release --no-restore     && dotnet test src/WorldAlerts.sln --configuration Release --no-build --no-restore     && dotnet publish src/api/WorldAlerts.Api.csproj --configuration Release --no-build --no-restore --output /publish
+#12 1.042   Determining projects to restore...
+#12 29.48   Restored /work/src/tests/WorldAlerts.Api.Tests/WorldAlerts.Api.Tests.csproj (in 28.03 sec).
+#12 29.48   Restored /work/src/api/WorldAlerts.Api.csproj (in 28.02 sec).
+#12 33.81   WorldAlerts.Api -> /work/src/api/bin/Release/net10.0/WorldAlerts.Api.dll
+#12 35.47 /work/src/tests/WorldAlerts.Api.Tests/AlertPipelineTests.cs(34,28): error CS0246: The type or namespace name 'AlertPipeline' could not be found (are you missing a using directive or an assembly reference?) [/work/src/tests/WorldAlerts.Api.Tests/WorldAlerts.Api.Tests.csproj]
+#12 35.47 /work/src/tests/WorldAlerts.Api.Tests/AlertPipelineTests.cs(38,35): error CS0246: The type or namespace name 'AlertPipeline' could not be found (are you missing a using directive or an assembly reference?) [/work/src/tests/WorldAlerts.Api.Tests/WorldAlerts.Api.Tests.csproj]
+#12 35.49 
+#12 35.49 Build FAILED.
+#12 35.49 
+#12 35.49 /work/src/tests/WorldAlerts.Api.Tests/AlertPipelineTests.cs(34,28): error CS0246: The type or namespace name 'AlertPipeline' could not be found (are you missing a using directive or an assembly reference?) [/work/src/tests/WorldAlerts.Api.Tests/WorldAlerts.Api.Tests.csproj]
+#12 35.49 /work/src/tests/WorldAlerts.Api.Tests/AlertPipelineTests.cs(38,35): error CS0246: The type or namespace name 'AlertPipeline' could not be found (are you missing a using directive or an assembly reference?) [/work/src/tests/WorldAlerts.Api.Tests/WorldAlerts.Api.Tests.csproj]
+#12 35.49     0 Warning(s)
+#12 35.49     2 Error(s)
+#12 35.49 
+#12 35.49 Time Elapsed 00:00:05.75
+#12 ERROR: process "/bin/sh -c dotnet restore src/WorldAlerts.sln     && dotnet build src/WorldAlerts.sln --configuration Release --no-restore     && dotnet test src/WorldAlerts.sln --configuration Release --no-build --no-restore     && dotnet publish src/api/WorldAlerts.Api.csproj --configuration Release --no-build --no-restore --output /publish" did not complete successfully: exit code: 1
+------
+ > [verified 6/6] RUN dotnet restore src/WorldAlerts.sln     && dotnet build src/WorldAlerts.sln --configuration Release --no-restore     && dotnet test src/WorldAlerts.sln --configuration Release --no-build --no-restore     && dotnet publish src/api/WorldAlerts.Api.csproj --configuration Release --no-build --no-restore --output /publish:
+35.47 /work/src/tests/WorldAlerts.Api.Tests/AlertPipelineTests.cs(38,35): error CS0246: The type or namespace name 'AlertPipeline' could not be found (are you missing a using directive or an assembly reference?) [/work/src/tests/WorldAlerts.Api.Tests/WorldAlerts.Api.Tests.csproj]
+35.49 
+35.49 Build FAILED.
+35.49 
+35.49 /work/src/tests/WorldAlerts.Api.Tests/AlertPipelineTests.cs(34,28): error CS0246: The type or namespace name 'AlertPipeline' could not be found (are you missing a using directive or an assembly reference?) [/work/src/tests/WorldAlerts.Api.Tests/WorldAlerts.Api.Tests.csproj]
+35.49 /work/src/tests/WorldAlerts.Api.Tests/AlertPipelineTests.cs(38,35): error CS0246: The type or namespace name 'AlertPipeline' could not be found (are you missing a using directive or an assembly reference?) [/work/src/tests/WorldAlerts.Api.Tests/WorldAlerts.Api.Tests.csproj]
+35.49     0 Warning(s)
+35.49     2 Error(s)
+35.49 
+35.49 Time Elapsed 00:00:05.75
+------
+Dockerfile:6
+--------------------
+   5 |     COPY src/tests/WorldAlerts.Api.Tests/ src/tests/WorldAlerts.Api.Tests/
+   6 | >>> RUN dotnet restore src/WorldAlerts.sln \
+   7 | >>>     && dotnet build src/WorldAlerts.sln --configuration Release --no-restore \
+   8 | >>>     && dotnet test src/WorldAlerts.sln --configuration Release --no-build --no-restore \
+   9 | >>>     && dotnet publish src/api/WorldAlerts.Api.csproj --configuration Release --no-build --no-restore --output /publish
+  10 |     
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c dotnet restore src/WorldAlerts.sln     && dotnet build src/WorldAlerts.sln --configuration Release --no-restore     && dotnet test src/WorldAlerts.sln --configuration Release --no-build --no-restore     && dotnet publish src/api/WorldAlerts.Api.csproj --configuration Release --no-build --no-restore --output /publish" did not complete successfully: exit code: 1
