@@ -1,0 +1,61 @@
+{"status":"ok"}[
+    {
+        "sourceId": "nyt-world",
+        "sourceName": "NYT World",
+        "nativeId": "https://www.nytimes.com/2026/10/20/world/asia/china-deepseek-us-ban.html",
+        "title": "China Criticizes U.S. Ban on DeepSeek A.I. in Government Systems",
+        "link": "https://www.nytimes.com/2026/10/20/world/asia/china-deepseek-us-ban.html",
+        "publishedUtc": "2026-10-21T00:48:25+00:00",
+        "firstSeenUtc": "2026-10-21T00:52:20.9900293+00:00",
+        "family": "world-news",
+        "categories": [
+            "DeepSeek Artificial Intelligence Co Ltd",
+            "China",
+            "United States International Relations",
+            "Artificial Intelligence",
+            "United States Defense and Military Forces",
+            "United States",
+            "Homeland Security Department",
+            "OpenAI Labs",
+            "Ministry of Commerce (China)",
+            "Huawei Technologies Co Ltd"
+        ],
+        "provenance": "https://rss.nytimes.com/services/xml/rss/nyt/World.xml"
+    },
+    {
+        "sourceId": "guardian-world",
+        "sourceName": "The Guardian World",
+        "nativeId": "https://www.theguardian.com/australia-news/live/2026/oct/21/helen-haines-independent-mp-alleged-attack-wangaratta-vigils-court-ntwnfb",
+        "title": "Helen Haines live updates: police charge accused Brendan Nugent with additional offence; lawyer says he has rare neurological condition",
+        "link": "https://www.theguardian.com/australia-news/live/2026/oct/21/helen-haines-independent-mp-alleged-attack-wangaratta-vigils-court-ntwnfb",
+        "publishedUtc": "2026-10-21T00:37:33+00:00",
+        "firstSeenUtc": "2026-10-21T00:52:20.9900293+00:00",
+        "family": "world-news",
+        "categories": [
+            "Australia news",
+            "Victoria"
+        ],
+        "provenance": "https://www.theguardian.com/world/rss"
+    },
+    {
+        "sourceId": "aljazeera-all",
+        "sourceName": "Al Jazeera English",
+        "nativeId": "https://www.aljazeera.com/?t=1792499605",
+        "title": "Why former FDLR fighters are returning to Rwanda",
+        "link": "https://www.aljazeera.com/news/2026/10/21/why-former-fdlr-fighters-are-returning-to-rwanda?traffic_source=rss",
+        "publishedUtc": "2026-10-21T00:25:43+00:00",
+        "firstSeenUtc": "2026-10-21T00:52:20.9900293+00:00",
+        "family": "world-news",
+        "categories": [
+            "News"
+        ],
+        "provenance": "https://www.aljazeera.com/xml/rss/all.xml"
+    }
+]
+200 items returned (API cap 200)
+aljazeera-all    25
+ars-technica     20
+bbc-world        34
+guardian-world   41
+nature           28
+nyt-world        52

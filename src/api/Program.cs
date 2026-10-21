@@ -1,15 +1,29 @@
 using Microsoft.Data.Sqlite;
+using WorldAlerts.Api.News;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var configuredPath = builder.Configuration["WorldAlerts:DatabasePath"];
-var databasePath = string.IsNullOrWhiteSpace(configuredPath)
+var databasePath = Path.GetFullPath(string.IsNullOrWhiteSpace(configuredPath)
     ? Path.Combine(builder.Environment.ContentRootPath, "data", "worldalerts.sqlite")
-    : configuredPath;
+    : configuredPath);
 
-var database = new SqliteDatabase(Path.GetFullPath(databasePath));
+var database = new SqliteDatabase(databasePath);
 database.TryInitialize();
 builder.Services.AddSingleton(database);
+
+// News and health share the one configured SQLite file; there is no second default.
+var newsOptions = builder.Configuration.GetSection("WorldAlerts:News").Get<NewsOptions>() ?? new NewsOptions();
+var newsStore = new NewsStore(databasePath);
+newsStore.TryInitialize();
+builder.Services.AddSingleton(newsOptions);
+builder.Services.AddSingleton(newsStore);
+builder.Services.AddHttpClient<NewsIngestionService>((services, client) =>
+{
+    var options = services.GetRequiredService<NewsOptions>();
+    client.Timeout = options.RequestTimeout;
+});
+builder.Services.AddHostedService<NewsPollingService>();
 
 var app = builder.Build();
 
@@ -18,6 +32,12 @@ app.MapGet("/api/health", async (SqliteDatabase db, CancellationToken cancellati
     await db.CanConnectAsync(cancellationToken)
         ? Results.Ok(new HealthResponse("ok"))
         : Results.Json(new HealthResponse("unavailable"), statusCode: StatusCodes.Status503ServiceUnavailable));
+app.MapGet("/api/news", async (NewsStore store, int? limit, CancellationToken cancellationToken) =>
+{
+    var clamped = Math.Clamp(limit ?? NewsStore.DefaultLimit, NewsStore.MinLimit, NewsStore.MaxLimit);
+    var items = await store.GetRecentAsync(clamped, cancellationToken);
+    return Results.Ok(items);
+});
 
 app.Run();
 

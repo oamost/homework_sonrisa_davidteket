@@ -1,0 +1,68 @@
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://feeds.bbci.co.uk/news/world/rss.xml
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://feeds.bbci.co.uk/news/world/rss.xml
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://127.0.0.1:5000
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Production
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /prod/sonrisa_homework/src/api
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 283.2214ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 293.6745ms - 200
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed bbc-world polled: parsed 35, inserted 0, duplicates 35, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://rss.nytimes.com/services/xml/rss/nyt/World.xml
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://rss.nytimes.com/services/xml/rss/nyt/World.xml
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 203.4538ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 203.5652ms - 200
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed nyt-world polled: parsed 53, inserted 0, duplicates 53, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.aljazeera.com/xml/rss/all.xml
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.aljazeera.com/xml/rss/all.xml
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 184.8378ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 184.9124ms - 200
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed aljazeera-all polled: parsed 25, inserted 0, duplicates 25, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.theguardian.com/world/rss
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.theguardian.com/world/rss
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 231.7385ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 231.8054ms - 200
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed guardian-world polled: parsed 45, inserted 0, duplicates 45, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://feeds.arstechnica.com/arstechnica/index
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://feeds.arstechnica.com/arstechnica/index
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 577.0826ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 577.16ms - 200
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed ars-technica polled: parsed 20, inserted 0, duplicates 20, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.nature.com/nature.rss
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.nature.com/nature.rss
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 222.1294ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 222.2049ms - 200
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed nature polled: parsed 75, inserted 0, duplicates 75, skipped 0.

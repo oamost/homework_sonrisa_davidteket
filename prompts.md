@@ -342,3 +342,15 @@ proceed with 06 - integrate all these sources into the backend. once you complet
 I mean you can still delgate coding tasks and reseach to qwen, just not huge ones. (small ones). also make sure that all the sources will be integrated. the original plan contained way more sources (coverage matrix if you can recall). 
 
 these were the findings on such sources in our previous research: /prod/sonrisa_homework/docs/requirement-coverage.md /prod/sonrisa_homework/docs/source-integration-research.md 
+
+## Prompt 55
+
+delegate 09 to qwen 
+
+## Prompt 56
+
+excellent job. how could I test 06 by myself quickly?
+
+## Prompt 57
+
+could you launch it, then give me curl commands I could use in my terminal to see some output? (testing) 
