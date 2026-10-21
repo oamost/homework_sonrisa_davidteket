@@ -100,6 +100,30 @@ public sealed class TestEventEndpointTests : IDisposable
         Assert.Empty(await queue.SnapshotAsync());
     }
 
+    [Fact]
+    public async Task Test_event_queues_private_channels_with_an_unrelated_legacy_row()
+    {
+        var path = _temp.File("mixed-test-routing.sqlite");
+        var prefs = new EventTypePreferenceStore(path); prefs.Initialize();
+        var subscriptions = new SubscriptionStore(path); subscriptions.Initialize();
+        await subscriptions.UpsertAsync(new Subscription { EventType = "tech.ai", Channel = "slack",
+            Destination = "channel:#old", Enabled = false });
+        var protection = DataProtectionProvider.Create("test");
+        var emails = new EmailSettingsStore(path, protection);
+        await emails.SaveAsync(new EmailSettings("smtp.example.test", 587, "StartTls", "me", "secret",
+            "me@example.test", true) { RecipientAddress = "me@example.test" });
+        var slacks = new SlackSettingsStore(path, protection);
+        await slacks.SaveAsync(new SlackSettings("https://hooks.slack.com/services/T/B/TEST", true));
+        var queue = new NotificationQueueStore(path); queue.Initialize();
+        var service = new TestEventService(path, prefs, subscriptions, emails, slacks, queue,
+            new MutableTimeProvider(new DateTimeOffset(2026, 10, 21, 12, 0, 0, TimeSpan.Zero)));
+        service.Initialize();
+        Assert.Contains("queued", (await service.EmitAsync()).Message);
+        var jobs = await queue.SnapshotAsync();
+        Assert.Contains(jobs, job => job.Channel == "email");
+        Assert.Contains(jobs, job => job.Channel == "slack");
+    }
+
     private sealed record TestToken(string CsrfToken);
     private sealed class MutableTimeProvider(DateTimeOffset now) : TimeProvider
     {

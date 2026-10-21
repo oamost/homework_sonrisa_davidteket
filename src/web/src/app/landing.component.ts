@@ -62,7 +62,6 @@ export class LandingComponent {
   protected readonly testBusy = signal(false);
   protected readonly testMessage = signal('');
   protected readonly differentNewsMessage = signal('');
-  private readonly newsBatch = signal(0);
   private differentNewsRequested = false;
 
   protected toggleScoreDebug(): void { this.showScoreDebug.update(value => !value); }
@@ -71,17 +70,25 @@ export class LandingComponent {
     return items.filter(item => (item.family || 'News') === family).length;
   }
 
-  protected visibleItems(items: ImportantNewsItem[]): ImportantNewsItem[] {
-    const news = items.filter(item => (item.family || 'News') === 'News');
-    const page = Math.min(this.newsBatch(), Math.max(0, Math.ceil(news.length / 5) - 1));
-    const shown = new Set(news.slice(page * 5, (page + 1) * 5));
-    return items.filter(item => (item.family || 'News') !== 'News' || shown.has(item));
+  // All important stories returned by the API remain visible. The former 5-news
+  // pagination silently hid categories and current-day reports on the first page.
+  protected visibleItems(items: ImportantNewsItem[]): ImportantNewsItem[] { return items; }
+
+  protected todayCount(items: ImportantNewsItem[]): number {
+    const now = new Date();
+    return items.filter(item => {
+      const value = item.publishedUtc || item.eventTimeUtc;
+      if (!value) return false;
+      const day = new Date(value);
+      return day.getFullYear() === now.getFullYear() && day.getMonth() === now.getMonth()
+        && day.getDate() === now.getDate();
+    }).length;
   }
 
   protected refreshDifferentNews(): void {
     if (this.loading()) return;
     this.differentNewsRequested = true;
-    this.differentNewsMessage.set('Checking other real stored news…');
+    this.differentNewsMessage.set('Refreshing connected news sources…');
     this.refresh();
   }
 
@@ -137,14 +144,7 @@ export class LandingComponent {
       .subscribe({
         next: result => {
           if (this.differentNewsRequested) {
-            const newsCount = result.items.filter(item => (item.family || 'News') === 'News').length;
-            const batches = Math.ceil(newsCount / 5);
-            if (batches > 1) {
-              this.newsBatch.update(page => (page + 1) % batches);
-              this.differentNewsMessage.set('Showing different stored news from connected feeds; no story was invented.');
-            } else {
-              this.differentNewsMessage.set('No other eligible stored news is available yet. Automatic refresh will keep checking.');
-            }
+            this.differentNewsMessage.set('News feed refreshed. All important stored stories are visible; ingestion runs automatically in the background.');
             this.differentNewsRequested = false;
           }
           this.response.set(result);
@@ -169,7 +169,7 @@ export class LandingComponent {
       .subscribe({
         next: ({csrfToken}) => this.http.post<{message: string}>('/api/test-events', {},
           {headers: {'X-CSRF-TOKEN': csrfToken}}).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-            next: response => { this.testMessage.set(response.message); this.testBusy.set(false); this.newsBatch.set(0); this.refresh(); },
+            next: response => { this.testMessage.set(response.message); this.testBusy.set(false); this.refresh(); },
             error: () => { this.testMessage.set('TEST event was not accepted. Check channel setup or wait for the send limit to reset.'); this.testBusy.set(false); },
           }),
         error: () => { this.testMessage.set('TEST event is unavailable.'); this.testBusy.set(false); },

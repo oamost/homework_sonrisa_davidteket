@@ -97,7 +97,7 @@ builder.Services.AddSingleton<NotificationDispatcher>();
 builder.Services.AddSingleton<AlertPipeline>();
 builder.Services.AddHostedService<EmailNotificationWorker>();
 builder.Services.AddSingleton<IAdminOperationsReader, RuntimeAdminOperationsReader>();
-builder.Services.AddAdminWall();
+builder.Services.AddAdminWall(builder.Configuration.GetValue<bool>("WorldAlerts:LocalHttp"));
 builder.Services.Configure<Microsoft.AspNetCore.Antiforgery.AntiforgeryOptions>(options =>
     options.HeaderName = "X-CSRF-TOKEN");
 

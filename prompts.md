@@ -696,3 +696,39 @@ I can finally start testing it. you don't need to run that extensive amount of t
 
 also please write a meaningful message for the current git changes (mentioning which tasks were affected and by what) 
 plus make sure to update prompts.md because it fell behind since the last update
+
+## Prompt 130 — webes ChatGPT (agentic kreditlimit elérése után)
+
+7z /prod/sonrisa_homework ezt akarom bezippelni és feltölteni ide
+
+## Prompt 131 — webes ChatGPT (agentic kreditlimit elérése után)
+
+lényegében be kellene fejezni az egészet. lokálisan run.sh-ból tudjam buildelni / elinditani / leállitani. a slack és email bekötés (értesitések) müködjenek minden gond nélkül. az important news pedig minden kategóriából kapja meg a legfontosabb hireket. ezek implementációi már mind-mind jelentős előrehaladásban vannak. a teljes repot fésüld át, javitsd ki a bleeding case-eket, frissitsd a prompts md-t (mostantól innen amit én irok, és ird oda, hogy webes chatgpt agentic kredit limit elérés után), majd készits egy rövid de tömör magyar nyelvü tesztelési guide-ot amivel miután letöltöm az updatelt repot (7z-be visszarakod a módositások után), ki tudok tesztelni mindent ami a szállitandó feladat sarokpontjait képezi. 12:36-van, 14:00-ra kell full elkészülnöm.
+
+## Prompt 132 — webes ChatGPT (agentic kreditlimit elérése után)
+
+tudsz adni egy commandot ami a ~/Downloads/sonrisa_homework_updated.7z -ből patcheli a projektet?
+
+## Prompt 133 — webes ChatGPT (agentic kreditlimit elérése után)
+
+a windows-os ps1 is müködik? a slack notfication-ök és az email notification-ök müködnek? értékelnéd az eredeti dokumentummal szemben az eddigi megvalósitást?
+
+## Prompt 134 — webes ChatGPT (agentic kreditlimit elérése után)
+
+- a buildel ami most nálam van: az admin login nem müködik. a news feed-ben nem látok mai (2026-október-21) important hireket
+
+## Prompt 135 — webes ChatGPT (agentic kreditlimit elérése után)
+
+a slack értesitésnek és az email értesitésnek MUSZÁJ müködnie. miután elkészited a friss patch-et, ki fogom próbálni, hogy az admin login megy-e, a news-feed a mai napból minden kategóriából mutat-e fontos hireket a nagyvilágból, illetve, hogy az email és a slack notifok müködnek-e
+
+## Prompt 136 — webes ChatGPT (agentic kreditlimit elérése után)
+
+a run.sh és a run.ps1 tartalmazzon olyan mechanizmust, hogy ha van futó instance, akkor azt állitsa le előbb. jelenleg vannak beragadt server instance-jaim, majd adj egy commandot is amivel le tudom állitani őket hogy a friss futást tudjam nézni csak.
+
+## Prompt 137 — webes ChatGPT (agentic kreditlimit elérése után)
+
+ez még mindig fut: [https://127.0.0.1:4200/](https://127.0.0.1:4200/) - dockeren kivül volt inditva, azért nem tudott leállni. agentic futás inditotta el. az admin password legyen baked in "admin". igy új patchet is kérek egyúttal
+
+## Prompt 138 — webes ChatGPT (agentic kreditlimit elérése után)
+
+de nem kell kérni admin password beállitást a run-on keresztül

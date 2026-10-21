@@ -8,7 +8,7 @@
     <p class="small text-secondary">Selected tags receive important matching alerts. Click to remove or add; then save.</p>
     <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Event type selection">
       @for (type of eventTypes; track type.code) {
-        <button type="button" data-event-tag class="btn btn-sm" [class.btn-primary]="selectedTypes().has(type.code)" [class.btn-outline-secondary]="!selectedTypes().has(type.code)" [attr.aria-pressed]="selectedTypes().has(type.code)" [title]="type.description" (click)="toggleType(type.code)">{{ type.name }}</button>
+        <button type="button" data-event-tag class="btn btn-sm" [class.btn-primary]="selectedTypes().has(type.code)" [class.btn-outline-secondary]="!selectedTypes().has(type.code)" [attr.aria-pressed]="selectedTypes().has(type.code)" [title]="type.description" [disabled]="!preference() || preferenceBusy()" (click)="toggleType(type.code)">{{ type.name }}</button>
       }
     </div>
     <button type="button" data-save-types class="btn btn-primary" (click)="saveTypes()" [disabled]="!preference() || preferenceBusy()">{{ preferenceBusy() ? 'Saving…' : 'Save event types' }}</button>

@@ -65,7 +65,8 @@ public sealed class TestEventService(string databasePath, EventTypePreferenceSto
                 || row.Channel == "slack" && configuredSlack?.Enabled == true)))
             targets.Add((row.Channel, row.Channel == "email" ? row.Destination ?? "" : "", $"local:{row.Id}"));
 
-        if (preference.IsCustomized || legacy.Count == 0)
+        // Enabled private channel settings are explicit opt-in even when an
+        // unrelated old legacy subscription exists.
         {
             if (!legacy.Any(row => row.EventType == "world-news" && row.Channel == "email")
                 && configuredEmail is { Enabled: true, RecipientAddress: { Length: > 0 } } email)

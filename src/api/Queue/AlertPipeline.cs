@@ -23,9 +23,12 @@ public sealed class AlertPipeline(AlertSelectionService selection, NewsStore new
         var preview = await selection.SelectAsync(ct);
         var legacy = await subscriptions.ListAsync(Subscription.DefaultUserId, ct);
         var preference = preferences is null ? null : await preferences.GetAsync(Subscription.DefaultUserId, ct);
-        // A legacy installation keeps its previous per-type targets until its owner saves
-        // the new shared selection. Never silently subscribe a pre-existing recipient.
-        var useConfigured = preference is not null && (preference.IsCustomized || legacy.Count == 0);
+        // Explicitly enabled SMTP/Slack settings are themselves channel opt-in.
+        // Previous logic silently suppressed all configured channels whenever any
+        // legacy subscription existed and the event-type form had not been saved.
+        // A legacy row for the SAME channel/type still overrides the configured
+        // destination below, including a disabled row (intentional opt-out).
+        var useConfigured = preference is not null;
         var email = emailSettings is not null ? await emailSettings.ReadAsync(ct) : null;
         var slack = slackSettings is not null ? await slackSettings.ReadAsync(ct) : null;
         var configuredChannels = new List<(string Channel, string Destination)>();

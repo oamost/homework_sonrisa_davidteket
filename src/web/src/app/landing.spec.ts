@@ -83,8 +83,8 @@ describe('Important news landing page', () => {
     http.expectOne('/api/news/important').flush({evaluatedUtc: '2026-10-21T12:01:00Z', omittedCount: 0, items});
     await fixture.whenStable(); fixture.detectChanges();
     const shown = [...fixture.nativeElement.querySelectorAll('article h3')].map((element: Element) => element.textContent?.trim());
-    expect(shown).toEqual(['Provider story 6', 'Provider story 7']);
-    expect(fixture.nativeElement.textContent).toContain('Showing different stored news');
+    expect(shown).toEqual(items.map(item => item.title));
+    expect(fixture.nativeElement.textContent).toContain('All important stored stories are visible');
   });
 
   it('loads live important news with provider fields, reasons and last updated time', async () => {

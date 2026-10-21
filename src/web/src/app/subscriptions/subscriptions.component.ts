@@ -98,7 +98,7 @@ export class SubscriptionsComponent {
   }
 
   protected toggleType(code: string): void {
-    if (this.preferenceBusy()) return;
+    if (!this.preference() || this.preferenceBusy()) return;
     this.selectedTypes.update(previous => {
       const next = new Set(previous);
       if (next.has(code)) next.delete(code); else next.add(code);

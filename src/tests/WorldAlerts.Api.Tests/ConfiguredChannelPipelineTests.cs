@@ -75,6 +75,41 @@ public sealed class ConfiguredChannelPipelineTests
         Assert.Contains(fourth, job => job.Channel == "slack");
     }
 
+    [Fact]
+    public async Task Unrelated_old_subscription_does_not_silence_explicitly_enabled_email_and_slack()
+    {
+        using var temp = new TempDirectory();
+        var path = temp.File("mixed-legacy.sqlite");
+        var now = DedupeTestSupport.Now;
+        var news = new NewsStore(path); news.Initialize();
+        var disasters = new DisasterStore(path); disasters.Initialize();
+        var markets = new MarketStore(path); markets.Initialize();
+        var subscriptions = new SubscriptionStore(path); subscriptions.Initialize();
+        // The disabled row is for a DIFFERENT category. It must not suppress
+        // alerts for world-news in the configured private delivery channels.
+        await subscriptions.UpsertAsync(new Subscription { EventType = "tech.ai", Channel = "email",
+            Destination = "legacy@example.test", Enabled = false });
+        var preferences = new EventTypePreferenceStore(path); preferences.Initialize();
+        var protection = DataProtectionProvider.Create("test");
+        var emails = new EmailSettingsStore(path, protection);
+        await emails.SaveAsync(new EmailSettings("smtp.example.test", 587, "StartTls", "sender", "secret",
+            "sender@example.test", true) { RecipientAddress = "recipient@example.test" });
+        var slacks = new SlackSettingsStore(path, protection);
+        await slacks.SaveAsync(new SlackSettings("https://hooks.slack.com/services/T/B/TEST", true));
+        await news.InsertAsync([new NewsItem("bbc-world", "BBC World", "today-1", "Breaking conflict",
+            "https://example.test/today", now.AddMinutes(-5), now, "world-news", [], "https://example.test/today", null)]);
+        var dedupe = new DedupeStore(path); dedupe.Initialize();
+        var queue = new NotificationQueueStore(path); queue.Initialize();
+        var selection = new AlertSelectionService(news, markets, disasters, subscriptions,
+            new MarketOptions(), new FixedClock(now));
+        var pipeline = new AlertPipeline(selection, news, markets, disasters, subscriptions,
+            new EventDedupeService(dedupe, () => now), queue, new FixedClock(now), preferences, emails, slacks);
+        Assert.Equal(2, await pipeline.EnqueueSelectedAsync());
+        var jobs = await queue.SnapshotAsync();
+        Assert.Contains(jobs, job => job.Channel == "email" && job.Destination == "recipient@example.test");
+        Assert.Contains(jobs, job => job.Channel == "slack");
+    }
+
     private sealed class FixedClock(DateTimeOffset now) : TimeProvider
     {
         public override DateTimeOffset GetUtcNow() => now;

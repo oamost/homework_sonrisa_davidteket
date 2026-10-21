@@ -1,5 +1,6 @@
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 interface SourceStatus {
   sourceId: string;
@@ -26,6 +27,7 @@ interface Operations {
           <p class="text-secondary mb-0">Source polling and delivery at a glance.</p></div>
         @if (operations()) { <button type="button" class="btn btn-outline-secondary" data-testid="admin-signout" (click)="signOut()">Sign out</button> }
       </div>
+      @if (operations() && stale()) { <p data-testid="admin-stale" class="alert alert-warning" role="status">Status may be stale. Last updated: {{ lastUpdated() }}. Automatic refresh will retry.</p> }
       @if (operations(); as state) {
         <div class="row g-3 mb-4">
           <div class="col-12 col-sm-4"><div class="card border-0 shadow-sm h-100"><div class="card-body p-4"><h2 class="h6 text-secondary">Delivery status</h2><p class="h4 mb-0">{{ state.delivery.status }}</p></div></div></div>
@@ -58,16 +60,49 @@ interface Operations {
 })
 export class AdminComponent implements OnInit {
   private readonly http = inject(HttpClient);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly refreshTimer: ReturnType<typeof setInterval>;
+  private refreshing = false;
+  private authenticated = true;
+  protected readonly stale = signal(false);
+  protected readonly lastUpdated = signal('');
   protected readonly operations = signal<Operations | null>(null);
   protected readonly message = signal('Loading operational status…');
   protected readonly loginAvailable = signal(false);
 
-  ngOnInit(): void {
-    this.http.get<Operations>('/api/admin/status').subscribe({
-      next: snapshot => this.operations.set(snapshot),
+  constructor() {
+    this.refreshTimer = setInterval(() => {
+      if (this.authenticated && document.visibilityState !== 'hidden') this.refreshStatus();
+    }, 30_000);
+    this.destroyRef.onDestroy(() => clearInterval(this.refreshTimer));
+  }
+
+  ngOnInit(): void { this.refreshStatus(); }
+
+  private refreshStatus(): void {
+    if (this.refreshing || !this.authenticated) return;
+    this.refreshing = true;
+    this.http.get<Operations>('/api/admin/status').pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: snapshot => {
+        this.operations.set(snapshot);
+        this.lastUpdated.set(new Date().toLocaleTimeString());
+        this.stale.set(false);
+        this.loginAvailable.set(false);
+        this.refreshing = false;
+      },
       error: (error: HttpErrorResponse) => {
-        this.loginAvailable.set(error.status === 401);
-        this.message.set(error.status === 401 ? 'Sign in to view operational status.' : 'Operational status unavailable. The backend may be offline.');
+        this.refreshing = false;
+        if (error.status === 401 || error.status === 403) {
+          this.authenticated = false;
+          this.operations.set(null);
+          this.stale.set(false);
+          this.loginAvailable.set(true);
+          this.message.set('Sign in to view operational status.');
+        } else if (this.operations()) {
+          this.stale.set(true);
+        } else {
+          this.message.set('Operational status unavailable. The backend may be offline.');
+        }
       },
     });
   }
@@ -83,7 +118,7 @@ export class AdminComponent implements OnInit {
         this.http.post('/admin/login', new HttpParams().set('csrf', token).set('password', password), { responseType: 'text' }).subscribe({
           next: () => {
             this.http.get<Operations>('/api/admin/status').subscribe({
-              next: snapshot => { this.operations.set(snapshot); this.loginAvailable.set(false); },
+              next: snapshot => { this.operations.set(snapshot); this.authenticated = true; this.stale.set(false); this.lastUpdated.set(new Date().toLocaleTimeString()); this.loginAvailable.set(false); },
               error: () => this.message.set('Operational status unavailable. Please try again.'),
             });
           },
@@ -107,6 +142,8 @@ export class AdminComponent implements OnInit {
         this.http.post('/admin/logout', new HttpParams().set('csrf', token), { responseType: 'text' }).subscribe({
           next: () => {
             this.operations.set(null);
+            this.authenticated = false;
+            this.stale.set(false);
             this.loginAvailable.set(true);
             this.message.set('Signed out.');
           },

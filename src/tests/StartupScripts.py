@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 class StartupScripts(unittest.TestCase):
     def setUp(self):
-        self.scratch = tempfile.TemporaryDirectory(prefix="startup-", dir="/tmp/opencode")
+        self.scratch = tempfile.TemporaryDirectory(prefix="startup-")
         self.addCleanup(self.scratch.cleanup)
         directory = Path(self.scratch.name)
         bin_dir = directory / "bin"
@@ -37,10 +37,12 @@ class StartupScripts(unittest.TestCase):
             "WORLDALERTS_PORT": "19091",
         })
 
-    def launch(self, launcher, env=None):
+    def launch(self, launcher, env=None, action=None):
         command = ["bash", str(ROOT / "run.sh")] if launcher == "linux" else [
             "pwsh", "-NoProfile", "-File", str(ROOT / "run.ps1")
         ]
+        if action is not None:
+            command.append(action)
         return subprocess.run(command, cwd=self.scratch.name, env=env or self.env,
                               text=True, capture_output=True)
 
@@ -145,6 +147,63 @@ class StartupScripts(unittest.TestCase):
                 env = dict(self.env, WORLDALERTS_ENV_FILE=str(self.config) + "-missing")
                 self.assertNotEqual(self.launch(launcher, env).returncode, 0)
                 self.assertEqual(self.calls(), [])
+
+    def test_explicit_build_start_stop_start_preserves_volumes(self):
+        result = self.launch("linux", action="build")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual([args[0] for args in self.calls()], ["build"])
+        self.log.unlink()
+        self.assertEqual(self.launch("linux", action="start").returncode, 0)
+        first = json.loads(self.state.read_text())
+        self.assertTrue(first["containers"]["task26-test-instance"]["running"])
+        self.assertEqual(set(first["volumes"]), {"task26-test-instance-data", "task26-test-instance-keys"})
+        self.assertEqual(self.launch("linux", action="stop").returncode, 0)
+        self.assertFalse(json.loads(self.state.read_text())["containers"]["task26-test-instance"]["running"])
+        self.log.unlink()
+        self.assertEqual(self.launch("linux", action="start").returncode, 0)
+        calls = self.calls()
+        self.assertIn(["container", "rm", "task26-test-instance"], calls)
+        self.assertTrue(any(args[0] == "run" for args in calls))
+        self.assertFalse(any(args[:2] == ["volume", "create"] for args in calls))
+        self.assertEqual(first["volumes"], json.loads(self.state.read_text())["volumes"])
+
+    def test_start_replaces_running_instance_to_load_new_env_and_image(self):
+        for launcher in self.launchers():
+            with self.subTest(launcher=launcher):
+                self.log.unlink(missing_ok=True)
+                self.state.unlink(missing_ok=True)
+                self.assertEqual(self.launch(launcher, action="build").returncode, 0)
+                self.assertEqual(self.launch(launcher, action="start").returncode, 0)
+                self.log.unlink()
+                again = self.launch(launcher, action="start")
+                self.assertEqual(again.returncode, 0, again.stdout + again.stderr)
+                calls = self.calls()
+                self.assertIn(["container", "stop", "task26-test-instance"], calls)
+                self.assertIn(["container", "rm", "task26-test-instance"], calls)
+                self.assertEqual(sum(args[0] == "run" for args in calls), 1)
+
+    def test_build_does_not_require_credentials(self):
+        self.config.unlink()
+        result = self.launch("linux", action="build")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        result = self.launch("linux", action="start")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertNotIn("run", [args[0] for args in self.calls()])
+
+    def test_stop_is_idempotent_on_already_stopped_container(self):
+        self.assertEqual(self.launch("linux", action="build").returncode, 0)
+        self.assertEqual(self.launch("linux", action="start").returncode, 0)
+        self.assertEqual(self.launch("linux", action="stop").returncode, 0)
+        self.log.unlink()
+        second = self.launch("linux", action="stop")
+        self.assertEqual(second.returncode, 0, second.stdout + second.stderr)
+        self.assertFalse(any(args[:2] == ["container", "stop"] for args in self.calls()))
+
+    def test_stop_rejects_unowned_container(self):
+        self.state.write_text(json.dumps({"containers": {"task26-test-instance": {"label": "other", "running": True}}, "volumes": {}}))
+        result = self.launch("linux", action="stop")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertNotIn(["container", "stop", "task26-test-instance"], self.calls())
 
     @staticmethod
     def launchers():

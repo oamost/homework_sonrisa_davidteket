@@ -12,13 +12,16 @@ public static class AdminExtensions
 {
     private const string Scheme = "WorldAlerts.Admin";
 
-    public static IServiceCollection AddAdminWall(this IServiceCollection services)
+    public static IServiceCollection AddAdminWall(this IServiceCollection services, bool allowLocalHttp = false)
     {
         services.AddAuthentication(Scheme).AddCookie(Scheme, options =>
         {
-            options.Cookie.Name = "__Host-WorldAlertsAdmin";
+            // Explicit local Docker deployment binds 127.0.0.1 and runs over HTTP.
+            // __Host- Secure cookies are rejected by some browsers on 127.0.0.1 HTTP.
+            // Production HTTPS retains the stricter cookie prefix and Secure policy.
+            options.Cookie.Name = allowLocalHttp ? "WorldAlertsAdminLocal" : "__Host-WorldAlertsAdmin";
             options.Cookie.Path = "/";
-            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.Cookie.SecurePolicy = allowLocalHttp ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
             options.Cookie.HttpOnly = true;
             options.Cookie.SameSite = SameSiteMode.Strict;
             options.ExpireTimeSpan = TimeSpan.FromHours(4);
@@ -38,8 +41,8 @@ public static class AdminExtensions
         services.AddAuthorization();
         services.AddAntiforgery(options =>
         {
-            options.Cookie.Name = "__Host-WorldAlertsCsrf";
-            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.Cookie.Name = allowLocalHttp ? "WorldAlertsCsrfLocal" : "__Host-WorldAlertsCsrf";
+            options.Cookie.SecurePolicy = allowLocalHttp ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
             options.Cookie.HttpOnly = true;
             options.Cookie.SameSite = SameSiteMode.Strict;
             options.FormFieldName = "csrf";

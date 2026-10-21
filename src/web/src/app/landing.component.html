@@ -10,7 +10,7 @@
   @if (showScoreDebug()) {
     <div class="mb-3" data-testid="feed-diagnostics">
       <button type="button" data-testid="send-test-event" class="btn btn-sm btn-outline-warning" (click)="sendTestEvent()" [disabled]="testBusy()">Send TEST event</button>
-      <button type="button" data-testid="different-news" class="btn btn-sm btn-outline-primary ms-2" (click)="refreshDifferentNews()" [disabled]="loading()">Different news</button>
+      <button type="button" data-testid="different-news" class="btn btn-sm btn-outline-primary ms-2" (click)="refreshDifferentNews()" [disabled]="loading()">Refresh news</button>
       @if (testMessage()) { <p role="status" class="small mt-2">{{ testMessage() }}</p> }
       @if (differentNewsMessage()) { <p role="status" class="small mt-2">{{ differentNewsMessage() }}</p> }
   @if (response(); as result) {
@@ -53,6 +53,7 @@
   </div>
 
   @if (response(); as result) {
+    <p class="small text-secondary" data-testid="today-count">Published today (your browser timezone): {{ todayCount(result.items) }} of {{ result.items.length }} important events. A missing category is reported honestly; no stories are fabricated.</p>
     <div class="row row-cols-1 row-cols-lg-2 g-3">
       @for (item of visibleItems(result.items); track item.link + item.title) {
         <article class="col">

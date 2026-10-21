@@ -60,6 +60,30 @@ public sealed class AdminWallTests : IDisposable
     }
 
     [Fact]
+    public async Task Loopback_http_admin_cookie_accepts_login_without_secure_prefix_when_opted_in()
+    {
+        using var factory = CreateFactory(AdminPassword.Hash(Password), environment: "Production", localHttp: true);
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false, HandleCookies = true, BaseAddress = new Uri("http://127.0.0.1"),
+        });
+        var loginPage = await client.GetAsync("/admin/login");
+        Assert.Equal(HttpStatusCode.OK, loginPage.StatusCode);
+        var csrfCookies = loginPage.Headers.GetValues("Set-Cookie").ToArray();
+        Assert.Contains(csrfCookies, cookie => cookie.StartsWith("WorldAlertsCsrfLocal=", StringComparison.Ordinal));
+        Assert.All(csrfCookies, cookie => Assert.DoesNotContain("; secure", cookie, StringComparison.OrdinalIgnoreCase));
+        var token = ParseToken(await loginPage.Content.ReadAsStringAsync());
+        var response = await PostAsync(client, "/admin/login", token, Password);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Contains(response.Headers.GetValues("Set-Cookie"), cookie =>
+            cookie.StartsWith("WorldAlertsAdminLocal=", StringComparison.Ordinal)
+            && cookie.Contains("HttpOnly", StringComparison.OrdinalIgnoreCase)
+            && cookie.Contains("SameSite=Strict", StringComparison.OrdinalIgnoreCase)
+            && !cookie.Contains("; secure", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/admin/status")).StatusCode);
+    }
+
+    [Fact]
     public async Task Development_loopback_accepts_default_admin_only_without_configured_hash()
     {
         using var factory = CreateFactory(null, environment: "Development");
@@ -172,9 +196,9 @@ public sealed class AdminWallTests : IDisposable
     }
 
     private WebApplicationFactory<Program> CreateFactory(string? hash, Action<IServiceCollection>? configure = null, string? environment = null,
-        IPAddress? remoteAddress = null, bool missingRemoteAddress = false) =>
+        IPAddress? remoteAddress = null, bool missingRemoteAddress = false, bool localHttp = false) =>
         new AdminApiFactory(hash, _temp.File($"admin-{Guid.NewGuid():N}.sqlite"), configure, environment,
-            missingRemoteAddress ? null : remoteAddress ?? IPAddress.Loopback);
+            missingRemoteAddress ? null : remoteAddress ?? IPAddress.Loopback, localHttp);
 
     private static async Task<string> LoginTokenAsync(HttpClient client) => ParseToken(await client.GetStringAsync("/admin/login"));
 
@@ -219,13 +243,14 @@ public sealed class AdminWallTests : IDisposable
     }
 
     private sealed class AdminApiFactory(string? hash, string databasePath, Action<IServiceCollection>? configure, string? environment,
-        IPAddress? remoteAddress) : WebApplicationFactory<Program>
+        IPAddress? remoteAddress, bool localHttp) : WebApplicationFactory<Program>
     {
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseSetting("WorldAlerts:Admin:PasswordHash", hash ?? "");
             if (environment is not null) builder.UseEnvironment(environment);
             builder.UseSetting("WorldAlerts:DatabasePath", databasePath);
+            builder.UseSetting("WorldAlerts:LocalHttp", localHttp ? "true" : "false");
             builder.UseSetting("WorldAlerts:News:PollingEnabled", "false");
             builder.UseSetting("WorldAlerts:Markets:PollingEnabled", "false");
             builder.UseSetting("WorldAlerts:Disasters:PollingEnabled", "false");
