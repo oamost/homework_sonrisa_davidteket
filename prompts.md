@@ -275,3 +275,70 @@ good job. I have spotted this "React or Angular are acceptable; neither is selec
 ## Prompt 40
 
 you can commit it now 
+
+## Prompt 41
+
+we can start implementing the application now. from now on, we will solely focus on deliverable 3 items. first, let's tackle the task responsible for laying the app's foundation 
+
+## Prompt 42
+
+is that part of the specification? 
+
+## Prompt 43
+
+only a subagent can investigate it via openrouter or qwen 
+
+## Prompt 44
+
+while qwen works, you could launch deepseek to investigate how to plug those sources into our application. put the associated task(s) into WIP status. 
+
+## Prompt 45
+
+whats up with plugging the sources into the app research? 
+to add, you can ignore build warnings for now, this is not going to be a production application, so no 100% perfectness is required. just to speed things up a bit 
+
+## Prompt 46
+
+writing tests must be delegated to deepseek 
+
+## Prompt 47
+
+meanwhile print me a status report on where we are standing with deliverables 3's task 02, 05, and 09.
+to answer your question: print me a command I can execute on arch linux environment to tackle this issue first 
+
+## Prompt 48
+
+02 - once backend tests have run, its done
+05 - run a small scoped validation on a few selected sources, after that its done
+09 - once 02 and 05 is done, integrate these sources into the backend 
+
+## Prompt 49
+
+I mean (1) integrate the validated news sources after 02 and 05 
+
+## Prompt 50
+
+integration must also be done by deepseek 
+
+## Prompt 51
+
+while openai sol 6 medium limit resets, could you continue the work? 
+
+## Prompt 52
+
+dotnet runtime issue resolved:
+
+":: dt@oamserver-1 (~) :: $ dotnet --list-runtimes
+Microsoft.AspNetCore.App 10.0.13 [/usr/share/dotnet/shared/Microsoft.AspNetCore.App]
+Microsoft.NETCore.App 10.0.13 [/usr/share/dotnet/shared/Microsoft.NETCore.App]
+:: dt@oamserver-1 (~) :: $ " 
+
+## Prompt 53
+
+proceed with 06 - integrate all these sources into the backend. once you complete it (don't delegate this to qwen, its way beyond its context capacity), I will proceed with testing it 
+
+## Prompt 54
+
+I mean you can still delgate coding tasks and reseach to qwen, just not huge ones. (small ones). also make sure that all the sources will be integrated. the original plan contained way more sources (coverage matrix if you can recall). 
+
+these were the findings on such sources in our previous research: /prod/sonrisa_homework/docs/requirement-coverage.md /prod/sonrisa_homework/docs/source-integration-research.md 

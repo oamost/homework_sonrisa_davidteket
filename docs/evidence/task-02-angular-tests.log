@@ -1,0 +1,15 @@
+npm notice run web@0.0.0 test
+npm notice run ng test
+❯ Building...
+✔ Building...
+Application bundle generation complete. [1.380 seconds] - 2026-10-21T00:09:27.183Z
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90m/prod/sonrisa_homework/src/web[39m
+
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m   Start at [22m 02:09:27
+[2m   Duration [22m 1.19s[2m (environment 63%, setup 23%, tests 7%, transform 5%, import 2%, worker 1%)[22m
+

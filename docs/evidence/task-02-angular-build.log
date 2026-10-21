@@ -1,0 +1,14 @@
+npm notice run web@0.0.0 build
+npm notice run ng build
+❯ Building...
+✔ Building...
+Initial chunk files | Names         |  Raw size | Estimated transfer size
+main-HUHISOBA.js    | main          | 123.06 kB |                36.16 kB
+styles-5INURTSO.css | styles        |   0 bytes |                 0 bytes
+
+                    | Initial total | 123.06 kB |                36.16 kB
+
+Application bundle generation complete. [1.489 seconds] - 2026-10-21T00:09:35.945Z
+
+Output location: /prod/sonrisa_homework/src/web/dist/web
+

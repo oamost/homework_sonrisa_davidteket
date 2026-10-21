@@ -1,1 +1,9 @@
 .serena/
+**/bin/
+**/obj/
+.env
+.env.*
+*.local.json
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
