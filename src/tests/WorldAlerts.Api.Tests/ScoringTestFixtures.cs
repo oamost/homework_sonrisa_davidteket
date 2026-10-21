@@ -100,6 +100,65 @@ internal static class ScoringFixtures
     public static MarketImportanceInput MK5() => Market(MarketFamily.Index, 1024.0, 1000.0, "2026-10-19T20:00:00Z");
     public static MarketImportanceInput MK6() => Market(MarketFamily.Crypto, 109.0, 100.0, "2026-10-18T20:00:00Z");
 
+    public static DisasterEvent Disaster(
+        string sourceId,
+        string eventType,
+        string? alertLevel = null,
+        double? severity = null,
+        string? severityUnit = null,
+        bool? tsunami = null,
+        string? eventTimeUtc = null,
+        string? publishedUtc = null)
+    {
+        return new DisasterEvent(
+            SourceId: sourceId,
+            NativeId: "native-" + sourceId,
+            EventType: eventType,
+            Title: "Fixture " + eventType,
+            EventTimeUtc: eventTimeUtc is null ? null : At(eventTimeUtc),
+            PublishedUtc: publishedUtc is null ? null : At(publishedUtc),
+            UpdatedUtc: null,
+            Latitude: null,
+            Longitude: null,
+            Country: null,
+            Iso3: null,
+            Severity: severity,
+            SeverityUnit: severityUnit,
+            AlertLevel: alertLevel,
+            AlertScore: null,
+            Tsunami: tsunami,
+            Significance: null,
+            Provenance: "https://example.test/disaster",
+            FetchedUtc: Now);
+    }
+
+    public static DisasterEvent DS1() => Disaster(
+        "gdacs", "earthquake", alertLevel: "Orange",
+        eventTimeUtc: "2026-10-21T07:00:00Z", publishedUtc: "2026-10-21T07:30:00Z");
+
+    public static DisasterEvent DS2() => Disaster(
+        "gdacs", "earthquake", alertLevel: "Green", severity: 6.3, severityUnit: "M",
+        eventTimeUtc: "2026-10-21T06:00:00Z", publishedUtc: "2026-10-21T06:20:00Z");
+
+    public static DisasterEvent DS3() => Disaster(
+        "gdacs", "earthquake", alertLevel: "Green", severity: 5.2, severityUnit: "M",
+        eventTimeUtc: "2026-10-21T06:00:00Z", publishedUtc: "2026-10-21T06:20:00Z");
+
+    public static DisasterEvent DS4() => Disaster(
+        "gdacs", "flood", alertLevel: "Green", tsunami: true,
+        eventTimeUtc: "2026-10-21T05:00:00Z", publishedUtc: "2026-10-21T05:40:00Z");
+
+    public static DisasterEvent DS5() => Disaster(
+        "ifrc-go", "epidemic", severity: 2, severityUnit: "IFRC severity level",
+        publishedUtc: "2026-10-21T03:00:00Z");
+
+    public static DisasterEvent DS6() => Disaster(
+        "ifrc-go", "flood", severity: 1, severityUnit: "IFRC severity level",
+        publishedUtc: "2026-10-21T03:00:00Z");
+
+    public static DisasterEvent DS7() => Disaster(
+        "gdacs", "earthquake", alertLevel: "Red",
+        publishedUtc: "2026-10-21T08:00:00Z");
 }
 
 /// <summary>One named news case and any caller-supplied corroborating sources.</summary>
