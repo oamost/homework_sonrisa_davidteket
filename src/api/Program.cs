@@ -1,5 +1,6 @@
 using Microsoft.Data.Sqlite;
 using WorldAlerts.Api.News;
+using WorldAlerts.Api.Disasters;
 using WorldAlerts.Api.Subscriptions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +19,19 @@ builder.Services.AddSingleton(database);
 var subscriptionStore = new SubscriptionStore(databasePath);
 subscriptionStore.TryInitialize();
 builder.Services.AddSingleton(subscriptionStore);
+
+var disasterOptions = builder.Configuration.GetSection("WorldAlerts:Disasters").Get<DisasterOptions>() ?? new DisasterOptions();
+var disasterStore = new DisasterStore(databasePath);
+disasterStore.TryInitialize();
+builder.Services.AddSingleton(disasterOptions);
+builder.Services.AddSingleton(disasterStore);
+builder.Services.AddHttpClient<DisasterIngestionService>((services, client) =>
+{
+    var options = services.GetRequiredService<DisasterOptions>();
+    client.Timeout = options.RequestTimeout;
+});
+builder.Services.AddHostedService<DisasterPollingService>();
+
 
 // News and health share the one configured SQLite file; there is no second default.
 var newsOptions = builder.Configuration.GetSection("WorldAlerts:News").Get<NewsOptions>() ?? new NewsOptions();
@@ -46,6 +60,12 @@ app.MapGet("/api/news", async (NewsStore store, int? limit, CancellationToken ca
     return Results.Ok(items);
 });
 
+app.MapGet("/api/disasters", async (DisasterStore store, int? limit, string? source, CancellationToken cancellationToken) =>
+{
+    var clamped = Math.Clamp(limit ?? DisasterStore.DefaultLimit, DisasterStore.MinLimit, DisasterStore.MaxLimit);
+    var items = await store.GetRecentAsync(clamped, source, cancellationToken);
+    return Results.Ok(items);
+});
 app.MapGet("/api/subscriptions", async (SubscriptionStore store, string? eventType, CancellationToken cancellationToken) =>
 {
     var items = await store.ListAsync(Subscription.DefaultUserId, eventType, cancellationToken);

@@ -95,7 +95,10 @@ public sealed class FoundationTests : IDisposable
         new WebApplicationFactory<Program>().WithWebHostBuilder(
             builder => builder
                 .UseSetting(DatabasePathSetting, databasePath)
-                .UseSetting(PollingEnabledSetting, "false"));
+                .UseSetting(PollingEnabledSetting, "false")
+                .UseSetting("WorldAlerts:Markets:PollingEnabled", "false")
+                .UseSetting("WorldAlerts:Disasters:PollingEnabled", "false")
+                .UseSetting("WorldAlerts:Advisories:PollingEnabled", "false"));
 
     private static void CreateDatabase(string path)
     {

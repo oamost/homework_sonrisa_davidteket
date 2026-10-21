@@ -104,5 +104,8 @@ public sealed class NewsEndpointTests : IDisposable
         new WebApplicationFactory<Program>().WithWebHostBuilder(
             builder => builder
                 .UseSetting("WorldAlerts:DatabasePath", databasePath)
-                .UseSetting("WorldAlerts:News:PollingEnabled", "false"));
+                .UseSetting("WorldAlerts:News:PollingEnabled", "false")
+                .UseSetting("WorldAlerts:Markets:PollingEnabled", "false")
+                .UseSetting("WorldAlerts:Disasters:PollingEnabled", "false")
+                .UseSetting("WorldAlerts:Advisories:PollingEnabled", "false"));
 }
