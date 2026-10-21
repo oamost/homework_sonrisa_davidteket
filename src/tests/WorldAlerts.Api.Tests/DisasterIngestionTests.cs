@@ -124,6 +124,57 @@ public sealed class DisasterIngestionTests : IDisposable
         Assert.Empty(await store.GetRecentAsync(DisasterStore.MaxLimit));
     }
 
+    [Fact]
+    public async Task Gdacs_filtered_rows_are_skipped_and_never_stored()
+    {
+        var store = CreateStore();
+        var source = DisasterTestSupport.Source(
+            DisasterParser.GdacsRss,
+            id: "gdacs",
+            url: "https://disaster.test/gdacs");
+        source.RecencyWindowHours = 168; // Opt in to the proposed 7-day archive filter.
+        var handler = new FakeHttpHandler(_ => FakeHttpHandler.Xml(DisasterFixtures.GdacsRecency));
+        var ingestion = DisasterTestSupport.Ingest(store, EnabledOptions(source), handler);
+
+        var poll = await ingestion.PollOnceAsync();
+
+        var result = Assert.Single(poll.Sources);
+        Assert.Equal(4, result.Parsed);
+        Assert.Equal(4, result.Inserted);
+        Assert.Equal(2, result.Skipped);
+        Assert.Null(result.ErrorType);
+
+        var stored = await store.GetRecentAsync(DisasterStore.MaxLimit);
+        Assert.Equal(4, stored.Count);
+        Assert.DoesNotContain(stored, item => item.NativeId == "203");
+        Assert.DoesNotContain(stored, item => item.NativeId == "204");
+    }
+
+    [Fact]
+    public async Task Ifrc_requests_newest_first_and_skips_archive_rows_before_storage()
+    {
+        var store = CreateStore();
+        var source = DisasterTestSupport.Source(
+            DisasterParser.Ifrc,
+            id: "ifrc",
+            url: "https://disaster.test/ifrc");
+        source.RecencyWindowHours = 168; // Opt in only for this archive-filter test.
+        var handler = new FakeHttpHandler(_ => DisasterTestSupport.Json(DisasterFixtures.IfrcRecency));
+        var ingestion = DisasterTestSupport.Ingest(store, EnabledOptions(source), handler);
+
+        var poll = await ingestion.PollOnceAsync();
+
+        var result = Assert.Single(poll.Sources);
+        Assert.Equal(4, result.Parsed);
+        Assert.Equal(4, result.Inserted);
+        Assert.Equal(2, result.Skipped);
+        Assert.Null(result.ErrorType);
+        Assert.Contains(
+            handler.RequestedUris,
+            uri => uri.Contains("ordering=-created_at", StringComparison.Ordinal));
+        Assert.Equal(4, (await store.GetRecentAsync(DisasterStore.MaxLimit)).Count);
+    }
+
     private DisasterStore CreateStore()
     {
         var store = new DisasterStore(_temp.File("events.sqlite"));

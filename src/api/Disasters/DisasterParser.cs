@@ -8,6 +8,11 @@ namespace WorldAlerts.Api.Disasters;
 /// Parses the supported keyless disaster payload shapes into normalized events.
 /// Values a provider does not supply (country, coordinates, severity, times)
 /// remain absent. An empty body is a valid zero-event result, never a crash.
+/// <para>
+/// Source-specific archive filtering is opt-in, not a 24-hour eligibility
+/// decision. When explicitly configured, filtered rows are counted as skipped.
+/// An empty filtered poll cannot establish that a provider has no current events.
+/// </para>
 /// </summary>
 public static class DisasterParser
 {
@@ -124,17 +129,27 @@ public static class DisasterParser
             var severityUnit = severityElement is null ? null : AttributeOrChildValue(severityElement, "unit");
 
             var (latitude, longitude) = Coordinates(item);
+            var isCurrent = ParseBool(ChildValue(item, "iscurrent"));
+            var modified = ParseDate(ChildValue(item, "datemodified"))
+                ?? ParseDate(ChildValue(item, "dateadded"));
+            var eventTime = ParseDate(ChildValue(item, "fromdate"))
+                ?? ParseDate(ChildValue(item, "todate"));
+            var published = ParseDate(ChildValue(item, "pubDate"));
+
+            if (!KeepGdacsEvent(source, isCurrent, modified, eventTime, published, fetchedUtc))
+            {
+                skipped++;
+                continue;
+            }
 
             events.Add(new DisasterEvent(
                 SourceId: source.Id,
                 NativeId: nativeId,
                 EventType: NormalizeGdacsType(ChildValue(item, "eventtype")),
                 Title: title,
-                EventTimeUtc: ParseDate(ChildValue(item, "fromdate"))
-                    ?? ParseDate(ChildValue(item, "todate")),
-                PublishedUtc: ParseDate(ChildValue(item, "pubDate")),
-                UpdatedUtc: ParseDate(ChildValue(item, "datemodified"))
-                    ?? ParseDate(ChildValue(item, "dateadded")),
+                EventTimeUtc: eventTime,
+                PublishedUtc: published,
+                UpdatedUtc: modified,
                 Latitude: latitude,
                 Longitude: longitude,
                 Country: ChildValue(item, "country"),
@@ -182,6 +197,12 @@ public static class DisasterParser
 
             var geometry = LatestGeometry(item);
             var eventTime = geometry is null ? null : DateValue(geometry.Value, "date");
+
+            if (!KeepEonetEvent(source, type, eventTime, fetchedUtc))
+            {
+                skipped++;
+                continue;
+            }
 
             double? severity = null;
             string? severityUnit = null;
@@ -353,15 +374,24 @@ public static class DisasterParser
 
             alertLevel ??= StringValue(item, "severity_level_display", "severity_level");
             var provenance = $"{apiBase}/{nativeId}/";
+            var created = DateValue(item, "created_at", "createdAt");
+            var updated = DateValue(item, "modified_at", "modifiedAt", "updated_at", "updatedAt");
+            var start = DateValue(item, "disaster_start_date", "start_date", "startDate");
+
+            if (!KeepIfrcEvent(source, created, updated, start, fetchedUtc))
+            {
+                skipped++;
+                continue;
+            }
 
             events.Add(new DisasterEvent(
                 SourceId: source.Id,
                 NativeId: nativeId,
                 EventType: type,
                 Title: title,
-                EventTimeUtc: DateValue(item, "start_date", "startDate"),
-                PublishedUtc: DateValue(item, "created_at", "createdAt"),
-                UpdatedUtc: DateValue(item, "modified_at", "modifiedAt", "updated_at"),
+                EventTimeUtc: start,
+                PublishedUtc: created,
+                UpdatedUtc: updated,
                 Latitude: DoubleValue(item, "latitude"),
                 Longitude: DoubleValue(item, "longitude"),
                 Country: country,
@@ -602,6 +632,15 @@ public static class DisasterParser
             var category = CategoryValue(item);
             var (country, iso3) = FirstCountry(item);
             var (latitude, longitude) = WktPoint(CentroidText(item));
+            var closed = BoolValue(item, "closed");
+            var lastUpdate = DateValue(item, "lastUpdate", "last_update");
+            var activationTime = DateValue(item, "activationTime", "activation_time");
+
+            if (!KeepEmsEvent(source, closed, lastUpdate, activationTime, fetchedUtc))
+            {
+                skipped++;
+                continue;
+            }
 
             events.Add(new DisasterEvent(
                 SourceId: source.Id,
@@ -609,8 +648,8 @@ public static class DisasterParser
                 EventType: NormalizeSourceType(category),
                 Title: title,
                 EventTimeUtc: DateValue(item, "eventTime", "event_time", "eventDate", "event_date"),
-                PublishedUtc: DateValue(item, "activationTime", "activation_time"),
-                UpdatedUtc: DateValue(item, "lastUpdate", "last_update"),
+                PublishedUtc: activationTime,
+                UpdatedUtc: lastUpdate,
                 Latitude: latitude,
                 Longitude: longitude,
                 Country: country,
@@ -694,6 +733,143 @@ public static class DisasterParser
 
         return new DisasterParseResult(events, skipped);
     }
+
+    /// <summary>
+    /// GDACS: keep events flagged current, otherwise require a recent
+    /// <c>datemodified</c>/<c>dateadded</c>. When absent, use the event date
+    /// then publication date as fallbacks. With an opted-in window, undated
+    /// rows are excluded because recency cannot be verified.
+    /// </summary>
+    private static bool KeepGdacsEvent(
+        DisasterSource source,
+        bool? isCurrent,
+        DateTimeOffset? modified,
+        DateTimeOffset? eventTime,
+        DateTimeOffset? published,
+        DateTimeOffset fetchedUtc)
+    {
+        var window = DisasterRecencyPolicy.ResolveWindow(source.RecencyWindowHours);
+        if (window is null || isCurrent == true)
+        {
+            return true;
+        }
+
+        if (modified is not null)
+        {
+            return DisasterRecencyPolicy.IsRecent(modified, fetchedUtc, window);
+        }
+
+        return DisasterRecencyPolicy.IsRecent(eventTime ?? published, fetchedUtc, window);
+    }
+
+    /// <summary>
+    /// EONET: keep events whose latest geometry date is inside the window.
+    /// Volcanoes use the longer volcano window. EONET exposes no other recency
+    /// field, so events without a geometry date are excluded rather than
+    /// inventing a timestamp.
+    /// </summary>
+    private static bool KeepEonetEvent(
+        DisasterSource source,
+        string eventType,
+        DateTimeOffset? latestGeometryDate,
+        DateTimeOffset fetchedUtc)
+    {
+        var isVolcano = string.Equals(eventType, "volcanoes", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(eventType, "volcano", StringComparison.OrdinalIgnoreCase);
+        var window = DisasterRecencyPolicy.ResolveWindow(
+            isVolcano ? source.VolcanoRecencyWindowHours ?? source.RecencyWindowHours : source.RecencyWindowHours);
+
+        return DisasterRecencyPolicy.IsRecent(latestGeometryDate, fetchedUtc, window);
+    }
+
+    /// <summary>
+    /// IFRC: keep events created or updated inside the window. Only when both
+    /// audit fields are missing does <c>disaster_start_date</c> act as the
+    /// documented fallback; events with no timestamp at all are excluded.
+    /// </summary>
+    private static bool KeepIfrcEvent(
+        DisasterSource source,
+        DateTimeOffset? created,
+        DateTimeOffset? updated,
+        DateTimeOffset? start,
+        DateTimeOffset fetchedUtc)
+    {
+        var window = DisasterRecencyPolicy.ResolveWindow(source.RecencyWindowHours);
+        if (window is null)
+        {
+            return true;
+        }
+
+        if (created is not null || updated is not null)
+        {
+            return DisasterRecencyPolicy.IsRecent(created, fetchedUtc, window)
+                || DisasterRecencyPolicy.IsRecent(updated, fetchedUtc, window);
+        }
+
+        return DisasterRecencyPolicy.IsRecent(start, fetchedUtc, window);
+    }
+
+    /// <summary>
+    /// Copernicus EMS: open or unknown-state activations are kept; closed
+    /// activations require a recent lastUpdate or (if absent) activationTime.
+    /// A missing <c>closed</c> field is treated as open because the payload
+    /// cannot prove the activation is historical.
+    /// </summary>
+    private static bool KeepEmsEvent(
+        DisasterSource source,
+        bool? closed,
+        DateTimeOffset? lastUpdate,
+        DateTimeOffset? activationTime,
+        DateTimeOffset fetchedUtc)
+    {
+        var window = DisasterRecencyPolicy.ResolveWindow(source.RecencyWindowHours);
+        if (window is null || closed != true)
+        {
+            return true;
+        }
+
+        return DisasterRecencyPolicy.IsRecent(lastUpdate ?? activationTime, fetchedUtc, window);
+    }
+
+    private static bool? BoolValue(JsonElement element, params string[] names)
+    {
+        foreach (var name in names)
+        {
+            if (!TryProperty(element, name, out var value))
+            {
+                continue;
+            }
+
+            if (value.ValueKind is JsonValueKind.True or JsonValueKind.False)
+            {
+                return value.GetBoolean();
+            }
+
+            if (value.ValueKind == JsonValueKind.Number && value.TryGetInt32(out var number))
+            {
+                return number != 0;
+            }
+
+            if (value.ValueKind == JsonValueKind.String)
+            {
+                var text = value.GetString();
+                if (bool.TryParse(text, out var parsed))
+                {
+                    return parsed;
+                }
+
+                if (int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var numeric))
+                {
+                    return numeric != 0;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static bool? ParseBool(string? text) =>
+        bool.TryParse(text?.Trim(), out var parsed) ? parsed : null;
 
     private static string? CategoryValue(JsonElement item)
     {

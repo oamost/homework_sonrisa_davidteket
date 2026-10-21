@@ -19,7 +19,9 @@ internal static class SourceCoverageFixtures
               "id": "EONET_2",
               "title": "Volcano B",
               "categories": [ { "id": "volcanoes", "title": "Volcanoes" } ],
-              "geometry": []
+              "geometry": [
+                { "date": "2026-10-20T00:00:00Z", "type": "Point", "coordinates": [11.0, 21.0] }
+              ]
             }
           ]
         }
@@ -33,13 +35,17 @@ internal static class SourceCoverageFixtures
               "id": "EONET_1",
               "title": "Volcano A duplicate",
               "categories": [ { "id": "volcanoes", "title": "Volcanoes" } ],
-              "geometry": []
+              "geometry": [
+                { "date": "2026-10-20T00:00:00Z", "type": "Point", "coordinates": [10.0, 20.0] }
+              ]
             },
             {
               "id": "EONET_3",
               "title": "Landslide C",
               "categories": [ { "id": "landslides", "title": "Landslides" } ],
-              "geometry": []
+              "geometry": [
+                { "date": "2026-10-20T00:00:00Z", "type": "Point", "coordinates": [12.0, 22.0] }
+              ]
             }
           ]
         }

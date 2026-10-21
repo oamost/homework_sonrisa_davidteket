@@ -181,4 +181,222 @@ internal static class DisasterFixtures
           ]
         }
         """;
+
+    /// <summary>
+    /// GDACS recency mix for a fetch at 2026-10-21T12:00:00Z: current, recently
+    /// modified, old, missing all recency fields, event-date fallback, and an
+    /// event exactly on the 7-day boundary.
+    /// </summary>
+    public const string GdacsRecency =
+        """
+        <?xml version="1.0" encoding="utf-8"?>
+        <rss version="2.0" xmlns:gdacs="http://www.gdacs.org">
+          <channel>
+            <title>GDACS recency</title>
+            <item>
+              <title>Current old event</title>
+              <gdacs:eventid>201</gdacs:eventid>
+              <gdacs:eventtype>EQ</gdacs:eventtype>
+              <gdacs:iscurrent>true</gdacs:iscurrent>
+              <gdacs:fromdate>2026-01-01T00:00:00</gdacs:fromdate>
+              <gdacs:datemodified>2026-01-01T00:00:00</gdacs:datemodified>
+            </item>
+            <item>
+              <title>Recently modified</title>
+              <gdacs:eventid>202</gdacs:eventid>
+              <gdacs:eventtype>FL</gdacs:eventtype>
+              <gdacs:iscurrent>false</gdacs:iscurrent>
+              <gdacs:fromdate>2026-01-01T00:00:00</gdacs:fromdate>
+              <gdacs:datemodified>2026-10-20T00:00:00</gdacs:datemodified>
+            </item>
+            <item>
+              <title>Old archive row</title>
+              <gdacs:eventid>203</gdacs:eventid>
+              <gdacs:eventtype>TC</gdacs:eventtype>
+              <gdacs:iscurrent>false</gdacs:iscurrent>
+              <gdacs:fromdate>2026-01-01T00:00:00</gdacs:fromdate>
+              <gdacs:datemodified>2026-01-01T00:00:00</gdacs:datemodified>
+            </item>
+            <item>
+              <title>No recency fields</title>
+              <gdacs:eventid>204</gdacs:eventid>
+              <gdacs:eventtype>VO</gdacs:eventtype>
+            </item>
+            <item>
+              <title>Event date fallback</title>
+              <gdacs:eventid>205</gdacs:eventid>
+              <gdacs:eventtype>WF</gdacs:eventtype>
+              <gdacs:fromdate>2026-10-20T00:00:00</gdacs:fromdate>
+            </item>
+            <item>
+              <title>Exactly on the window boundary</title>
+              <gdacs:eventid>206</gdacs:eventid>
+              <gdacs:eventtype>EQ</gdacs:eventtype>
+              <gdacs:iscurrent>false</gdacs:iscurrent>
+              <gdacs:fromdate>2026-01-01T00:00:00</gdacs:fromdate>
+              <gdacs:datemodified>2026-10-14T12:00:00</gdacs:datemodified>
+            </item>
+          </channel>
+        </rss>
+        """;
+
+    /// <summary>
+    /// EONET recency mix for a fetch at 2026-10-21T12:00:00Z: recent wildfire,
+    /// old wildfire, 81-day-old volcano (inside the 90-day volcano window),
+    /// equally old wildfire (outside the 30-day default), missing geometry, and
+    /// an event exactly on the 30-day boundary.
+    /// </summary>
+    public const string EonetRecency =
+        """
+        {
+          "events": [
+            {
+              "id": "EONET_RECENT",
+              "title": "Recent wildfire",
+              "categories": [ { "id": "wildfires", "title": "Wildfires" } ],
+              "geometry": [ { "date": "2026-10-20T00:00:00Z", "type": "Point", "coordinates": [1.0, 2.0] } ]
+            },
+            {
+              "id": "EONET_OLD",
+              "title": "Old wildfire",
+              "categories": [ { "id": "wildfires", "title": "Wildfires" } ],
+              "geometry": [ { "date": "2026-01-01T00:00:00Z", "type": "Point", "coordinates": [3.0, 4.0] } ]
+            },
+            {
+              "id": "EONET_VOLCANO",
+              "title": "Old volcano",
+              "categories": [ { "id": "volcanoes", "title": "Volcanoes" } ],
+              "geometry": [ { "date": "2026-08-01T00:00:00Z", "type": "Point", "coordinates": [5.0, 6.0] } ]
+            },
+            {
+              "id": "EONET_OLD_WILDFIRE",
+              "title": "Same age wildfire",
+              "categories": [ { "id": "wildfires", "title": "Wildfires" } ],
+              "geometry": [ { "date": "2026-08-01T00:00:00Z", "type": "Point", "coordinates": [7.0, 8.0] } ]
+            },
+            {
+              "id": "EONET_MISSING",
+              "title": "No geometry",
+              "categories": [ { "id": "wildfires", "title": "Wildfires" } ],
+              "geometry": []
+            },
+            {
+              "id": "EONET_BOUNDARY",
+              "title": "Exactly on the window boundary",
+              "categories": [ { "id": "wildfires", "title": "Wildfires" } ],
+              "geometry": [ { "date": "2026-09-21T12:00:00Z", "type": "Point", "coordinates": [9.0, 10.0] } ]
+            }
+          ]
+        }
+        """;
+
+    /// <summary>
+    /// IFRC recency mix for a fetch at 2026-10-21T12:00:00Z: recent creation,
+    /// recent update, old audit dates, a start-date-only fallback, no timestamps,
+    /// and an event exactly on the 7-day boundary.
+    /// </summary>
+    public const string IfrcRecency =
+        """
+        {
+          "count": 6,
+          "results": [
+            {
+              "id": 401,
+              "name": "Recent creation",
+              "dtype": { "name": "Flood" },
+              "disaster_start_date": "2026-10-18T00:00:00Z",
+              "created_at": "2026-10-20T00:00:00Z"
+            },
+            {
+              "id": 402,
+              "name": "Old archive event",
+              "dtype": { "name": "Flood" },
+              "disaster_start_date": "2026-01-01T00:00:00Z",
+              "created_at": "2026-01-01T00:00:00Z",
+              "updated_at": "2026-01-02T00:00:00Z"
+            },
+            {
+              "id": 403,
+              "name": "Start date fallback",
+              "dtype": { "name": "Flood" },
+              "disaster_start_date": "2026-10-19T00:00:00Z"
+            },
+            {
+              "id": 404,
+              "name": "No timestamps",
+              "dtype": { "name": "Flood" }
+            },
+            {
+              "id": 405,
+              "name": "Exactly on the window boundary",
+              "dtype": { "name": "Flood" },
+              "created_at": "2026-10-14T12:00:00Z"
+            },
+            {
+              "id": 406,
+              "name": "Recent update",
+              "dtype": { "name": "Flood" },
+              "created_at": "2026-01-01T00:00:00Z",
+              "updated_at": "2026-10-20T00:00:00Z"
+            }
+          ]
+        }
+        """;
+
+    /// <summary>
+    /// Copernicus EMS recency mix for a fetch at 2026-10-21T12:00:00Z: closed
+    /// and old, open and old, closed but recently updated, missing closed,
+    /// closed without lastUpdate, and a closed activation exactly on the
+    /// 14-day boundary.
+    /// </summary>
+    public const string EmsRecency =
+        """
+        [
+          {
+            "id": 501,
+            "name": "Closed old activation",
+            "category": "Flood",
+            "closed": true,
+            "activationTime": "2026-01-01T00:00:00Z",
+            "lastUpdate": "2026-01-01T00:00:00Z"
+          },
+          {
+            "id": 502,
+            "name": "Open old activation",
+            "category": "Flood",
+            "closed": false,
+            "activationTime": "2026-01-01T00:00:00Z",
+            "lastUpdate": "2026-01-01T00:00:00Z"
+          },
+          {
+            "id": 503,
+            "name": "Closed recently updated activation",
+            "category": "Wildfire",
+            "closed": true,
+            "activationTime": "2026-01-01T00:00:00Z",
+            "lastUpdate": "2026-10-20T00:00:00Z"
+          },
+          {
+            "id": 504,
+            "name": "Missing closed field",
+            "category": "Flood",
+            "activationTime": "2026-01-01T00:00:00Z"
+          },
+          {
+            "id": 505,
+            "name": "Closed without lastUpdate",
+            "category": "Flood",
+            "closed": true,
+            "activationTime": "2026-01-01T00:00:00Z"
+          },
+          {
+            "id": 506,
+            "name": "Closed exactly on the window boundary",
+            "category": "Flood",
+            "closed": true,
+            "activationTime": "2026-01-01T00:00:00Z",
+            "lastUpdate": "2026-10-07T12:00:00Z"
+          }
+        ]
+        """;
 }

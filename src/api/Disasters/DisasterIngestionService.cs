@@ -195,7 +195,9 @@ public sealed class DisasterIngestionService
                 bodies.Add(body);
                 var pageResult = DisasterParser.Parse(body, source, fetchedUtc);
                 parsedSoFar += pageResult.Items.Count;
-                if (pageResult.Items.Count < pageSize)
+                // Use the pre-filter row count for the short-page check so a page
+                // that is entirely archive rows does not hide later pages.
+                if (pageResult.Items.Count + pageResult.Skipped < pageSize)
                 {
                     break;
                 }
@@ -303,6 +305,10 @@ public sealed class DisasterIngestionService
                 }
             }
         }
+        else if (string.Equals(source.Kind, DisasterParser.Ifrc, StringComparison.Ordinal))
+        {
+            urls.Add(WithIfrcOrdering(source));
+        }
 
         if (urls.Count == 0)
         {
@@ -310,6 +316,25 @@ public sealed class DisasterIngestionService
         }
 
         return urls;
+    }
+
+    /// <summary>
+    /// IFRC GO returns events in arbitrary order, so request newest first.
+    /// <see cref="DisasterSource.Ordering"/> overrides the default
+    /// <c>-created_at</c>; an explicit <c>ordering</c> already present in the URL
+    /// is left untouched.
+    /// </summary>
+    private static string WithIfrcOrdering(DisasterSource source)
+    {
+        if (source.Url.Contains("ordering=", StringComparison.OrdinalIgnoreCase))
+        {
+            return source.Url;
+        }
+
+        var ordering = string.IsNullOrWhiteSpace(source.Ordering)
+            ? "-created_at"
+            : source.Ordering.Trim();
+        return AppendQuery(source.Url, "ordering", ordering);
     }
 
     private static string AppendQuery(string url, string key, string value)

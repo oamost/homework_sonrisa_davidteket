@@ -54,4 +54,24 @@ public sealed class DisasterSource
 
     /// <summary>Copernicus EMS maximum unique activations per poll.</summary>
     public int MaxItems { get; set; } = 300;
+
+    /// <summary>
+    /// Optional, approval-dependent archive-filter window in hours.
+    /// Null or nonpositive values preserve all valid historical rows.
+    /// </summary>
+    public int? RecencyWindowHours { get; set; }
+
+    /// <summary>
+    /// Optional EONET volcano-specific archive-filter window in hours.
+    /// Falls back to RecencyWindowHours when not set. Never sets 24-hour
+    /// delivery eligibility. Ignored by other source kinds.
+    /// </summary>
+    public int? VolcanoRecencyWindowHours { get; set; }
+
+    /// <summary>
+    /// Optional source ordering expression. IFRC GO uses
+    /// <c>-created_at</c> (newest first) when this is empty, so archive rows
+    /// cannot crowd recent events out of the response.
+    /// </summary>
+    public string Ordering { get; set; } = string.Empty;
 }

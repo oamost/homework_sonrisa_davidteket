@@ -37,6 +37,9 @@ public sealed class DisasterParserTests
     public void Eonet_uses_the_latest_geometry_and_preserves_magnitude_units()
     {
         var source = DisasterTestSupport.Source(DisasterParser.Eonet);
+        // This test is about normalized-field preservation, so keep the
+        // geometry-less event that the default recency filter would drop.
+        source.RecencyWindowHours = 0;
 
         var result = DisasterParser.Parse(DisasterFixtures.Eonet, source, Fetched);
 
@@ -111,5 +114,117 @@ public sealed class DisasterParserTests
 
         Assert.Empty(result.Items);
         Assert.Equal(0, result.Skipped);
+    }
+
+    [Fact]
+    public void Future_provider_timestamps_are_not_considered_recent()
+    {
+        var source = DisasterTestSupport.Source(DisasterParser.Eonet);
+        source.RecencyWindowHours = 24;
+        const string body = """
+            {"events":[{"id":"future","title":"Future geometry","categories":[{"id":"wildfires"}],"geometry":[{"date":"2026-10-22T12:00:00Z","type":"Point","coordinates":[1,2]}]}]}
+            """;
+
+        var result = DisasterParser.Parse(body, source, Fetched);
+
+        Assert.Empty(result.Items);
+        Assert.Equal(1, result.Skipped);
+    }
+
+    [Fact]
+    public void Gdacs_pubdate_is_the_fallback_when_update_and_event_dates_are_absent()
+    {
+        var source = DisasterTestSupport.Source(DisasterParser.GdacsRss);
+        source.RecencyWindowHours = 168;
+        const string body = """
+            <rss><channel><item><title>New notice</title><guid>new</guid><pubDate>Tue, 20 Oct 2026 12:00:00 GMT</pubDate></item><item><title>Old notice</title><guid>old</guid><pubDate>Thu, 01 Jan 2026 12:00:00 GMT</pubDate></item></channel></rss>
+            """;
+
+        var result = DisasterParser.Parse(body, source, Fetched);
+
+        Assert.Equal("new", Assert.Single(result.Items).NativeId);
+        Assert.Equal(1, result.Skipped);
+    }
+
+    [Fact]
+    public void Gdacs_publication_and_modification_remain_distinct()
+    {
+        var source = DisasterTestSupport.Source(DisasterParser.GdacsRss);
+        const string body = """
+            <rss><channel><item><title>Modified notice</title><guid>notice</guid><gdacs:iscurrent xmlns:gdacs="http://www.gdacs.org">false</gdacs:iscurrent><gdacs:datemodified xmlns:gdacs="http://www.gdacs.org">2026-10-20T12:00:00Z</gdacs:datemodified><pubDate>Thu, 01 Jan 2026 12:00:00 GMT</pubDate></item></channel></rss>
+            """;
+
+        var item = Assert.Single(DisasterParser.Parse(body, source, Fetched).Items);
+
+        Assert.Equal(new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero), item.PublishedUtc);
+        Assert.Equal(new DateTimeOffset(2026, 10, 20, 12, 0, 0, TimeSpan.Zero), item.UpdatedUtc);
+        Assert.Null(item.EventTimeUtc);
+    }
+
+    [Fact]
+    public void Ifrc_start_creation_and_update_are_separate_provider_timestamps()
+    {
+        var source = DisasterTestSupport.Source(DisasterParser.Ifrc);
+        const string body = """
+            {"results":[{"id":7,"name":"Flood","disaster_start_date":"2026-01-01T00:00:00Z","created_at":"2026-01-02T00:00:00Z","updated_at":"2026-10-20T00:00:00Z"},{"id":8,"name":"Undated"}]}
+            """;
+
+        var result = DisasterParser.Parse(body, source, Fetched);
+
+        Assert.Equal(2, result.Items.Count);
+        var item = result.Items[0];
+        Assert.Equal(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero), item.EventTimeUtc);
+        Assert.Equal(new DateTimeOffset(2026, 1, 2, 0, 0, 0, TimeSpan.Zero), item.PublishedUtc);
+        Assert.Equal(new DateTimeOffset(2026, 10, 20, 0, 0, 0, TimeSpan.Zero), item.UpdatedUtc);
+        Assert.Null(result.Items[1].EventTimeUtc);
+        Assert.Null(result.Items[1].PublishedUtc);
+        Assert.Null(result.Items[1].UpdatedUtc);
+    }
+
+    [Fact]
+    public void Closed_ems_uses_recent_activation_when_update_is_missing()
+    {
+        var source = DisasterTestSupport.Source(DisasterParser.CopernicusEms);
+        source.RecencyWindowHours = 24;
+        const string body = """
+            [{"id":1,"name":"Recent activation","closed":true,"activationTime":"2026-10-20T12:00:00Z"},{"id":2,"name":"Historical activation","closed":true,"activationTime":"2026-01-01T00:00:00Z"}]
+            """;
+
+        var result = DisasterParser.Parse(body, source, Fetched);
+
+        Assert.Equal("1", Assert.Single(result.Items).NativeId);
+        Assert.Equal(1, result.Skipped);
+    }
+
+    [Fact]
+    public void Eonet_uses_newest_geometry_even_when_provider_lists_it_first()
+    {
+        var source = DisasterTestSupport.Source(DisasterParser.Eonet);
+        source.RecencyWindowHours = 24;
+        const string body = """
+            {"events":[{"id":"fire","title":"Fire","categories":[{"id":"wildfires"}],"geometry":[{"date":"2026-10-20T12:00:00Z","type":"Point","coordinates":[10,20]},{"date":"2026-01-01T00:00:00Z","type":"Point","coordinates":[30,40]}]}]}
+            """;
+
+        var result = DisasterParser.Parse(body, source, Fetched);
+
+        var item = Assert.Single(result.Items);
+        Assert.Equal(new DateTimeOffset(2026, 10, 20, 12, 0, 0, TimeSpan.Zero), item.EventTimeUtc);
+        Assert.Equal(20, item.Latitude);
+    }
+
+    [Fact]
+    public void Unconfigured_archive_policy_keeps_historical_and_undated_rows_without_fabricating_times()
+    {
+        var source = DisasterTestSupport.Source(DisasterParser.CopernicusEms);
+        const string body = """
+            [{"id":1,"name":"Closed old","closed":true,"activationTime":"2026-01-01T00:00:00Z","lastUpdate":"2026-01-02T00:00:00Z"},{"id":2,"name":"Undated","closed":true}]
+            """;
+
+        var result = DisasterParser.Parse(body, source, Fetched);
+
+        Assert.Equal(2, result.Items.Count);
+        Assert.Null(result.Items[1].EventTimeUtc);
+        Assert.Null(result.Items[1].PublishedUtc);
+        Assert.Null(result.Items[1].UpdatedUtc);
     }
 }
