@@ -4,6 +4,10 @@ namespace WorldAlerts.Api.Tests;
 
 public sealed class DisasterIngestionTests : IDisposable
 {
+    // Fixture timestamps are anchored to the inclusive 2026-10-14T12:00Z boundary.
+    private static readonly DateTimeOffset FixtureFetchTime =
+        new(2026, 10, 21, 12, 0, 0, TimeSpan.Zero);
+
     private readonly TempDirectory _temp = new();
 
     public void Dispose() => _temp.Dispose();
@@ -134,7 +138,8 @@ public sealed class DisasterIngestionTests : IDisposable
             url: "https://disaster.test/gdacs");
         source.RecencyWindowHours = 168; // Opt in to the proposed 7-day archive filter.
         var handler = new FakeHttpHandler(_ => FakeHttpHandler.Xml(DisasterFixtures.GdacsRecency));
-        var ingestion = DisasterTestSupport.Ingest(store, EnabledOptions(source), handler);
+        var ingestion = DisasterTestSupport.Ingest(
+            store, EnabledOptions(source), handler, new FixedClock(FixtureFetchTime));
 
         var poll = await ingestion.PollOnceAsync();
 
@@ -160,7 +165,8 @@ public sealed class DisasterIngestionTests : IDisposable
             url: "https://disaster.test/ifrc");
         source.RecencyWindowHours = 168; // Opt in only for this archive-filter test.
         var handler = new FakeHttpHandler(_ => DisasterTestSupport.Json(DisasterFixtures.IfrcRecency));
-        var ingestion = DisasterTestSupport.Ingest(store, EnabledOptions(source), handler);
+        var ingestion = DisasterTestSupport.Ingest(
+            store, EnabledOptions(source), handler, new FixedClock(FixtureFetchTime));
 
         var poll = await ingestion.PollOnceAsync();
 
@@ -189,4 +195,9 @@ public sealed class DisasterIngestionTests : IDisposable
         RequestTimeoutSeconds = 5,
         Sources = sources.ToList(),
     };
+
+    private sealed class FixedClock(DateTimeOffset utcNow) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => utcNow;
+    }
 }

@@ -170,14 +170,16 @@ internal static class DisasterTestSupport
     public static DisasterIngestionService Ingest(
         DisasterStore store,
         DisasterOptions options,
-        FakeHttpHandler handler)
+        FakeHttpHandler handler,
+        TimeProvider? clock = null)
     {
         var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(5) };
         return new DisasterIngestionService(
             client,
             store,
             options,
-            NullLogger<DisasterIngestionService>.Instance);
+            NullLogger<DisasterIngestionService>.Instance,
+            clock: clock);
     }
 
     public static HttpResponseMessage Json(string body) => new(HttpStatusCode.OK)

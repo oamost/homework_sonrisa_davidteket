@@ -86,7 +86,9 @@ public sealed class DisasterIngestionService
         DisasterSource source,
         CancellationToken cancellationToken)
     {
-        var fetchedUtc = DateTimeOffset.UtcNow;
+        // Use the same injectable clock as collection cadence; archive boundaries must
+        // not depend on ambient wall-clock time in deterministic tests.
+        var fetchedUtc = _clock.GetUtcNow();
 
         try
         {
