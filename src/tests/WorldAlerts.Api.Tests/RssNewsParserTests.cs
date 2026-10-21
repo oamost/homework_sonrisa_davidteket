@@ -17,6 +17,7 @@ public sealed class RssNewsParserTests
               <link> https://news.test/a </link>
               <guid> story-1 </guid>
               <pubDate>Wed, 21 Oct 2026 09:30:00 GMT</pubDate>
+              <description>  A &amp; B &lt;b&gt;live&lt;/b&gt;  </description>
               <category>Politics</category>
               <category><![CDATA[Economy & Trade]]></category>
             </item>
@@ -36,6 +37,132 @@ public sealed class RssNewsParserTests
         Assert.Equal("world-news", item.Family);
         Assert.Equal(new[] { "Politics", "Economy & Trade" }, item.Categories);
         Assert.Equal("https://news.test/rss.xml", item.Provenance);
+        Assert.Equal("A & B live", item.Summary);
+    }
+
+    [Fact]
+    public void Reads_html_description_and_collapses_whitespace_and_entities()
+    {
+        var xml = NewsTestSupport.Rss(
+            """
+            <item>
+              <title>HTML summary</title>
+              <link>https://news.test/html-summary</link>
+              <guid>html-summary</guid>
+              <description><![CDATA[<p>First&nbsp;line &amp; more</p>
+
+                <p>Second <strong>line</strong></p>]]></description>
+            </item>
+            """);
+
+        var item = Assert.Single(RssNewsParser.Parse(xml, NewsTestSupport.Feed, FirstSeen).Items);
+
+        Assert.Equal("First line & more Second line", item.Summary);
+        Assert.Equal("HTML summary", item.Title);
+        Assert.Equal("https://news.test/html-summary", item.Link);
+    }
+
+    [Fact]
+    public void Falls_back_to_summary_then_content_encoded()
+    {
+        var xml = NewsTestSupport.Rss(
+            """
+            <item>
+              <title>Summary element</title>
+              <link>https://news.test/summary-element</link>
+              <guid>summary-element</guid>
+              <summary>  From summary  </summary>
+            </item>
+            """,
+            """
+            <item>
+              <title>Encoded element</title>
+              <link>https://news.test/encoded-element</link>
+              <guid>encoded-element</guid>
+              <content:encoded><![CDATA[<p>From encoded</p>]]></content:encoded>
+            </item>
+            """);
+
+        var result = RssNewsParser.Parse(xml, NewsTestSupport.Feed, FirstSeen);
+
+        Assert.Equal(2, result.Items.Count);
+        Assert.Equal("From summary", result.Items[0].Summary);
+        Assert.Equal("From encoded", result.Items[1].Summary);
+    }
+
+    [Fact]
+    public void Absent_or_empty_summary_stays_null()
+    {
+        var xml = NewsTestSupport.Rss(
+            """
+            <item>
+              <title>No summary</title>
+              <link>https://news.test/no-summary</link>
+              <guid>no-summary</guid>
+            </item>
+            """,
+            """
+            <item>
+              <title>Empty summary</title>
+              <link>https://news.test/empty-summary</link>
+              <guid>empty-summary</guid>
+              <description>   </description>
+              <summary><![CDATA[]]></summary>
+            </item>
+            """);
+
+        var result = RssNewsParser.Parse(xml, NewsTestSupport.Feed, FirstSeen);
+
+        Assert.Equal(2, result.Items.Count);
+        Assert.All(result.Items, item => Assert.Null(item.Summary));
+    }
+
+    [Fact]
+    public void Truncates_long_summaries_at_the_documented_limit()
+    {
+        var longText = new string('x', RssNewsParser.MaxSummaryLength + 250);
+        var xml = NewsTestSupport.Rss(
+            $"""
+            <item>
+              <title>Long summary</title>
+              <link>https://news.test/long-summary</link>
+              <guid>long-summary</guid>
+              <description>{longText}</description>
+            </item>
+            """);
+
+        var item = Assert.Single(RssNewsParser.Parse(xml, NewsTestSupport.Feed, FirstSeen).Items);
+
+        Assert.Equal(RssNewsParser.MaxSummaryLength, item.Summary!.Length);
+        Assert.Equal(new string('x', RssNewsParser.MaxSummaryLength), item.Summary);
+    }
+
+    [Fact]
+    public void Removes_script_and_style_text_from_summary()
+    {
+        var xml = NewsTestSupport.Rss(
+            """
+            <item>
+              <title>Script summary</title>
+              <link>https://news.test/script-summary</link>
+              <guid>script-summary</guid>
+              <description><![CDATA[<p>Visible</p><script>alert('x')</script><style>.a{color:red}</style><p>Also visible</p>]]></description>
+            </item>
+            """,
+            """
+            <item>
+              <title>Escaped script summary</title>
+              <link>https://news.test/escaped-script-summary</link>
+              <guid>escaped-script-summary</guid>
+              <description>&lt;script&gt;alert('y')&lt;/script&gt;&lt;p&gt;Escaped visible&lt;/p&gt;</description>
+            </item>
+            """);
+
+        var result = RssNewsParser.Parse(xml, NewsTestSupport.Feed, FirstSeen);
+
+        Assert.Equal(2, result.Items.Count);
+        Assert.Equal("Visible Also visible", result.Items[0].Summary);
+        Assert.Equal("Escaped visible", result.Items[1].Summary);
     }
 
     [Fact]

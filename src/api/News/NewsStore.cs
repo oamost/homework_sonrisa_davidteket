@@ -29,7 +29,11 @@ public sealed class NewsStore
         }.ToString();
     }
 
-    /// <summary>Creates the news schema. Throws when the database is unusable.</summary>
+    /// <summary>
+    /// Creates the news schema if needed and applies idempotent additive
+    /// migrations for databases created by older builds. Throws when the
+    /// database is unusable.
+    /// </summary>
     public void Initialize()
     {
         var directory = Path.GetDirectoryName(_path);
@@ -54,10 +58,37 @@ public sealed class NewsStore
                 Family TEXT NOT NULL,
                 CategoriesJson TEXT NOT NULL,
                 Provenance TEXT NOT NULL,
+                Summary TEXT NULL,
                 CONSTRAINT UQ_NewsItems_Source_Native UNIQUE (SourceId, NativeId)
             );
             """;
         command.ExecuteNonQuery();
+
+        // Older databases lack the nullable provider-summary column. SQLite has
+        // no ADD COLUMN IF NOT EXISTS, so check the catalog first; existing rows
+        // keep their data and get a null summary.
+        if (!ColumnExists(connection, "NewsItems", "Summary"))
+        {
+            using var migrate = connection.CreateCommand();
+            migrate.CommandText = "ALTER TABLE NewsItems ADD COLUMN Summary TEXT NULL;";
+            migrate.ExecuteNonQuery();
+        }
+    }
+
+    private static bool ColumnExists(SqliteConnection connection, string table, string column)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = $"PRAGMA table_info(\"{table}\");";
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            if (string.Equals(reader.GetString(1), column, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -77,8 +108,9 @@ public sealed class NewsStore
     }
 
     /// <summary>
-    /// Inserts stories, ignoring rows already present. Returns the number of rows
-    /// actually inserted; duplicates are reported by the caller as parsed minus inserted.
+    /// Inserts stories, filling missing summaries on existing rows without revising
+    /// other fields. Returns only the number of newly inserted rows; duplicates
+    /// are reported by the caller as parsed minus inserted.
     /// </summary>
     public async Task<int> InsertAsync(
         IReadOnlyCollection<NewsItem> items,
@@ -99,10 +131,10 @@ public sealed class NewsStore
             """
             INSERT INTO NewsItems (
                 SourceId, SourceName, NativeId, Title, Link, PublishedUtc,
-                FirstSeenUtc, Family, CategoriesJson, Provenance)
+                FirstSeenUtc, Family, CategoriesJson, Provenance, Summary)
             VALUES (
                 $sourceId, $sourceName, $nativeId, $title, $link, $publishedUtc,
-                $firstSeenUtc, $family, $categoriesJson, $provenance)
+                $firstSeenUtc, $family, $categoriesJson, $provenance, $summary)
             ON CONFLICT (SourceId, NativeId) DO NOTHING;
             """;
 
@@ -116,6 +148,19 @@ public sealed class NewsStore
         var family = command.Parameters.Add("$family", SqliteType.Text);
         var categoriesJson = command.Parameters.Add("$categoriesJson", SqliteType.Text);
         var provenance = command.Parameters.Add("$provenance", SqliteType.Text);
+        var summary = command.Parameters.Add("$summary", SqliteType.Text);
+
+        await using var backfill = connection.CreateCommand();
+        backfill.Transaction = transaction;
+        backfill.CommandText =
+            """
+            UPDATE NewsItems SET Summary = $summary
+            WHERE SourceId = $sourceId AND NativeId = $nativeId
+              AND (Summary IS NULL OR TRIM(Summary) = '');
+            """;
+        var backfillSourceId = backfill.Parameters.Add("$sourceId", SqliteType.Text);
+        var backfillNativeId = backfill.Parameters.Add("$nativeId", SqliteType.Text);
+        var backfillSummary = backfill.Parameters.Add("$summary", SqliteType.Text);
 
         var inserted = 0;
         foreach (var item in items)
@@ -132,8 +177,17 @@ public sealed class NewsStore
             family.Value = item.Family;
             categoriesJson.Value = JsonSerializer.Serialize(item.Categories);
             provenance.Value = item.Provenance;
+            summary.Value = !string.IsNullOrWhiteSpace(item.Summary) ? item.Summary : DBNull.Value;
 
-            inserted += await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            var added = await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            inserted += added;
+            if (added == 0 && !string.IsNullOrWhiteSpace(item.Summary))
+            {
+                backfillSourceId.Value = item.SourceId;
+                backfillNativeId.Value = item.NativeId;
+                backfillSummary.Value = item.Summary;
+                await backfill.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            }
         }
 
         transaction.Commit();
@@ -146,9 +200,15 @@ public sealed class NewsStore
     /// </summary>
     public async Task<IReadOnlyList<NewsItem>> GetRecentAsync(
         int limit,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        await ReadAsync(Math.Clamp(limit, MinLimit, MaxLimit), cancellationToken);
+
+    /// <summary>Reads all persisted items for selection without the public endpoint's 200-row cap.</summary>
+    public Task<IReadOnlyList<NewsItem>> GetForSelectionAsync(CancellationToken cancellationToken = default) =>
+        ReadAsync(-1, cancellationToken);
+
+    private async Task<IReadOnlyList<NewsItem>> ReadAsync(int limit, CancellationToken cancellationToken)
     {
-        var clamped = Math.Clamp(limit, MinLimit, MaxLimit);
 
         await using var connection = new SqliteConnection(_connectionString);
         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
@@ -157,12 +217,12 @@ public sealed class NewsStore
         command.CommandText =
             """
             SELECT SourceId, SourceName, NativeId, Title, Link, PublishedUtc,
-                   FirstSeenUtc, Family, CategoriesJson, Provenance
+                   FirstSeenUtc, Family, CategoriesJson, Provenance, Summary
             FROM NewsItems
             ORDER BY COALESCE(PublishedUtc, FirstSeenUtc) DESC, Id DESC
             LIMIT $limit;
             """;
-        command.Parameters.AddWithValue("$limit", clamped);
+        command.Parameters.AddWithValue("$limit", limit);
 
         var items = new List<NewsItem>();
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
@@ -178,7 +238,8 @@ public sealed class NewsStore
                 FirstSeenUtc: ParseTimestamp(reader.GetString(6)),
                 Family: reader.GetString(7),
                 Categories: JsonSerializer.Deserialize<string[]>(reader.GetString(8)) ?? Array.Empty<string>(),
-                Provenance: reader.GetString(9)));
+                Provenance: reader.GetString(9),
+                Summary: reader.IsDBNull(10) ? null : reader.GetString(10)));
         }
 
         return items;

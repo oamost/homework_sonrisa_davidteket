@@ -32,7 +32,8 @@ internal static class NewsTestSupport
         string sourceId = "test-feed",
         string sourceName = "Test Feed",
         string family = "world-news",
-        IReadOnlyList<string>? categories = null) =>
+        IReadOnlyList<string>? categories = null,
+        string? summary = null) =>
         new(
             SourceId: sourceId,
             SourceName: sourceName,
@@ -43,12 +44,13 @@ internal static class NewsTestSupport
             FirstSeenUtc: firstSeenUtc,
             Family: family,
             Categories: categories ?? Array.Empty<string>(),
-            Provenance: "https://news.test/rss.xml");
+            Provenance: "https://news.test/rss.xml",
+            Summary: summary);
 
     public static string Rss(params string[] items) =>
         $"""
         <?xml version="1.0" encoding="utf-8"?>
-        <rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/">
+        <rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
           <channel>
             <title>Test feed</title>
             {string.Concat(items)}

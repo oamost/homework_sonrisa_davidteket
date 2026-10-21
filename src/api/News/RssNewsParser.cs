@@ -1,17 +1,35 @@
 using System.Globalization;
+using System.Net;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 namespace WorldAlerts.Api.News;
 
 /// <summary>
 /// Minimal RSS 2.0 reader. Element lookups use local names so namespaced
-/// extensions such as <c>dc:date</c> are accepted; values are trimmed and XML
-/// entities/CDATA are decoded by <see cref="XDocument"/>.
+/// extensions such as <c>dc:date</c> and <c>content:encoded</c> are accepted;
+/// values are trimmed and XML entities/CDATA are decoded by <see cref="XDocument"/>.
 /// </summary>
 public static class RssNewsParser
 {
+    /// <summary>
+    /// Maximum stored summary length. Provider descriptions are plain text after
+    /// markup removal and may be truncated at this many characters. Truncation is
+    /// not an importance judgment.
+    /// </summary>
+    public const int MaxSummaryLength = 1000;
+
     // Checked in order. "date" also covers dc:date because matching is by local name.
     private static readonly string[] DateElementNames = { "pubDate", "date", "published", "updated" };
+
+    // "encoded" covers content:encoded because matching is by local name.
+    private static readonly string[] SummaryElementNames = { "description", "summary", "encoded" };
+
+    private static readonly Regex HtmlTagPattern = new("<[^>]*>", RegexOptions.Compiled);
+    private static readonly Regex NonContentPattern = new(
+        @"<\s*(script|style)\b[^>]*>.*?<\s*/\s*\1\s*>",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline);
+    private static readonly Regex WhitespacePattern = new(@"\s+", RegexOptions.Compiled);
 
     public static RssParseResult Parse(string xml, NewsFeed feed, DateTimeOffset firstSeenUtc)
     {
@@ -50,7 +68,8 @@ public static class RssNewsParser
                 FirstSeenUtc: firstSeenUtc.ToUniversalTime(),
                 Family: feed.Family,
                 Categories: ReadCategories(element),
-                Provenance: feed.Url));
+                Provenance: feed.Url,
+                Summary: ReadSummary(element)));
         }
 
         return new RssParseResult(items, skipped);
@@ -99,6 +118,53 @@ public static class RssNewsParser
             .Select(candidate => candidate.Value.Trim())
             .Where(value => value.Length > 0)
             .ToArray();
+
+    /// <summary>
+    /// Reads provider summary text from the first non-empty description, summary,
+    /// or content:encoded element. Markup is removed, entities are decoded,
+    /// whitespace is collapsed, and the result is capped at
+    /// <see cref="MaxSummaryLength"/> characters. Absent text stays null; nothing
+    /// is invented.
+    /// </summary>
+    private static string? ReadSummary(XElement item)
+    {
+        foreach (var name in SummaryElementNames)
+        {
+            var raw = item.Elements()
+                .FirstOrDefault(candidate => IsNamed(candidate, name))
+                ?.Value;
+            var cleaned = CleanSummary(raw);
+            if (cleaned is not null)
+            {
+                return cleaned;
+            }
+        }
+
+        return null;
+    }
+
+    private static string? CleanSummary(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return null;
+        }
+
+        var withoutMarkup = HtmlTagPattern.Replace(NonContentPattern.Replace(raw, " "), " ");
+        var decoded = WebUtility.HtmlDecode(withoutMarkup);
+        // Some feeds escape their markup, so a second pass after entity decoding
+        // removes tags that only became visible now.
+        var stripped = HtmlTagPattern.Replace(NonContentPattern.Replace(decoded, " "), " ");
+        var collapsed = WhitespacePattern.Replace(stripped, " ").Trim();
+        if (collapsed.Length == 0)
+        {
+            return null;
+        }
+
+        return collapsed.Length <= MaxSummaryLength
+            ? collapsed
+            : collapsed[..MaxSummaryLength].TrimEnd();
+    }
 
     private static string? ChildValue(XElement parent, string localName)
     {

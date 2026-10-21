@@ -28,7 +28,8 @@ public sealed class NewsEndpointTests : IDisposable
                 FirstSeen,
                 publishedUtc: new DateTimeOffset(2026, 10, 21, 10, 0, 0, TimeSpan.Zero),
                 title: "Published story",
-                categories: new[] { "World" }),
+                categories: new[] { "World" },
+                summary: "Published provider summary"),
             NewsTestSupport.Item(
                 "undated",
                 FirstSeen.AddMinutes(-60),
@@ -55,6 +56,7 @@ public sealed class NewsEndpointTests : IDisposable
         Assert.Equal("world-news", newest.GetProperty("family").GetString());
         Assert.Equal("https://news.test/rss.xml", newest.GetProperty("provenance").GetString());
         Assert.Equal(JsonValueKind.Null, newest.GetProperty("publishedUtc").ValueKind);
+        Assert.Equal(JsonValueKind.Null, newest.GetProperty("summary").ValueKind);
         Assert.Equal(
             new[] { "Tech", "Science" },
             newest.GetProperty("categories").EnumerateArray().Select(value => value.GetString()).ToArray());
@@ -65,6 +67,7 @@ public sealed class NewsEndpointTests : IDisposable
         var older = root[1];
         Assert.Equal("Published story", older.GetProperty("title").GetString());
         Assert.Equal(JsonValueKind.String, older.GetProperty("publishedUtc").ValueKind);
+        Assert.Equal("Published provider summary", older.GetProperty("summary").GetString());
     }
 
     [Fact]
