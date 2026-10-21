@@ -1,6 +1,7 @@
 using Microsoft.Data.Sqlite;
 using WorldAlerts.Api.News;
 using WorldAlerts.Api.Disasters;
+using WorldAlerts.Api.Markets;
 using WorldAlerts.Api.Subscriptions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +20,18 @@ builder.Services.AddSingleton(database);
 var subscriptionStore = new SubscriptionStore(databasePath);
 subscriptionStore.TryInitialize();
 builder.Services.AddSingleton(subscriptionStore);
+
+var marketOptions = builder.Configuration.GetSection("WorldAlerts:Markets").Get<MarketOptions>() ?? new MarketOptions();
+var marketStore = new MarketStore(databasePath);
+marketStore.TryInitialize();
+builder.Services.AddSingleton(marketOptions);
+builder.Services.AddSingleton(marketStore);
+builder.Services.AddHttpClient<MarketIngestionService>((services, client) =>
+{
+    var options = services.GetRequiredService<MarketOptions>();
+    client.Timeout = options.RequestTimeout;
+});
+builder.Services.AddHostedService<MarketPollingService>();
 
 var disasterOptions = builder.Configuration.GetSection("WorldAlerts:Disasters").Get<DisasterOptions>() ?? new DisasterOptions();
 var disasterStore = new DisasterStore(databasePath);
@@ -60,6 +73,12 @@ app.MapGet("/api/news", async (NewsStore store, int? limit, CancellationToken ca
     return Results.Ok(items);
 });
 
+app.MapGet("/api/markets", async (MarketStore store, int? limit, string? source, CancellationToken cancellationToken) =>
+{
+    var clamped = Math.Clamp(limit ?? MarketStore.DefaultLimit, MarketStore.MinLimit, MarketStore.MaxLimit);
+    var items = await store.GetRecentAsync(clamped, source, cancellationToken);
+    return Results.Ok(items);
+});
 app.MapGet("/api/disasters", async (DisasterStore store, int? limit, string? source, CancellationToken cancellationToken) =>
 {
     var clamped = Math.Clamp(limit ?? DisasterStore.DefaultLimit, DisasterStore.MinLimit, DisasterStore.MaxLimit);
