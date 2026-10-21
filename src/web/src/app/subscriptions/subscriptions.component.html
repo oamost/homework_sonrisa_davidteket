@@ -1,7 +1,19 @@
 <section aria-labelledby="subscriptions-heading" class="pb-5">
   <h2 id="subscriptions-heading" class="h3">Alert setup</h2>
-  <p class="text-secondary">Choose an event type and channel. Only events assessed as important are eligible. New items published within the previous 24 hours may qualify even if the event happened earlier; items with no provider time or a future timestamp do not qualify.</p>
-  <p class="alert alert-warning" role="note">Email notifications require an explicitly enabled SMTP setup and an enabled email subscription. Source coverage varies; worldwide or 24-hour completeness is not proven. Slack delivery is not yet available; existing Slack subscriptions remain saved but will not send.</p>
+  <p class="text-secondary">All approved types are selected initially. Remove or re-add tags and save once; the saved choice applies to every configured channel. Only events assessed as important are eligible. New items published within the previous 24 hours may qualify even if the event happened earlier; items with no provider time or a future timestamp do not qualify.</p>
+  <p class="small text-secondary">Email and Slack are ready to deliver as soon as their private settings and destination are saved. Existing legacy subscriptions remain respected; disabled legacy rows stay paused. Startup catch-up is bounded to 50, then 10 sends per minute. Provider coverage varies; worldwide and continuous coverage is not proven.</p>
+
+  <section class="card mb-4" aria-labelledby="types-heading"><div class="card-body">
+    <h3 id="types-heading" class="h5">Event types</h3>
+    <p class="small text-secondary">Selected tags receive important matching alerts. Click to remove or add; then save.</p>
+    <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Event type selection">
+      @for (type of eventTypes; track type.code) {
+        <button type="button" data-event-tag class="btn btn-sm" [class.btn-primary]="selectedTypes().has(type.code)" [class.btn-outline-secondary]="!selectedTypes().has(type.code)" [attr.aria-pressed]="selectedTypes().has(type.code)" [title]="type.description" (click)="toggleType(type.code)">{{ type.name }}</button>
+      }
+    </div>
+    <button type="button" data-save-types class="btn btn-primary" (click)="saveTypes()" [disabled]="!preference() || preferenceBusy()">{{ preferenceBusy() ? 'Saving…' : 'Save event types' }}</button>
+    <span role="status" class="small ms-2">{{ preferenceMessage() }}</span>
+  </div></section>
 
   <section class="card mb-4" aria-labelledby="smtp-heading"><div class="card-body">
     <h3 id="smtp-heading" class="h5">Private email delivery setup</h3>
@@ -9,11 +21,12 @@
     @if (emailAccess() === 'login') { <p>Sign in as the local administrator at <a href="/admin/login">Admin login</a>, then return here and refresh the page to configure SMTP and send a test email.</p> }
     @if (emailAccess() === 'error') { <p class="alert alert-danger">SMTP configuration unavailable. Reload to retry.</p> }
     @if (emailAccess() === 'admin') {
-      <p class="small text-secondary">Saved: {{ emailStatus()?.configured ? (emailStatus()?.enabled ? 'enabled' : 'disabled') : 'not configured' }}. Password is never displayed. Private settings and encryption keys must survive server restarts. STARTTLS (typically port 587) is required; implicit TLS port 465 is unsupported.</p>
+      <p class="small text-secondary">{{ emailStatus()?.enabled && emailStatus()?.recipientAddress ? 'Ready for automatic email alerts' : 'Needs setup: enter an SMTP account and recipient' }}. An email login in your browser does not give this app SMTP access. Use your provider's SMTP host and app password. The password is never displayed. STARTTLS (typically port 587) is required; implicit TLS port 465 is unsupported.</p>
       <form (submit)="$event.preventDefault(); saveEmail()" novalidate>
         <div class="row g-2 mb-2"><div class="col-md-8"><label class="form-label" for="smtp-host">SMTP host</label><input id="smtp-host" name="smtpHost" class="form-control" autocomplete="off" [value]="smtpHost" (input)="smtpHost = $any($event.target).value" [disabled]="emailBusy()"></div><div class="col-md-4"><label class="form-label" for="smtp-port">Port</label><input id="smtp-port" name="smtpPort" type="number" min="1" max="65535" class="form-control" [value]="smtpPort" (input)="smtpPort = +$any($event.target).value" [disabled]="emailBusy()"></div></div>
         <div class="row g-2 mb-2"><div class="col-md-6"><label class="form-label" for="smtp-user">Username</label><input id="smtp-user" name="smtpUsername" class="form-control" autocomplete="off" [value]="smtpUsername" (input)="smtpUsername = $any($event.target).value" [disabled]="emailBusy()"></div><div class="col-md-6"><label class="form-label" for="smtp-password">Password</label><input id="smtp-password" name="smtpPassword" type="password" class="form-control" autocomplete="new-password" [value]="smtpPassword" (input)="smtpPassword = $any($event.target).value" [disabled]="emailBusy()"><div class="form-text">Leave blank to retain the saved password.</div></div></div>
         <div class="mb-2"><label class="form-label" for="smtp-from">From address</label><input id="smtp-from" name="smtpFrom" type="email" class="form-control" autocomplete="off" [value]="smtpFrom" (input)="smtpFrom = $any($event.target).value" [disabled]="emailBusy()"></div>
+        <div class="mb-2"><label class="form-label" for="smtp-recipient">Send alerts to</label><input id="smtp-recipient" name="smtpRecipient" type="email" class="form-control" autocomplete="email" [value]="recipientAddress" (input)="recipientAddress = $any($event.target).value" [disabled]="emailBusy()"><div class="form-text">Readable address, stored in local protected settings. Required for automatic email alerts.</div></div>
         <div class="form-check mb-2"><input id="smtp-enabled" name="smtpEnabled" type="checkbox" class="form-check-input" [checked]="smtpEnabled" (change)="smtpEnabled = $any($event.target).checked" [disabled]="emailBusy()"><label for="smtp-enabled" class="form-check-label">Enable automatic email delivery (may send pending eligible alerts)</label></div>
         <button type="submit" class="btn btn-primary" [disabled]="emailBusy()">Save SMTP settings</button>
       </form>
@@ -25,6 +38,9 @@
     }
   </div></section>
 
+  <app-slack-setup /><app-webhook-setup />
+
+  <details class="mt-4"><summary class="small text-secondary">Advanced: existing per-type subscriptions and source details</summary>
   <div class="row g-4">
     <div class="col-lg-7">
       <h3 class="h5">Available event types</h3>
@@ -48,17 +64,17 @@
         <div class="mb-3">
           <label for="channel" class="form-label">Channel</label>
           <select id="channel" name="channel" class="form-select" [value]="channel" (change)="channel = $any($event.target).value" [disabled]="pending() || loading()">
-            <option value="email">Email</option><option value="slack">Slack (disabled)</option>
+            <option value="email">Email</option><option value="slack">Slack</option>
           </select>
         </div>
         <div class="mb-3">
           <label for="destination" class="form-label">{{ channel === 'slack' ? 'Slack channel reference' : 'Email address' }}</label>
-          <input id="destination" name="destination" class="form-control" type="password" autocomplete="off" [value]="destination" (input)="destination = $any($event.target).value" [disabled]="pending() || loading()" aria-describedby="destination-help">
+          <input id="destination" name="destination" class="form-control" [type]="channel === 'slack' ? 'text' : 'email'" autocomplete="off" [value]="destination" (input)="destination = $any($event.target).value" [disabled]="pending() || loading()" aria-describedby="destination-help">
           <div id="destination-help" class="form-text">{{ channel === 'slack' ? 'Enter a non-secret reference such as channel:#alerts. Never paste a Slack webhook URL here.' : 'Private entry: the address will not appear in the subscription list.' }} @if (editing) { Leave blank to keep the saved destination; enter a new one to replace it. }</div>
         </div>
         <div class="form-check mb-3">
           <input id="enabled" name="enabled" class="form-check-input" type="checkbox" [checked]="enabled" (change)="enabled = $any($event.target).checked" [disabled]="pending() || loading()">
-          <label for="enabled" class="form-check-label">Enabled (email eligible when SMTP is enabled; Slack remains disabled)</label>
+          <label for="enabled" class="form-check-label">Enabled for this legacy subscription (requires configured channel)</label>
         </div>
         <button type="submit" class="btn btn-primary" [disabled]="pending() || loading()">{{ pending() ? 'Working…' : 'Save subscription' }}</button>
       </form>
@@ -93,4 +109,5 @@
       }
     </div>
   </section>
+  </details>
 </section>

@@ -1,16 +1,27 @@
 using System.Text.Json;
+using System.Net.Mail;
 using Microsoft.AspNetCore.DataProtection;
 
 namespace WorldAlerts.Api.Delivery;
 
 public sealed record EmailSettings(string Host, int Port, string TlsMode, string Username,
-    string Password, string FromAddress, bool Enabled);
+    string Password, string FromAddress, bool Enabled)
+{
+    public string? RecipientAddress { get; init; }
+}
 
 public sealed record EmailSettingsUpdate(string? Host, int Port, string? TlsMode, string? Username,
-    string? Password, string? FromAddress, bool Enabled);
+    string? Password, string? FromAddress, bool Enabled)
+{
+    public string? RecipientAddress { get; init; }
+}
 
 public sealed record EmailSettingsStatus(bool Configured, bool Enabled, string? Host, int? Port,
-    string? TlsMode, string? FromAddress, bool HasCredentials);
+    string? TlsMode, string? FromAddress, bool HasCredentials)
+{
+    public string? RecipientAddress { get; init; }
+    public string? Username { get; init; }
+}
 
 /// <summary>Encrypted private configuration. Keys and ciphertext live beside the persistent database, not in source control.</summary>
 public sealed class EmailSettingsStore(string databasePath, IDataProtectionProvider protection)
@@ -52,8 +63,9 @@ public sealed class EmailSettingsStore(string databasePath, IDataProtectionProvi
 
     public static EmailSettingsStatus Redact(EmailSettings? settings) => settings is null
         ? new(false, false, null, null, null, null, false)
-        : new(true, settings.Enabled, settings.Host, settings.Port, settings.TlsMode,
-            settings.FromAddress, !string.IsNullOrWhiteSpace(settings.Username));
+        : new EmailSettingsStatus(true, settings.Enabled, settings.Host, settings.Port, settings.TlsMode,
+            settings.FromAddress, !string.IsNullOrWhiteSpace(settings.Username))
+        { RecipientAddress = settings.RecipientAddress, Username = settings.Username };
 
     public static SmtpOptions ToOptions(EmailSettings settings) => new()
     {
@@ -65,12 +77,16 @@ public sealed class EmailSettingsStore(string databasePath, IDataProtectionProvi
 
     public static (EmailSettings? Settings, string? Error) Validate(EmailSettingsUpdate request, EmailSettings? previous)
     {
+        var recipient = request.RecipientAddress?.Trim() ?? previous?.RecipientAddress;
+        if (!string.IsNullOrEmpty(recipient) &&
+            (!MailAddress.TryCreate(recipient, out var address) || address.Address != recipient))
+            return (null, "Enter a valid recipient email address.");
         if (!Enum.TryParse<SmtpTlsMode>(request.TlsMode, true, out var mode)
             || !Enum.IsDefined(mode) || mode != SmtpTlsMode.StartTls)
             return (null, "STARTTLS is required for SMTP configuration.");
         var settings = new EmailSettings(request.Host?.Trim() ?? "", request.Port, mode.ToString(),
             request.Username?.Trim() ?? "", string.IsNullOrEmpty(request.Password) ? previous?.Password ?? "" : request.Password,
-            request.FromAddress?.Trim() ?? "", request.Enabled);
+            request.FromAddress?.Trim() ?? "", request.Enabled) { RecipientAddress = recipient };
         var errors = ToOptions(settings).Validate();
         return errors.Count == 0 ? (settings, null) : (null, string.Join(" ", errors));
     }

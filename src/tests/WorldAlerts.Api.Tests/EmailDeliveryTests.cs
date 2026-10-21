@@ -19,6 +19,23 @@ public sealed class EmailDeliveryTests
     private const string Secret = "test-smtp-secret-private";
 
     [Fact]
+    public async Task Recipient_is_readable_and_persisted_while_smtp_password_stays_protected()
+    {
+        using var temp = new TempDirectory();
+        var path = Path.Combine(temp.Path, "recipient.sqlite");
+        var store = new EmailSettingsStore(path, DataProtectionProvider.Create("test"));
+        var (settings, error) = EmailSettingsStore.Validate(Update(true) with
+        { RecipientAddress = "alerts@example.test" }, null);
+        Assert.Null(error);
+        await store.SaveAsync(settings!);
+        var status = EmailSettingsStore.Redact(await store.ReadAsync());
+        Assert.Equal("alerts@example.test", status.RecipientAddress);
+        Assert.DoesNotContain(Secret, JsonSerializer.Serialize(status));
+        Assert.NotNull(EmailSettingsStore.Validate(Update(true) with
+        { RecipientAddress = "wrong@" }, await store.ReadAsync()).Error);
+    }
+
+    [Fact]
     public async Task Unconfigured_host_starts_without_sending_or_claiming_pending_email()
     {
         using var temp = new TempDirectory();
@@ -74,11 +91,16 @@ public sealed class EmailDeliveryTests
         Assert.False(status.RootElement.GetProperty("configured").GetBoolean());
         Assert.Equal(HttpStatusCode.BadRequest, (await client.PutAsJsonAsync("/api/admin/email", Update(true))).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/admin/email/test", new { destination = "test@example.org" })).StatusCode);
-        using var save = new HttpRequestMessage(HttpMethod.Put, "/api/admin/email") { Content = JsonContent.Create(Update(true)) };
+        using var save = new HttpRequestMessage(HttpMethod.Put, "/api/admin/email")
+        { Content = JsonContent.Create(Update(true) with { RecipientAddress = "reader@example.org" }) };
         save.Headers.Add("X-CSRF-TOKEN", token);
         var saved = await client.SendAsync(save);
         Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
         Assert.DoesNotContain(Secret, await saved.Content.ReadAsStringAsync());
+        using var reloaded = await client.GetAsync("/api/admin/email");
+        using var reloadedJson = JsonDocument.Parse(await reloaded.Content.ReadAsStringAsync());
+        Assert.Equal("reader@example.org", reloadedJson.RootElement.GetProperty("recipientAddress").GetString());
+        Assert.Equal("sender", reloadedJson.RootElement.GetProperty("username").GetString());
         Assert.Empty(fake.Sent);
         using var test = new HttpRequestMessage(HttpMethod.Post, "/api/admin/email/test")
         { Content = JsonContent.Create(new { destination = "test@example.org" }) };

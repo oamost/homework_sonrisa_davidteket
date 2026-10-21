@@ -14,6 +14,13 @@ public sealed class AlertSelectionService(
     SubscriptionStore subscriptionStore, MarketOptions marketOptions, TimeProvider clock)
 {
     private const int RejectedDisplayLimit = 100;
+
+    /// <summary>
+    /// The comparison marker the Markets producer stores for a validated same-payload rolling
+    /// 24-hour open baseline (<c>docs/evidence/task-10-provider-baseline.md</c>).
+    /// </summary>
+    private const string RollingTwentyFourHourOpen = "rolling-24h-open";
+
     private readonly CatchUpEligibilityEvaluator _eligibility = new();
     private readonly NewsImportanceScorer _newsScorer = new();
     private readonly MarketImportanceScorer _marketScorer = new();
@@ -80,19 +87,10 @@ public sealed class AlertSelectionService(
             } } : Array.Empty<string>();
             var interval = MarketObservationMapping.TryParseInterval(item.Interval, out var parsed)
                 ? parsed : TimeSpan.Zero;
-            // Exact same instrument/source/quote/interval and exact 24-hour timestamp.
-            // Never infer a baseline from a 1h candle, a different source, or an adjacent day.
-            var baseline = interval == TimeSpan.FromHours(24)
-                ? markets.FirstOrDefault(other =>
-                    string.Equals(other.SourceId, item.SourceId, StringComparison.OrdinalIgnoreCase)
-                    && string.Equals(other.Instrument, item.Instrument, StringComparison.Ordinal)
-                    && string.Equals(other.QuoteUnit, item.QuoteUnit, StringComparison.Ordinal)
-                    && string.Equals(other.Interval, item.Interval, StringComparison.OrdinalIgnoreCase)
-                    && other.ObservationUtc == item.ObservationUtc - interval)
-                : null;
+            var baseline = ComparisonBaseline(item, markets, interval);
             var importance = family is { } marketFamily
                 ? _marketScorer.Score(MarketObservationMapping.Create(marketFamily, item,
-                    baseline?.Value, now, interval))
+                    baseline, now, interval))
                 : ImportanceDecision.NotImportant("market.unknown-source-kind",
                     "No configured approved market source kind maps this observation to a scoring family.");
             var result = Build(EventRecordMappers.FromMarket(item, now),
@@ -113,6 +111,55 @@ public sealed class AlertSelectionService(
             Limitations(diagnostics),
             missingEligibleMarketBaselines,
             diagnostics);
+    }
+
+    /// <summary>
+    /// Resolves the approved 24-hour comparison baseline for one stored observation.
+    /// <para>
+    /// A provider-supplied baseline from the same payload is preferred. It is used only when the
+    /// comparison marker is the approved rolling 24-hour open, the baseline value is finite and
+    /// positive, and the baseline timestamp is 24 hours before the observation within the
+    /// provider's rolling-window alignment. The provider baseline is carried on the same
+    /// observation record, so its source, instrument, quote unit and interval are the same
+    /// observation's metadata by construction; no baseline is ever taken across venues.
+    /// </para>
+    /// <para>
+    /// When the provider baseline is absent or unusable, the compatible stored history is used:
+    /// the exact same source, instrument, quote unit and interval at exactly 24 hours earlier. A
+    /// 1h candle, a different source, an adjacent day or a UTC-day previous close is never used,
+    /// and no price is fabricated.
+    /// </para>
+    /// </summary>
+    private static double? ComparisonBaseline(
+        MarketObservation item, IReadOnlyList<MarketObservation> markets, TimeSpan interval)
+    {
+        if (interval != TimeSpan.FromHours(24)) return null;
+        if (ProviderBaseline(item) is { } provider) return provider;
+        return markets.FirstOrDefault(other =>
+            string.Equals(other.SourceId, item.SourceId, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(other.Instrument, item.Instrument, StringComparison.Ordinal)
+            && string.Equals(other.QuoteUnit, item.QuoteUnit, StringComparison.Ordinal)
+            && string.Equals(other.Interval, item.Interval, StringComparison.OrdinalIgnoreCase)
+            && other.ObservationUtc == item.ObservationUtc - interval)?.Value;
+    }
+
+    /// <summary>
+    /// Returns the provider-supplied 24-hour comparison value when it is valid for this
+    /// observation, otherwise null. The comparison marker is the one documented by the Markets
+    /// producer in <c>docs/evidence/task-10-provider-baseline.md</c>.
+    /// </summary>
+    private static double? ProviderBaseline(MarketObservation item)
+    {
+        if (!string.Equals(item.ComparisonKind, RollingTwentyFourHourOpen, StringComparison.Ordinal)) return null;
+        if (item.BaselineValue is not { } baseline || !double.IsFinite(baseline) || baseline <= 0) return null;
+        if (item.BaselineUtc is not { } baselineUtc) return null;
+        // Subtracting 24 hours must stay inside the representable DateTimeOffset range.
+        if (item.ObservationUtc < DateTimeOffset.MinValue + TimeSpan.FromHours(24)) return null;
+        // A baseline after the observation is not a 24-hour-earlier comparison value.
+        if (baselineUtc > item.ObservationUtc) return null;
+        var expected = item.ObservationUtc - TimeSpan.FromHours(24);
+        if ((baselineUtc - expected).Duration() > TimeSpan.FromMinutes(1)) return null;
+        return baseline;
     }
 
     /// <summary>
@@ -156,10 +203,12 @@ public sealed class AlertSelectionService(
         {
             "Read-only preview; no delivery, delivered-state persistence, or pacing is performed.",
             "Corroboration requires exact normalized distinctive headlines within six hours; related or rewritten headlines are not merged. Reused identical headlines can falsely merge unrelated reports.",
-            "Market baselines require exact 24-hour history for the same source, instrument, quote unit and interval; missing or offset history is not interpolated.",
+            "Market baselines use the provider's own validated same-payload rolling 24-hour open price, or the exact stored 24-hour history for the same source, instrument, quote unit and interval; missing or offset history is never interpolated and no price is fabricated.",
             "Only configured email and Slack channels are previewed; no destination or credential is included.",
             "Source coverage remains incomplete: regional-only heat/cold, no Africa-only feed, tsunami/landslide standalone feeds unproven, WHO feed dropped.",
             "All stored rows are evaluated without the public display cap; rejected preview is limited to 100 with omitted count reported.",
+            "Market-family entries are numeric price observations, not market news stories. Financial and macroeconomic news articles are shown under the economy.financial code and are important only when a trusted source reports a consequential financial event.",
+            "FX and index sources publish a daily reference rate or a session value; the previous trading day or session is not a true 24-hour comparison, so those observations stay unscored until an approved comparable baseline exists.",
         };
         foreach (var diagnostic in diagnostics.Where(d => d.ImportantEligibleCount == 0))
         {

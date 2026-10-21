@@ -16,6 +16,46 @@ public sealed record NewsCorroboratingSource(
     DateTimeOffset? PublishedUtc);
 
 /// <summary>
+/// Outcome of the financial-event analysis of one headline.
+/// </summary>
+/// <param name="Subject">The matched approved financial event subject, or null.</param>
+/// <param name="Action">The matched approved consequential action, or null.</param>
+/// <param name="Scale">The matched material scale marker, or null.</param>
+/// <param name="Amount">The matched material amount word, or null.</param>
+/// <param name="Exclusion">The exclusion marker that disqualified the headline, or null.</param>
+public sealed record FinancialEventAnalysis(
+    string? Subject,
+    string? Action,
+    string? Scale,
+    string? Amount,
+    string? Exclusion)
+{
+    /// <summary>
+    /// True when the matched subject is itself a material capital-market or credit event, so a
+    /// material scale marker can stand in for a consequential action.
+    /// </summary>
+    public bool ScaleApplies =>
+        Subject is not null
+        && Scale is not null
+        && NewsImportanceScorer.FinancialScaleBearingSubjects.Contains(Subject, StringComparer.Ordinal);
+
+    /// <summary>
+    /// True when the matched subject is one for which a consequential action alone qualifies.
+    /// </summary>
+    public bool ActionApplies =>
+        Subject is not null
+        && Action is not null
+        && NewsImportanceScorer.FinancialActionSubjects.Contains(Subject, StringComparer.Ordinal);
+
+    /// <summary>
+    /// True when the headline describes a consequential financial event: an approved subject plus
+    /// an approved consequential action or a material scale, with no exclusion marker.
+    /// </summary>
+    public bool IsConsequentialEvent =>
+        Subject is not null && Exclusion is null && (ActionApplies || ScaleApplies);
+}
+
+/// <summary>
 /// Deterministic news importance scorer for the approved acceptance fixtures.
 /// </summary>
 /// <remarks>
@@ -63,6 +103,136 @@ public sealed class NewsImportanceScorer
         "landslide",
         "epidemic",
         "pandemic",
+    };
+
+    /// <summary>
+    /// The approved positive financial event subjects (decision D1 addition, 2026-10-21).
+    /// A subject alone never makes a story important: an approved consequential action or a
+    /// material scale marker is required as well, and the reporting source must be trusted.
+    /// </summary>
+    public static readonly IReadOnlyList<string> FinancialEventSubjects = new[]
+    {
+        // Central banks and monetary policy.
+        "central bank", "federal reserve", "fed", "ecb", "bank of england", "bank of japan",
+        "rba", "boj", "boe", "imf", "world bank", "monetary policy", "policy rate",
+        "interest rate", "rate hike", "rate cut",
+        // Prices, activity and employment.
+        "inflation", "consumer prices", "cpi", "gdp", "recession",
+        "jobs report", "unemployment", "unemployment rate", "payrolls",
+        // Credit stress and market structure.
+        "default", "bank failure", "bank collapse", "insolvency", "bankruptcy", "bailout",
+        "trading halt", "circuit breaker", "suspended trading",
+        // Capital markets and mergers.
+        "ipo", "initial public offering", "acquisition", "merger", "takeover",
+    };
+
+    /// <summary>
+    /// The approved consequential financial actions. A material market move or a decision verb
+    /// qualifies; a routine directional verb such as "rises" does not, so an ordinary monthly
+    /// data print is not promoted.
+    /// </summary>
+    public static readonly IReadOnlyList<string> FinancialEventActions = new[]
+    {
+        "raise", "raises", "raised", "raising",
+        "cut", "cuts", "cutting",
+        "hike", "hikes", "hiked", "hiking",
+        "lower", "lowers", "lowered", "lowering",
+        "slash", "slashes", "slashed",
+        "double", "doubles", "doubled",
+        "triple", "triples", "tripled",
+        "surge", "surges", "surged",
+        "soar", "soars", "soared",
+        "plunge", "plunges", "plunged",
+        "collapse", "collapses", "collapsed",
+        "contract", "contracts", "contracted",
+        "shrink", "shrinks",
+        "fail", "fails", "failed",
+        "default", "defaults", "defaulted",
+        "halt", "halts", "halted",
+        "suspend", "suspends", "suspended",
+        "approve", "approves", "approved",
+        "agree", "agrees", "agreed",
+        "complete", "completes", "completed",
+        "announce", "announces", "announced",
+        "launch", "launches", "launched",
+        "bail out", "bails out", "bailed out",
+        "rescue", "rescues", "rescued",
+        "seize", "seizes", "seized",
+    };
+
+    /// <summary>
+    /// Material scale markers. With a scale-bearing subject these stand in for a consequential
+    /// action, so a quantified event qualifies even when the verb is not in the action list.
+    /// </summary>
+    public static readonly IReadOnlyList<string> FinancialScaleMarkers = new[]
+    {
+        "billion", "trillion", "biggest", "largest", "record", "records",
+    };
+
+    /// <summary>Amount words that add a further bounded strength to an important financial event.</summary>
+    public static readonly IReadOnlyList<string> FinancialMaterialAmounts = new[]
+    {
+        "billion", "trillion",
+    };
+
+    /// <summary>
+    /// The subjects for which a consequential action alone is enough, because the subject is
+    /// itself a policy, price, activity, employment, credit or market-structure event.
+    /// </summary>
+    public static readonly IReadOnlyList<string> FinancialActionSubjects = new[]
+    {
+        "central bank", "federal reserve", "fed", "ecb", "bank of england", "bank of japan",
+        "rba", "boj", "boe", "imf", "world bank", "monetary policy", "policy rate",
+        "interest rate", "rate hike", "rate cut",
+        "inflation", "consumer prices", "cpi", "gdp", "recession",
+        "jobs report", "unemployment", "unemployment rate", "payrolls",
+        "default", "bank failure", "bank collapse", "insolvency", "bankruptcy", "bailout",
+        "trading halt", "circuit breaker", "suspended trading",
+    };
+
+    /// <summary>
+    /// The subjects for which a material scale marker alone is enough. Capital-market events
+    /// (an IPO, an acquisition, a merger, a takeover) are included here but not in
+    /// <see cref="FinancialActionSubjects"/>, so an ordinary small fundraising or an unquantified
+    /// deal is never promoted on its own.
+    /// </summary>
+    public static readonly IReadOnlyList<string> FinancialScaleBearingSubjects = new[]
+    {
+        "ipo", "initial public offering", "acquisition", "merger", "takeover",
+        "central bank", "federal reserve", "fed", "ecb", "bank of england", "bank of japan",
+        "rba", "boj", "boe", "imf", "world bank", "monetary policy", "policy rate",
+        "interest rate", "rate hike", "rate cut",
+        "inflation", "consumer prices", "cpi", "gdp", "recession",
+        "jobs report", "unemployment", "unemployment rate", "payrolls",
+        "default", "bank failure", "bank collapse", "insolvency", "bankruptcy", "bailout",
+        "trading halt", "circuit breaker", "suspended trading",
+    };
+
+    /// <summary>
+    /// Headline markers that disqualify a financial story from the rule: forecasts and odds,
+    /// undecided speculation, routine market commentary, personal finance and promotion, and
+    /// opinion or analysis pieces.
+    /// </summary>
+    public static readonly IReadOnlyList<string> FinancialExclusions = new[]
+    {
+        // Forecasts, odds and speculation.
+        "forecast", "forecasts", "predict", "predicts", "predicted", "prediction",
+        "expect", "expects", "expected to", "odds", "likely to", "analyst", "analysts",
+        "warn", "warns", "warning", "outlook", "projection", "projected",
+        "speculation", "speculates", "speculating", "rumour", "rumor",
+        "could", "might", "set to", "poised to", "in talks", "weighing",
+        // Routine market commentary and roundups.
+        "round up", "markets today", "stock market today", "market wrap", "market update",
+        "closing bell", "opening bell", "pre market", "what to watch", "what to know",
+        "watchlist", "top stocks", "stocks to watch", "share price", "stock price",
+        "closing price", "opening price", "live updates",
+        // Personal finance and promotion.
+        "your money", "personal finance", "should you buy", "investing in", "how to save",
+        "saving tips", "retirement planning", "credit score", "best stocks to buy",
+        "for beginners", "sponsored", "promoted", "advertisement", "discount", "coupon",
+        "giveaway", "black friday", "promo code",
+        // Opinion and analysis.
+        "opinion", "analysis", "review", "explainer", "how to",
     };
 
     private readonly NewsSourceTiers _sourceTiers;
@@ -145,6 +315,24 @@ public sealed class NewsImportanceScorer
             return ImportanceDecision.Important(NewsImportanceRuleIds.TierOneCorroboration, 0.85, factors.ToArray());
         }
 
+        var financial = AnalyzeFinancialEvent(item);
+        if (financial.IsConsequentialEvent && isTierOne)
+        {
+            factors.Add(
+                $"Headline reports a consequential financial event: subject '{financial.Subject}'"
+                + (financial.Action is null ? string.Empty : $", action '{financial.Action}'")
+                + (financial.Scale is null ? string.Empty : $", scale '{financial.Scale}'") + ".");
+            factors.Add("Source is tier-1, so the approved financial event rule applies.");
+            var financialStrength = 0.70;
+            if (item.PublishedUtc is { } published && published <= nowUtc) financialStrength += 0.05;
+            if (financial.Amount is not null) financialStrength += 0.05;
+            factors.Add(
+                "Strength heuristic: trusted-source financial event 0.70; a usable provider publication time "
+                + "adds 0.05; an explicit material amount adds a further 0.05.");
+            return ImportanceDecision.Important(
+                NewsImportanceRuleIds.ConsequentialFinancialEvent, financialStrength, factors.ToArray());
+        }
+
         var topic = ConsequentialTopic(item);
         if (topic is not null)
         {
@@ -153,9 +341,93 @@ public sealed class NewsImportanceScorer
             return ImportanceDecision.Important("news.consequential-topic", 0.65, factors.ToArray());
         }
 
+        factors.Add(FinancialRuleNotApplied(financial));
         factors.Add("Strength heuristic: no approved trigger; source tier alone has no importance score.");
         return ImportanceDecision.NotImportant(NewsImportanceRuleIds.NoApprovedTrigger, factors.ToArray());
     }
+
+    /// <summary>
+    /// Analyses one headline for a consequential financial event. The analysis is metadata-only: it
+    /// reads the headline text and never a clock, a price, a source list or a subscription.
+    /// </summary>
+    /// <param name="item">Normalized news item; only the headline is read.</param>
+    public static FinancialEventAnalysis AnalyzeFinancialEvent(NewsItem item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+
+        var text = ScoringText.Normalize(item.Title);
+        return new FinancialEventAnalysis(
+            FindFinancialToken(text, FinancialEventSubjects),
+            FindFinancialToken(text, FinancialEventActions),
+            FindFinancialToken(text, FinancialScaleMarkers),
+            FindFinancialToken(text, FinancialMaterialAmounts),
+            FindFinancialToken(text, FinancialExclusions));
+    }
+
+    /// <summary>Explains, in one factor, why the financial event rule did not apply.</summary>
+    private static string FinancialRuleNotApplied(FinancialEventAnalysis analysis)
+    {
+        if (analysis.Exclusion is not null)
+        {
+            return $"Financial event rule not applied: the headline is excluded as '{analysis.Exclusion}'.";
+        }
+
+        if (analysis.Subject is null)
+        {
+            return "Financial event rule not applied: no approved financial event subject in the headline.";
+        }
+
+        if (!analysis.IsConsequentialEvent)
+        {
+            return "Financial event rule not applied: financial subject without a consequential action "
+                + "or a material scale marker.";
+        }
+
+        return "Financial event rule not applied: the source is not a trusted tier-1 source.";
+    }
+
+    /// <summary>
+    /// Finds the first approved marker in the normalized headline. A marker also matches a direct
+    /// inflection that follows it ("interest rates", "IPOs"), but never a longer unrelated word.
+    /// </summary>
+    private static string? FindFinancialToken(string normalizedText, IReadOnlyList<string> markers)
+    {
+        foreach (var marker in markers)
+            if (ContainsApprovedToken(normalizedText, marker)) return marker;
+        return null;
+    }
+
+    /// <summary>
+    /// True when the normalized text contains the approved token as a whole word or with a direct
+    /// inflection ("interest rates", "IPOs"), but never inside a longer unrelated word.
+    /// </summary>
+    /// <param name="normalizedText">Text normalized with <see cref="ScoringText.Normalize"/>.</param>
+    /// <param name="token">The approved token to look for.</param>
+    public static bool ContainsApprovedToken(string normalizedText, string token)
+    {
+        if (string.IsNullOrEmpty(normalizedText) || string.IsNullOrEmpty(token)) return false;
+        if (ScoringText.ContainsTokenSequence(normalizedText, token)) return true;
+
+        var index = 0;
+        while ((index = normalizedText.IndexOf(" " + token, index, StringComparison.Ordinal)) >= 0)
+        {
+            var next = index + token.Length + 1;
+            if (next >= normalizedText.Length) return true;
+            foreach (var suffix in InflectionSuffixes)
+            {
+                if (!normalizedText.AsSpan(next).StartsWith(suffix.AsSpan(), StringComparison.Ordinal)) continue;
+                var after = next + suffix.Length;
+                if (after >= normalizedText.Length || !char.IsLetter(normalizedText[after])) return true;
+            }
+
+            index = next;
+        }
+
+        return false;
+    }
+
+    /// <summary>The direct inflections a marker may take at the end of a word.</summary>
+    private static readonly string[] InflectionSuffixes = ["s", "es", "ed", "ing"];
 
     // Explicit headline action + topic, not a broad feed label or an isolated noun.
     // These are deterministic editorial indicators, not a probability or universal weight.

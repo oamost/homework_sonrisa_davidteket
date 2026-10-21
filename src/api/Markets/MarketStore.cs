@@ -55,11 +55,40 @@ public sealed class MarketStore
                 DelaySemantics TEXT NOT NULL,
                 Interval TEXT NOT NULL,
                 Provenance TEXT NOT NULL,
+                BaselineValue REAL NULL,
+                BaselineUtc TEXT NULL,
+                ComparisonKind TEXT NULL,
                 CONSTRAINT UQ_MarketObservations_Source_Instrument_Interval_Observation
                     UNIQUE (SourceId, Instrument, Interval, ObservationUtc)
             );
             """;
         command.ExecuteNonQuery();
+
+        // Existing databases predate provider baseline columns. Never synthesize
+        // historical baselines from current observations or fetched timestamps.
+        using var columns = connection.CreateCommand();
+        columns.CommandText = "PRAGMA table_info(MarketObservations);";
+        var existing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        using (var reader = columns.ExecuteReader())
+        {
+            while (reader.Read())
+            {
+                existing.Add(reader.GetString(1));
+            }
+        }
+
+        foreach (var (name, type) in new[]
+        {
+            ("BaselineValue", "REAL"), ("BaselineUtc", "TEXT"), ("ComparisonKind", "TEXT"),
+        })
+        {
+            if (!existing.Contains(name))
+            {
+                using var migration = connection.CreateCommand();
+                migration.CommandText = $"ALTER TABLE MarketObservations ADD COLUMN {name} {type} NULL;";
+                migration.ExecuteNonQuery();
+            }
+        }
 
         using var indexCommand = connection.CreateCommand();
         indexCommand.CommandText =
@@ -110,10 +139,12 @@ public sealed class MarketStore
             """
             INSERT INTO MarketObservations (
                 SourceId, Venue, Region, Instrument, QuoteUnit, Value,
-                ObservationUtc, FetchedUtc, Delayed, DelaySemantics, Interval, Provenance)
+                ObservationUtc, FetchedUtc, Delayed, DelaySemantics, Interval, Provenance,
+                BaselineValue, BaselineUtc, ComparisonKind)
             VALUES (
                 $sourceId, $venue, $region, $instrument, $quoteUnit, $value,
-                $observationUtc, $fetchedUtc, $delayed, $delaySemantics, $interval, $provenance)
+                $observationUtc, $fetchedUtc, $delayed, $delaySemantics, $interval, $provenance,
+                $baselineValue, $baselineUtc, $comparisonKind)
             ON CONFLICT (SourceId, Instrument, Interval, ObservationUtc) DO NOTHING;
             """;
 
@@ -129,6 +160,27 @@ public sealed class MarketStore
         var delaySemantics = command.Parameters.Add("$delaySemantics", SqliteType.Text);
         var interval = command.Parameters.Add("$interval", SqliteType.Text);
         var provenance = command.Parameters.Add("$provenance", SqliteType.Text);
+        var baselineValue = command.Parameters.Add("$baselineValue", SqliteType.Real);
+        var baselineUtc = command.Parameters.Add("$baselineUtc", SqliteType.Text);
+        var comparisonKind = command.Parameters.Add("$comparisonKind", SqliteType.Text);
+
+        await using var backfill = connection.CreateCommand();
+        backfill.Transaction = transaction;
+        backfill.CommandText =
+            """
+            UPDATE MarketObservations
+            SET BaselineValue = $baselineValue, BaselineUtc = $baselineUtc, ComparisonKind = $comparisonKind
+            WHERE SourceId = $sourceId AND Instrument = $instrument AND Interval = $interval
+              AND ObservationUtc = $observationUtc
+              AND BaselineValue IS NULL AND BaselineUtc IS NULL AND ComparisonKind IS NULL;
+            """;
+        var backfillValue = backfill.Parameters.Add("$baselineValue", SqliteType.Real);
+        var backfillUtc = backfill.Parameters.Add("$baselineUtc", SqliteType.Text);
+        var backfillKind = backfill.Parameters.Add("$comparisonKind", SqliteType.Text);
+        var backfillSource = backfill.Parameters.Add("$sourceId", SqliteType.Text);
+        var backfillInstrument = backfill.Parameters.Add("$instrument", SqliteType.Text);
+        var backfillInterval = backfill.Parameters.Add("$interval", SqliteType.Text);
+        var backfillObservation = backfill.Parameters.Add("$observationUtc", SqliteType.Text);
 
         var inserted = 0;
         foreach (var observation in observations)
@@ -145,8 +197,26 @@ public sealed class MarketStore
             delaySemantics.Value = observation.DelaySemantics;
             interval.Value = observation.Interval;
             provenance.Value = observation.Provenance;
+            var usableBaseline = observation.BaselineValue is > 0 and { } price
+                && double.IsFinite(price) && observation.BaselineUtc.HasValue
+                && !string.IsNullOrWhiteSpace(observation.ComparisonKind);
+            baselineValue.Value = usableBaseline ? observation.BaselineValue!.Value : DBNull.Value;
+            baselineUtc.Value = usableBaseline ? FormatTimestamp(observation.BaselineUtc!.Value) : DBNull.Value;
+            comparisonKind.Value = usableBaseline ? observation.ComparisonKind! : DBNull.Value;
 
-            inserted += await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            var added = await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            inserted += added;
+            if (added == 0 && usableBaseline)
+            {
+                backfillValue.Value = baselineValue.Value;
+                backfillUtc.Value = baselineUtc.Value;
+                backfillKind.Value = comparisonKind.Value;
+                backfillSource.Value = sourceId.Value;
+                backfillInstrument.Value = instrument.Value;
+                backfillInterval.Value = interval.Value;
+                backfillObservation.Value = observationUtc.Value;
+                await backfill.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            }
         }
 
         transaction.Commit();
@@ -187,7 +257,8 @@ public sealed class MarketStore
         command.CommandText =
             """
             SELECT SourceId, Venue, Region, Instrument, QuoteUnit, Value,
-                   ObservationUtc, FetchedUtc, Delayed, DelaySemantics, Interval, Provenance
+                   ObservationUtc, FetchedUtc, Delayed, DelaySemantics, Interval, Provenance,
+                   BaselineValue, BaselineUtc, ComparisonKind
             FROM MarketObservations
             WHERE ($sourceId IS NULL OR SourceId COLLATE NOCASE = $sourceId)
             ORDER BY ObservationUtc DESC, Id DESC
@@ -212,7 +283,10 @@ public sealed class MarketStore
                 Delayed: reader.GetInt64(8) != 0,
                 DelaySemantics: reader.GetString(9),
                 Interval: reader.GetString(10),
-                Provenance: reader.GetString(11)));
+                Provenance: reader.GetString(11),
+                BaselineValue: reader.IsDBNull(12) ? null : reader.GetDouble(12),
+                BaselineUtc: reader.IsDBNull(13) ? null : ParseTimestamp(reader.GetString(13)),
+                ComparisonKind: reader.IsDBNull(14) ? null : reader.GetString(14)));
         }
 
         return observations;

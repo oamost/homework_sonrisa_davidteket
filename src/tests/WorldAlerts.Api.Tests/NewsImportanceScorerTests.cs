@@ -233,6 +233,154 @@ public sealed class NewsImportanceScorerTests
         Assert.Contains(decision.Factors, factor => factor.Contains("Headline is missing", StringComparison.Ordinal));
     }
 
+    // ---- Approved financial event rule (decision D1 addition, 2026-10-21) ----
+
+    [Fact]
+    public void F1_TierOneCentralBankRateDecision_IsImportant()
+    {
+        var item = ScoringFixtures.News("guardian-world", "The Guardian World",
+            "Reserve Bank of Australia raises interest rates by half a point to 4.1%", "2026-10-21T08:00:00Z");
+
+        var decision = _scorer.Score(item, ScoringFixtures.Now);
+
+        Assert.True(decision.IsImportant);
+        Assert.Equal(NewsImportanceRuleIds.ConsequentialFinancialEvent, decision.RuleId);
+        Assert.Equal(0.75, decision.Score, 6);
+        Assert.Contains(decision.Factors, factor => factor.Contains("interest rate", StringComparison.Ordinal));
+        Assert.Contains(decision.Factors, factor => factor.Contains("tier-1", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void F2_TierOneMaterialIpo_IsImportant()
+    {
+        var item = ScoringFixtures.News("guardian-world", "The Guardian World",
+            "Billionaire Mukesh Ambani launches India's biggest-ever IPO", "2026-10-21T08:00:00Z");
+
+        var decision = _scorer.Score(item, ScoringFixtures.Now);
+
+        Assert.True(decision.IsImportant);
+        Assert.Equal(NewsImportanceRuleIds.ConsequentialFinancialEvent, decision.RuleId);
+        Assert.Equal(0.75, decision.Score, 6);
+        Assert.Contains(decision.Factors, factor => factor.Contains("ipo", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void F3_TierOneFinancialEventWithMaterialAmount_ScoresAbove070()
+    {
+        var item = ScoringFixtures.News("bbc-world", "BBC World",
+            "Central bank announces $500 billion emergency package for banks", "2026-10-21T08:00:00Z");
+
+        var decision = _scorer.Score(item, ScoringFixtures.Now);
+
+        Assert.True(decision.IsImportant);
+        Assert.Equal(NewsImportanceRuleIds.ConsequentialFinancialEvent, decision.RuleId);
+        Assert.Equal(0.80, decision.Score, 6);
+        Assert.True(decision.Score > 0.70);
+    }
+
+    [Fact]
+    public void F4_OfficialDecisionFromATrustedSource_IsImportant()
+    {
+        var item = ScoringFixtures.News("bbc-world", "BBC World",
+            "IMF approves $10 billion emergency financing programme for Egypt", "2026-10-21T08:00:00Z");
+
+        var decision = _scorer.Score(item, ScoringFixtures.Now);
+
+        Assert.True(decision.IsImportant);
+        Assert.Equal(NewsImportanceRuleIds.ConsequentialFinancialEvent, decision.RuleId);
+        Assert.Contains(decision.Factors, factor => factor.Contains("imf", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void F5_AnExplicitTrustMapPromotesAnOfficialSource()
+    {
+        var tiers = new NewsSourceTiers(new[]
+        {
+            new NewsSourceTierDefinition("ecb-press", "ECB Press", NewsSourceTier.TierOne),
+        });
+        var scorer = new NewsImportanceScorer(sourceTiers: tiers);
+        var item = ScoringFixtures.News("ecb-press", "ECB Press",
+            "European Central Bank raises interest rates by half a point", "2026-10-21T08:00:00Z");
+
+        var decision = scorer.Score(item, ScoringFixtures.Now);
+
+        Assert.True(decision.IsImportant);
+        Assert.Equal(NewsImportanceRuleIds.ConsequentialFinancialEvent, decision.RuleId);
+    }
+
+    [Fact]
+    public void F6_SpecialistFinancialEvent_IsNotImportantBecauseTheSourceIsNotTrusted()
+    {
+        var item = ScoringFixtures.News("ars-technica", "Ars Technica",
+            "Reserve Bank of Australia raises interest rates by half a point to 4.1%", "2026-10-21T08:00:00Z");
+
+        var decision = _scorer.Score(item, ScoringFixtures.Now);
+
+        Assert.False(decision.IsImportant);
+        Assert.Equal(NewsImportanceRuleIds.NoApprovedTrigger, decision.RuleId);
+        Assert.Contains(decision.Factors, factor => factor.Contains("trusted tier-1", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void F7_FinancialForecastOrOddsReport_IsNotImportant()
+    {
+        var item = ScoringFixtures.News("guardian-world", "The Guardian World",
+            "Odds of fifth interest rate hike this year shorten as RBA deputy warns inflation outlook 'worsening'",
+            "2026-10-21T08:00:00Z");
+
+        var decision = _scorer.Score(item, ScoringFixtures.Now);
+
+        Assert.False(decision.IsImportant);
+        Assert.Equal(NewsImportanceRuleIds.NoApprovedTrigger, decision.RuleId);
+        Assert.Contains(decision.Factors, factor => factor.Contains("excluded", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void F8_OrdinarySmallFundraising_IsNotImportant()
+    {
+        var item = ScoringFixtures.News("bbc-world", "BBC World",
+            "Local startup announces $4 million IPO to fund expansion", "2026-10-21T08:00:00Z");
+
+        var decision = _scorer.Score(item, ScoringFixtures.Now);
+
+        Assert.False(decision.IsImportant);
+        Assert.Equal(NewsImportanceRuleIds.NoApprovedTrigger, decision.RuleId);
+    }
+
+    [Theory]
+    [InlineData("Analysis: Fed raises rates as inflation cools")]
+    [InlineData("Central bank could cut rates next month, analysts say")]
+    [InlineData("Speculation grows that central bank will cut rates")]
+    [InlineData("Your money: central bank raises rates, what it means for savers")]
+    [InlineData("Stock market today: central bank raises rates as investors sell")]
+    [InlineData("How to save money when the central bank raises rates")]
+    [InlineData("Markets close mixed after quiet session")]
+    public void F9_RoutineForecastPersonalFinanceAndPromotion_AreNotImportant(string headline)
+    {
+        var item = ScoringFixtures.News("bbc-world", "BBC World", headline, "2026-10-21T08:00:00Z");
+
+        var decision = _scorer.Score(item, ScoringFixtures.Now);
+
+        Assert.False(decision.IsImportant);
+        Assert.Equal(NewsImportanceRuleIds.NoApprovedTrigger, decision.RuleId);
+    }
+
+    [Fact]
+    public void F10_FinancialRuleScoreIsAlwaysFiniteAndBounded()
+    {
+        var important = _scorer.Score(ScoringFixtures.News("bbc-world", "BBC World",
+            "Central bank announces $500 billion emergency package for banks", "2026-10-21T08:00:00Z"), ScoringFixtures.Now);
+        var routine = _scorer.Score(ScoringFixtures.News("bbc-world", "BBC World",
+            "Local startup announces $4 million IPO to fund expansion", "2026-10-21T08:00:00Z"), ScoringFixtures.Now);
+
+        Assert.True(double.IsFinite(important.Score));
+        Assert.InRange(important.Score, 0, 1);
+        Assert.True(important.Score > 0.70);
+        Assert.True(double.IsFinite(routine.Score));
+        Assert.InRange(routine.Score, 0, 1);
+        Assert.True(routine.Score < important.Score);
+    }
+
     [Fact]
     public void UnknownSource_ProducesExplicitClassificationAndMissingTimeFactors()
     {

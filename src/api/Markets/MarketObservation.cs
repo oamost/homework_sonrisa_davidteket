@@ -17,7 +17,10 @@ public sealed record MarketObservation(
     bool Delayed,
     string DelaySemantics,
     string Interval,
-    string Provenance);
+    string Provenance,
+    double? BaselineValue = null,
+    DateTimeOffset? BaselineUtc = null,
+    string? ComparisonKind = null);
 
 /// <summary>Outcome of parsing one market payload.</summary>
-public sealed record MarketParseResult(IReadOnlyList<MarketObservation> Items, int Skipped);
+public sealed record MarketParseResult(IReadOnlyList<MarketObservation> Items, int Skipped, string? BaselineDiagnostic = null);

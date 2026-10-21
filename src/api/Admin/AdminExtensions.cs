@@ -48,7 +48,7 @@ public static class AdminExtensions
         return services;
     }
 
-    public static IEndpointRouteBuilder MapAdminWall(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapAdminWall(this IEndpointRouteBuilder app, bool hostFrontend = false)
     {
         app.MapGet("/admin/login", (HttpContext context, IAntiforgery antiforgery) =>
         {
@@ -83,7 +83,7 @@ public static class AdminExtensions
             return Results.Ok(await reader.ReadAsync(cancellationToken));
         }).RequireAuthorization();
 
-        app.MapGet("/admin", async (HttpContext context, IAntiforgery antiforgery, IAdminOperationsReader reader, CancellationToken cancellationToken) =>
+        app.MapGet(hostFrontend ? "/admin/server" : "/admin", async (HttpContext context, IAntiforgery antiforgery, IAdminOperationsReader reader, CancellationToken cancellationToken) =>
         {
             var snapshot = await reader.ReadAsync(cancellationToken);
             var token = antiforgery.GetAndStoreTokens(context).RequestToken!;

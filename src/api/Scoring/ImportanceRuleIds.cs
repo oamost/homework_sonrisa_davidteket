@@ -9,6 +9,9 @@ public static class NewsImportanceRuleIds
     /// <summary>Two independent tier-1 sources carried the story within six hours.</summary>
     public const string TierOneCorroboration = "news.tier-1-corroboration";
 
+    /// <summary>A trusted source reported a consequential financial event.</summary>
+    public const string ConsequentialFinancialEvent = "news.consequential-financial-event";
+
     /// <summary>No approved news rule matched.</summary>
     public const string NoApprovedTrigger = "news.no-approved-trigger";
 }

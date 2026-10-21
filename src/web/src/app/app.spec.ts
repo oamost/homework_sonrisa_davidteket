@@ -70,6 +70,9 @@ describe('App', () => {
     fixture.detectChanges();
     httpMock.expectOne('/api/subscriptions').flush([]);
     httpMock.expectOne('/api/admin/email').flush(null, { status: 401, statusText: 'Unauthorized' });
+    httpMock.expectOne('/api/alert-settings/types').flush({isCustomized: false, selectedTypes: [], csrfToken: 'csrf'});
+    httpMock.expectOne('/api/admin/slack').flush(null, {status: 401, statusText: 'Unauthorized'});
+    httpMock.expectOne('/api/admin/webhooks').flush(null, {status: 401, statusText: 'Unauthorized'});
     await fixture.whenStable();
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('#subscriptions-heading')?.textContent).toContain('Alert setup');

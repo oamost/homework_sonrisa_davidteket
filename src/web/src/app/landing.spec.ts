@@ -24,6 +24,69 @@ describe('Important news landing page', () => {
     return fixture;
   }
 
+  it('shows only event cards by default and keeps the test action behind Debug', async () => {
+    const fixture = page();
+    http.expectOne('/api/news/important').flush({evaluatedUtc: '2026-10-21T12:00:00Z', omittedCount: 0,
+      missingMarketBaselineCount: 4, limitations: ['Incomplete coverage'],
+      items: [{title: 'News item', summary: null, sourceName: 'BBC', family: 'News', eventTypes: ['world-news'],
+        link: 'https://example.org/story', provenanceUrl: 'https://example.org/feed',
+        publishedUtc: '2026-10-21T11:00:00Z', importanceScore: 0.8, reasons: []}]});
+    await fixture.whenStable(); fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.textContent).toContain('News item');
+    expect(el.textContent).not.toContain('Displayed:');
+    expect(el.textContent).not.toContain('Incomplete coverage');
+    expect(el.textContent).not.toContain('market observations');
+    expect(el.textContent).not.toContain('Refresh events');
+    expect(el.querySelector('[data-testid="send-test-event"]')).toBeNull();
+    el.querySelector<HTMLInputElement>('#score-debug')!.click(); fixture.detectChanges();
+    expect(el.textContent).toContain('Displayed:');
+    expect(el.textContent).toContain('Incomplete coverage');
+    expect(el.querySelector('[data-testid="send-test-event"]')).not.toBeNull();
+  });
+
+  it('sends a Debug-only TEST request with a fresh token and refreshes the feed', async () => {
+    const fixture = page();
+    http.expectOne('/api/news/important').flush({evaluatedUtc: '2026-10-21T12:00:00Z', omittedCount: 0, items: []});
+    await fixture.whenStable(); fixture.detectChanges();
+    (fixture.nativeElement.querySelector('#score-debug') as HTMLInputElement).click(); fixture.detectChanges();
+    (fixture.nativeElement.querySelector('[data-testid="send-test-event"]') as HTMLButtonElement).click();
+    http.expectOne('/api/test-events/token').flush({csrfToken: 'one-time-token'});
+    const send = http.expectOne('/api/test-events');
+    expect(send.request.method).toBe('POST');
+    expect(send.request.headers.get('X-CSRF-TOKEN')).toBe('one-time-token');
+    expect(send.request.body).toEqual({});
+    send.flush({message: 'TEST event queued for configured matching channels.'});
+    http.expectOne('/api/news/important').flush({evaluatedUtc: '2026-10-21T12:01:00Z', omittedCount: 0,
+      items: [{title: 'TEST — not real news', sourceName: 'World Alerts internal test',
+        link: '/subscriptions', provenanceUrl: '/subscriptions', publishedUtc: '2026-10-21T12:00:00Z',
+        eventTypes: ['world-news'], reasons: ['Explicit local test request.']}]});
+    await fixture.whenStable(); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('TEST event queued');
+    expect(fixture.nativeElement.textContent).toContain('TEST — not real news');
+  });
+
+  it('uses the Debug companion button to show a different batch of real eligible news', async () => {
+    const fixture = page();
+    const items = Array.from({length: 7}, (_, index) => ({
+      title: `Provider story ${index + 1}`, summary: null, family: 'News', sourceName: index % 2 ? 'BBC' : 'Guardian',
+      link: `https://example.org/${index}`, provenanceUrl: `https://example.org/feed/${index % 2}`,
+      publishedUtc: '2026-10-21T11:00:00Z', eventTypes: ['world-news'], reasons: [],
+    }));
+    http.expectOne('/api/news/important').flush({evaluatedUtc: '2026-10-21T12:00:00Z', omittedCount: 0, items});
+    await fixture.whenStable(); fixture.detectChanges();
+    (fixture.nativeElement.querySelector('#score-debug') as HTMLInputElement).click(); fixture.detectChanges();
+    const button = fixture.nativeElement.querySelector('[data-testid="different-news"]') as HTMLButtonElement;
+    expect(button).not.toBeNull();
+    expect(button.previousElementSibling?.getAttribute('data-testid')).toBe('send-test-event');
+    button.click();
+    http.expectOne('/api/news/important').flush({evaluatedUtc: '2026-10-21T12:01:00Z', omittedCount: 0, items});
+    await fixture.whenStable(); fixture.detectChanges();
+    const shown = [...fixture.nativeElement.querySelectorAll('article h3')].map((element: Element) => element.textContent?.trim());
+    expect(shown).toEqual(['Provider story 6', 'Provider story 7']);
+    expect(fixture.nativeElement.textContent).toContain('Showing different stored news');
+  });
+
   it('loads live important news with provider fields, reasons and last updated time', async () => {
     const fixture = page();
     expect(fixture.nativeElement.textContent).toContain('Loading');
@@ -52,38 +115,21 @@ describe('Important news landing page', () => {
     expect(el.querySelector<HTMLAnchorElement>('a[href="https://example.org/feed"]')).toBeTruthy();
   });
 
-  it('shows empty state and refreshes on demand without overlapping requests', async () => {
+  it('shows empty state without offering manual refresh', async () => {
     const fixture = page();
     http.expectOne('/api/news/important').flush({ evaluatedUtc: '2026-10-21T12:00:00Z', omittedCount: 0, items: [] });
     await fixture.whenStable();
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('No important news');
-    const button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
-    button.click();
-    fixture.detectChanges();
-    button.click();
-    const refreshed = http.expectOne('/api/news/important');
-    refreshed.flush({ evaluatedUtc: '2026-10-21T12:01:00Z', omittedCount: 0,
-      items: [{ title: 'Breaking flood', summary: null, sourceName: 'BBC World',
-        link: 'https://example.org/flood', provenanceUrl: 'https://example.org/feed',
-        publishedUtc: '2026-10-21T12:00:00Z', reasons: ['Approved urgency keyword.'] }] });
-    await fixture.whenStable();
-    fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Breaking flood');
-    expect(fixture.nativeElement.textContent).not.toContain('No important news');
+    expect(fixture.nativeElement.textContent).not.toContain('Refresh events');
   });
 
-  it('shows an error and allows retry', async () => {
+  it('shows an error without promising manual retry', async () => {
     const fixture = page();
     http.expectOne('/api/news/important').flush('unavailable', { status: 503, statusText: 'Unavailable' });
     await fixture.whenStable();
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Unable to load');
-    fixture.nativeElement.querySelector('button').click();
-    http.expectOne('/api/news/important').flush({ evaluatedUtc: '2026-10-21T12:00:00Z', omittedCount: 0, items: [] });
-    await fixture.whenStable();
-    fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('No important news');
+    expect(fixture.nativeElement.textContent).toContain('Automatic refresh will retry');
   });
 
   it('cancels a pending request when navigating away', () => {
@@ -111,10 +157,12 @@ describe('Important news landing page', () => {
     const el: HTMLElement = fixture.nativeElement;
     expect(el.textContent).toContain('Major quake');
     expect(el.textContent).toContain('BTCUSDT at Binance');
-    expect(el.textContent).toContain('0 news · 1 disasters · 1 markets');
-    expect(el.textContent).toContain('2 market observations');
+    expect(el.textContent).not.toContain('0 news · 1 disasters · 1 markets');
+    expect(el.textContent).not.toContain('2 market observations');
     expect(el.textContent).not.toContain('market.move-threshold');
     (el.querySelector<HTMLInputElement>('#score-debug')!).click(); fixture.detectChanges();
+    expect(el.textContent).toContain('0 news · 1 disasters · 1 markets');
+    expect(el.textContent).toContain('2 market observations');
     expect(el.textContent).toContain('market.move-threshold');
     expect(el.textContent).toContain('Importance score: 0.72');
     expect(el.textContent).toContain('6%');
@@ -136,6 +184,8 @@ describe('Important news landing page', () => {
       ] });
     await fixture.whenStable(); fixture.detectChanges();
     const el: HTMLElement = fixture.nativeElement;
+    expect(el.textContent).not.toContain('Event types in this view:');
+    el.querySelector<HTMLInputElement>('#score-debug')!.click(); fixture.detectChanges();
     expect(el.textContent).toContain('Event types in this view:');
     expect(el.textContent).toContain('conflict (2)');
     expect(el.textContent).toContain('disaster.earthquake (1)');
@@ -169,6 +219,7 @@ describe('Important news landing page', () => {
       items: [] });
     await fixture.whenStable(); fixture.detectChanges();
     const el: HTMLElement = fixture.nativeElement;
+    el.querySelector<HTMLInputElement>('#score-debug')!.click(); fixture.detectChanges();
     expect(el.textContent).toContain('130 eligible but not important');
     expect(el.textContent).toContain('34 of those could not be scored from provider data');
     expect(el.textContent).toContain('10 eligible observations missing exact 24-hour baselines');

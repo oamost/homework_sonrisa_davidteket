@@ -1,8 +1,90 @@
-  Determining projects to restore...
-  All projects are up-to-date for restore.
-  WorldAlerts.Api -> /prod/sonrisa_homework/src/api/bin/Debug/net10.0/WorldAlerts.Api.dll
-  WorldAlerts.Api.Tests -> /prod/sonrisa_homework/src/tests/WorldAlerts.Api.Tests/bin/Debug/net10.0/WorldAlerts.Api.Tests.dll
-Test run for /prod/sonrisa_homework/src/tests/WorldAlerts.Api.Tests/bin/Debug/net10.0/WorldAlerts.Api.Tests.dll (.NETCoreApp,Version=v10.0)
-A total of 1 test files matched the specified pattern.
+Build and test verification — all-type important-event feed coverage (Selection scope)
 
-Passed!  - Failed:     0, Passed:   440, Skipped:     0, Total:   440, Duration: 1 s - WorldAlerts.Api.Tests.dll (net10.0)
+Scope of this run: src/api/Selection/**, src/web/src/app/landing.component.*,
+src/tests/WorldAlerts.Api.Tests/ImportantNewsTypeCoverageTests.cs,
+src/tests/WorldAlerts.Api.Tests/ImportantNewsEndpointTests.cs.
+No commit was made by the agent; the working tree carries the changes.
+
+Previous failing build (reported by the parent, retained for traceability):
+
+  /prod/sonrisa_homework/src/api/Selection/AlertSelectionService.cs(157,22): error CS1503:
+  Argument 1: cannot convert from 'System.TimeSpan' to 'decimal'
+
+  Cause: Math.Abs has no TimeSpan overload (TimeSpan.Abs() is the instance method).
+  Fix: the alignment check now compares TimeSpans directly and keeps the stated
+  one-minute tolerance; DateTimeOffset safety guards were added in the same method:
+    - observation time below DateTimeOffset.MinValue + 24h -> no baseline (no underflow)
+    - a baseline later than the observation is rejected (not a 24-hour-earlier value)
+    - |BaselineUtc - (ObservationUtc - 24h)| <= 1 minute, measured with TimeSpan.Duration()
+
+Build (serialized, no concurrent build):
+
+  $ dotnet build src/WorldAlerts.sln -m:1 /nodeReuse:false --nologo
+    Determining projects to restore...
+    All projects are up-to-date for restore.
+    WorldAlerts.Api -> src/api/bin/Debug/net10.0/WorldAlerts.Api.dll
+    WorldAlerts.Api.Tests -> src/tests/WorldAlerts.Api.Tests/bin/Debug/net10.0/WorldAlerts.Api.Tests.dll
+  Build succeeded.
+      0 Warning(s)
+      0 Error(s)
+  Time Elapsed 00:00:04.18
+
+Focused tests (provider baseline + new important-news type coverage + endpoint):
+
+  $ dotnet test src/WorldAlerts.sln --no-build --nologo -m:1 /nodeReuse:false \
+      --filter "FullyQualifiedName~MarketProviderBaselineTests|FullyQualifiedName~ImportantNewsTypeCoverageTests|FullyQualifiedName~ImportantNewsEndpointTests"
+  A total of 1 test files matched the specified pattern.
+  Passed!  - Failed: 0, Passed: 76, Skipped: 0, Total: 76, Duration: 1 s - WorldAlerts.Api.Tests.dll (net10.0)
+
+Full backend suite:
+
+  $ dotnet test src/WorldAlerts.sln --no-build --nologo -m:1 /nodeReuse:false
+  A total of 1 test files matched the specified pattern.
+  Passed!  - Failed: 0, Passed: 512, Skipped: 0, Total: 512, Duration: 2 s - WorldAlerts.Api.Tests.dll (net10.0)
+
+Frontend (focused landing tests plus the rest of the suite):
+
+  $ npx ng test --watch=false            (src/web)
+  Test Files  5 passed (5)
+       Tests  29 passed (29)
+
+Not verified here: the running API instance still serves the pre-change build, so the new
+diagnostic fields (eligibleNotImportantCount, unscorableCount, ruleCounts) and the provider
+rolling 24-hour baseline consumption are only observable after an API restart. No macroeconomics
+code or rule was added; that decision is still pending human approval.
+
+=== Slice 2: approved economy.financial taxonomy + news.consequential-financial-event rule ===
+
+Build (serialized, no concurrent build):
+
+  $ dotnet build src/WorldAlerts.sln -m:1 /nodeReuse:false --nologo
+    WorldAlerts.Api -> src/api/bin/Debug/net10.0/WorldAlerts.Api.dll
+    WorldAlerts.Api.Tests -> src/tests/WorldAlerts.Api.Tests/bin/Debug/net10.0/WorldAlerts.Api.Tests.dll
+  Build succeeded.
+      0 Warning(s)
+      0 Error(s)
+
+Focused tests for the approved financial addition:
+
+  $ dotnet test src/WorldAlerts.sln --no-build --nologo -m:1 /nodeReuse:false \
+      --filter "FullyQualifiedName~NewsImportanceScorerTests|FullyQualifiedName~CoverageGapTests|FullyQualifiedName~ImportantNewsTypeCoverageTests|FullyQualifiedName~ImportantNewsEndpointTests"
+  A total of 1 test files matched the specified pattern.
+  Passed!  - Failed: 0, Passed: 165, Skipped: 0, Total: 165, Duration: 1 s - WorldAlerts.Api.Tests.dll (net10.0)
+
+Full backend suite:
+
+  $ dotnet test src/WorldAlerts.sln --no-build --nologo -m:1 /nodeReuse:false
+  A total of 1 test files matched the specified pattern.
+  Passed!  - Failed: 0, Passed: 539, Skipped: 0, Total: 539, Duration: 2 s - WorldAlerts.Api.Tests.dll (net10.0)
+
+Frontend:
+
+  $ npx ng test --watch=false            (src/web)
+  Test Files  5 passed (5)
+       Tests  29 passed (29)
+
+Live effect of the approved rule (read-only replication of the new rule over the persisted
+database, evaluation instant 2026-10-21T04:20:00Z, 139 eligible news items): 2 eligible
+financial events become important (0.75, rule news.consequential-financial-event) and the
+eligible important news count moves from 4 to 7. No article was fabricated and no provider was
+probed. The running API still serves the pre-change build; the parent deploys.

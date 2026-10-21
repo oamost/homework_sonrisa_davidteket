@@ -69,7 +69,8 @@ public static class EmailEndpoints
             var status = EmailSettingsStore.Redact(await store.ReadAsync(ct));
             var token = antiforgery.GetAndStoreTokens(context).RequestToken;
             return Results.Ok(new { status.Configured, status.Enabled, status.Host, status.Port,
-                status.TlsMode, status.FromAddress, status.HasCredentials, csrfToken = token });
+                status.TlsMode, status.FromAddress, status.RecipientAddress, status.Username,
+                status.HasCredentials, csrfToken = token });
         }
         catch (Exception exception) when (exception is IOException or System.Security.Cryptography.CryptographicException)
         { return Results.Problem("Private SMTP settings are unavailable. Check the persistent data volume and keys.", statusCode: 503); }

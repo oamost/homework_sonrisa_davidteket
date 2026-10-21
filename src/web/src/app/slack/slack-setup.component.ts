@@ -7,6 +7,7 @@ interface SlackStatus {
   enabled: boolean;
   configId: string;
   target: string;
+  channelLabel?: string | null;
   csrfToken: string;
 }
 
@@ -20,12 +21,14 @@ interface SlackStatus {
       @if (access() === 'login') { <p>Sign in as the local administrator at <a href="/admin/login">Admin login</a>, then reload to configure Slack.</p> }
       @if (access() === 'error') { <p class="alert alert-danger">Slack settings unavailable. Reload to retry.</p> }
       @if (access() === 'admin') {
-        <p class="small text-secondary">Saved: {{ status()?.configured ? (status()?.enabled ? 'enabled' : 'disabled') : 'not configured' }}. Reference: {{ status()?.configId }}. The webhook URL is never displayed. A Slack subscription must use this non-secret config reference, not a webhook URL.</p>
-        <form (submit)="$event.preventDefault(); save()" novalidate>
+         <p class="small text-secondary">{{ status()?.enabled ? 'Ready for automatic alerts' : 'Needs setup: add an authorized Slack incoming webhook' }}. Signing in to Slack does not grant the app webhook access. In Slack, create an incoming webhook for the channel you choose and paste its URL here. The saved URL is never displayed. @if (status()?.channelLabel) { Channel: {{ status()?.channelLabel }}. }</p>
+         <form (submit)="$event.preventDefault(); save()" novalidate>
+           <label class="form-label" for="slack-label">Channel label (non-secret)</label>
+           <input id="slack-label" name="slackLabel" type="text" class="form-control mb-2" autocomplete="off" [value]="label" (input)="label = $any($event.target).value" [disabled]="busy()" placeholder="#alerts">
           <label class="form-label" for="slack-webhook">Authorized Slack incoming webhook URL</label>
           <input id="slack-webhook" name="slackWebhook" type="password" class="form-control" autocomplete="new-password" [value]="webhook" (input)="webhook = $any($event.target).value" [disabled]="busy()">
           <div class="form-text mb-2">Official HTTPS hooks.slack.com/services/ URL only. Leave blank to retain saved webhook. Do not paste the webhook into a subscription.</div>
-          <div class="form-check mb-2"><input id="slack-enabled" name="slackEnabled" type="checkbox" class="form-check-input" [checked]="enabled" (change)="enabled = $any($event.target).checked" [disabled]="busy()"><label for="slack-enabled" class="form-check-label">Enable automatic Slack delivery to this webhook's channel (may send pending eligible alerts after dispatch is connected)</label></div>
+           <div class="form-check mb-2"><input id="slack-enabled" name="slackEnabled" type="checkbox" class="form-check-input" [checked]="enabled" (change)="enabled = $any($event.target).checked" [disabled]="busy()"><label for="slack-enabled" class="form-check-label">Automatic Slack delivery (on as soon as settings are saved)</label></div>
           <button data-slack-save type="submit" class="btn btn-primary" [disabled]="busy()">Save Slack settings</button>
         </form>
         <form class="mt-3" (submit)="$event.preventDefault(); test()" novalidate>
@@ -46,12 +49,14 @@ export class SlackSetupComponent {
   protected readonly message = signal('');
   protected readonly error = signal('');
   protected webhook = '';
-  protected enabled = false;
+  protected enabled = true;
+  protected label = '';
   protected consent = false;
 
   constructor() {
     this.http.get<SlackStatus>('/api/admin/slack').pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: status => { this.status.set(status); this.enabled = status.enabled; this.access.set('admin'); },
+      next: status => { this.status.set(status); this.enabled = status.enabled || !status.configured;
+        this.label = status.channelLabel ?? ''; this.access.set('admin'); },
       error: response => this.access.set(response.status === 401 || response.status === 403 ? 'login' : 'error'),
     });
   }
@@ -60,7 +65,7 @@ export class SlackSetupComponent {
     const status = this.status();
     if (!status || this.busy()) return;
     this.busy.set(true); this.message.set(''); this.error.set('');
-    this.http.put<SlackStatus>('/api/admin/slack', {webhookUrl: this.webhook, enabled: this.enabled},
+    this.http.put<SlackStatus>('/api/admin/slack', {webhookUrl: this.webhook, enabled: this.enabled, channelLabel: this.label},
       {headers: {'X-CSRF-TOKEN': status.csrfToken}}).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: saved => {
         this.webhook = ''; this.consent = false; this.busy.set(false);

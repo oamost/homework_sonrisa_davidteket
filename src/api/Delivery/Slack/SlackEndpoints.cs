@@ -18,7 +18,8 @@ public static class SlackEndpoints
             {
                 var status = SlackSettingsStore.Redact(await store.ReadAsync(ct));
                 var token = antiforgery.GetAndStoreTokens(context).RequestToken;
-                return Results.Ok(new { status.Configured, status.Enabled, status.ConfigId, status.Target, csrfToken = token });
+                return Results.Ok(new { status.Configured, status.Enabled, status.ConfigId, status.Target,
+                    status.ChannelLabel, csrfToken = token });
             }
             catch (Exception ex) when (PrivateStorageFailure(ex)) { return StorageUnavailable(); }
         }).RequireAuthorization();

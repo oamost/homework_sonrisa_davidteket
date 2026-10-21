@@ -39,4 +39,16 @@ public sealed class SlackSettingsStoreTests
         var (retained, _) = SlackSettingsStore.Validate(new SlackSettingsUpdate(null, true), disabled);
         Assert.Equal(disabled.WebhookUrl, retained!.WebhookUrl);
     }
+
+    [Fact]
+    public void Non_secret_channel_label_is_readable_without_exposing_webhook()
+    {
+        var (settings, error) = SlackSettingsStore.Validate(new SlackSettingsUpdate(
+            "https://hooks.slack.com/services/T/B/XXXXXXXXXXXXXXXXXXXXXXXX", true)
+            { ChannelLabel = "#alerts" }, null);
+        Assert.Null(error);
+        var status = SlackSettingsStore.Redact(settings);
+        Assert.Equal("#alerts", status.ChannelLabel);
+        Assert.DoesNotContain("hooks.slack.com", System.Text.Json.JsonSerializer.Serialize(status));
+    }
 }

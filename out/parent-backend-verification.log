@@ -1,0 +1,8 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  WorldAlerts.Api -> /prod/sonrisa_homework/src/api/bin/Debug/net10.0/WorldAlerts.Api.dll
+  WorldAlerts.Api.Tests -> /prod/sonrisa_homework/src/tests/WorldAlerts.Api.Tests/bin/Debug/net10.0/WorldAlerts.Api.Tests.dll
+Test run for /prod/sonrisa_homework/src/tests/WorldAlerts.Api.Tests/bin/Debug/net10.0/WorldAlerts.Api.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:   541, Skipped:     0, Total:   541, Duration: 1 s - WorldAlerts.Api.Tests.dll (net10.0)

@@ -4,10 +4,15 @@
       <h2 id="news-heading" class="h3 mb-1">Important world events</h2>
       <p class="text-secondary mb-0">Eligible news, disasters and market moves from connected feeds over the past 24 hours. No subscription needed to preview.</p>
     </div>
-    <button type="button" class="btn btn-outline-primary" (click)="refresh()" [disabled]="loading()" aria-label="Refresh important news">Refresh events</button>
   </div>
-  <label class="d-inline-flex gap-2 align-items-center mb-3"><input id="score-debug" type="checkbox" [checked]="showScoreDebug()" (change)="toggleScoreDebug()"> Show score debug</label>
+  <label class="d-inline-flex gap-2 align-items-center mb-3 small"><input id="score-debug" type="checkbox" [checked]="showScoreDebug()" (change)="toggleScoreDebug()"> Debug</label>
 
+  @if (showScoreDebug()) {
+    <div class="mb-3" data-testid="feed-diagnostics">
+      <button type="button" data-testid="send-test-event" class="btn btn-sm btn-outline-warning" (click)="sendTestEvent()" [disabled]="testBusy()">Send TEST event</button>
+      <button type="button" data-testid="different-news" class="btn btn-sm btn-outline-primary ms-2" (click)="refreshDifferentNews()" [disabled]="loading()">Different news</button>
+      @if (testMessage()) { <p role="status" class="small mt-2">{{ testMessage() }}</p> }
+      @if (differentNewsMessage()) { <p role="status" class="small mt-2">{{ differentNewsMessage() }}</p> }
   @if (response(); as result) {
     <p class="small text-secondary">Displayed: {{ countFamily(result.items, 'News') }} news · {{ countFamily(result.items, 'Disaster') }} disasters · {{ countFamily(result.items, 'Market') }} markets.</p>
     @if (typeCoverage(result.items).length) {
@@ -31,23 +36,25 @@
     }
     <p class="small text-secondary">Last updated: <time [attr.datetime]="result.evaluatedUtc">{{ result.evaluatedUtc | date:'medium':'UTC' }} UTC</time></p>
   }
+    @if (response(); as result) {
+      @if (result.missingMarketBaselineCount) { <p class="alert alert-info">{{ result.missingMarketBaselineCount }} market observations could not be scored as important because the exact 24-hour baseline is missing.</p> }
+      @if (result.limitations?.length) { <details class="small mb-3"><summary>Coverage and data gaps</summary><ul>@for (gap of result.limitations; track gap) { <li>{{ gap }}</li> }</ul></details> }
+      @if (result.omittedRejectedCount) { <p class="small text-secondary">{{ result.omittedRejectedCount }} non-displayed rejected observations omitted from diagnostics.</p> }
+      @if (result.omittedCount > 0) { <p class="small text-secondary">Showing the first {{ result.items.length }} important events; {{ result.omittedCount }} additional events omitted.</p> }
+    }
+    </div>
+  }
   <div aria-live="polite" role="status">
     @if (loading()) { <p>Loading important news…</p> }
-    @if (error()) { <p class="alert alert-warning">Unable to load important news. Try refreshing.</p> }
+    @if (error()) { <p class="alert alert-warning">Unable to update important news. Automatic refresh will retry; displayed items may be stale.</p> }
     @if (!loading() && !error() && response()?.items?.length === 0) {
       <p class="alert alert-light border">No important news, disasters or markets from connected feeds in the past 24 hours.</p>
     }
   </div>
 
   @if (response(); as result) {
-    @if (result.missingMarketBaselineCount) { <p class="alert alert-info">{{ result.missingMarketBaselineCount }} market observations could not be scored as important because the exact 24-hour baseline is missing.</p> }
-    @if (result.limitations?.length) { <details class="small mb-3"><summary>Coverage and data gaps</summary><ul>@for (gap of result.limitations; track gap) { <li>{{ gap }}</li> }</ul></details> }
-    @if (result.omittedRejectedCount) { <p class="small text-secondary">{{ result.omittedRejectedCount }} non-displayed rejected observations omitted from diagnostics.</p> }
-    @if (result.omittedCount > 0) {
-      <p class="small text-secondary">Showing the first {{ result.items.length }} important events; {{ result.omittedCount }} additional events omitted.</p>
-    }
     <div class="row row-cols-1 row-cols-lg-2 g-3">
-      @for (item of result.items; track item.link + item.title) {
+      @for (item of visibleItems(result.items); track item.link + item.title) {
         <article class="col">
           <div class="card h-100 shadow-sm">
             <div class="card-body">

@@ -1,6 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { SlackSetupComponent } from '../slack/slack-setup.component';
+import { WebhookSetupComponent } from './webhook-setup.component';
 
 interface Subscription {
   id: number;
@@ -12,8 +14,11 @@ interface Subscription {
 
 interface EmailStatus {
   configured: boolean; enabled: boolean; host: string | null; port: number | null;
-  tlsMode: string | null; fromAddress: string | null; hasCredentials: boolean; csrfToken: string;
+  tlsMode: string | null; fromAddress: string | null; recipientAddress?: string | null;
+  username?: string | null; hasCredentials: boolean; csrfToken: string;
 }
+
+interface EventTypePreference { isCustomized: boolean; selectedTypes: string[]; csrfToken: string; }
 
 const eventTypes = [
   {code: 'world-news', name: 'World news', description: 'Important breaking world stories.'},
@@ -39,17 +44,23 @@ const eventTypes = [
   {code: 'tech.critical-infrastructure', name: 'Critical infrastructure', description: 'Consequential infrastructure news.'},
   {code: 'environment.energy', name: 'Environment and energy', description: 'Consequential environment and energy news.'},
   {code: 'science.transformative', name: 'Transformative science', description: 'Important science news; topic filtering is not proven.'},
+  {code: 'economy.financial', name: 'Economy and financial news', description: 'Consequential economic and financial news: central bank and rate decisions, inflation, jobs and GDP, defaults, bank failures, trading halts, major IPOs and mergers.'},
 ] as const;
 
 @Component({
   selector: 'app-subscriptions',
   standalone: true,
+  imports: [SlackSetupComponent, WebhookSetupComponent],
   templateUrl: './subscriptions.component.html',
 })
 export class SubscriptionsComponent {
   private readonly http = inject(HttpClient);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly eventTypes = eventTypes;
+  protected readonly preference = signal<EventTypePreference | null>(null);
+  protected readonly selectedTypes = signal<Set<string>>(new Set());
+  protected readonly preferenceBusy = signal(false);
+  protected readonly preferenceMessage = signal('');
   protected readonly items = signal<Subscription[] | null>(null);
   protected readonly loading = signal(false);
   protected readonly pending = signal(false);
@@ -73,17 +84,55 @@ export class SubscriptionsComponent {
   protected smtpUsername = '';
   protected smtpPassword = '';
   protected smtpFrom = '';
-  protected smtpEnabled = false;
+  protected smtpEnabled = true;
+  protected recipientAddress = '';
   protected testDestination = '';
 
-  constructor() { this.refresh(); this.refreshEmail(); }
+  constructor() { this.refresh(); this.refreshEmail(); this.refreshPreference(); }
+
+  protected refreshPreference(): void {
+    this.http.get<EventTypePreference>('/api/alert-settings/types').pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: state => { this.preference.set(state); this.selectedTypes.set(new Set(state.selectedTypes)); },
+      error: () => this.preferenceMessage.set('Event type settings unavailable. Reload to retry.'),
+    });
+  }
+
+  protected toggleType(code: string): void {
+    if (this.preferenceBusy()) return;
+    this.selectedTypes.update(previous => {
+      const next = new Set(previous);
+      if (next.has(code)) next.delete(code); else next.add(code);
+      return next;
+    });
+    this.preferenceMessage.set('Unsaved changes');
+  }
+
+  protected saveTypes(): void {
+    const current = this.preference();
+    if (!current || this.preferenceBusy()) return;
+    this.preferenceBusy.set(true);
+    this.preferenceMessage.set('');
+    const selectedTypes = this.eventTypes.map(type => type.code).filter(code => this.selectedTypes().has(code));
+    this.http.put<EventTypePreference>('/api/alert-settings/types', {selectedTypes},
+      {headers: {'X-CSRF-TOKEN': current.csrfToken}}).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: saved => {
+          this.preference.set({...saved, csrfToken: current.csrfToken});
+          this.selectedTypes.set(new Set(saved.selectedTypes));
+          this.preferenceBusy.set(false);
+          this.preferenceMessage.set('Saved event types for every configured channel.');
+        },
+        error: () => { this.preferenceBusy.set(false); this.preferenceMessage.set('Could not save event types. Retry.'); },
+      });
+  }
 
   protected refreshEmail(): void {
     this.http.get<EmailStatus>('/api/admin/email').pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: status => {
         this.emailStatus.set(status); this.emailAccess.set('admin');
         this.smtpHost = status.host ?? ''; this.smtpPort = status.port ?? 587;
-        this.smtpFrom = status.fromAddress ?? ''; this.smtpEnabled = status.enabled;
+        this.smtpUsername = status.username ?? '';
+        this.smtpFrom = status.fromAddress ?? ''; this.smtpEnabled = status.enabled || !status.configured;
+        this.recipientAddress = status.recipientAddress ?? '';
       },
       error: error => this.emailAccess.set(error.status === 401 || error.status === 403 ? 'login' : 'error'),
     });
@@ -96,7 +145,7 @@ export class SubscriptionsComponent {
     this.http.put<EmailStatus>('/api/admin/email', {
       host: this.smtpHost, port: Number(this.smtpPort), tlsMode: 'StartTls',
       username: this.smtpUsername, password: this.smtpPassword,
-      fromAddress: this.smtpFrom, enabled: this.smtpEnabled,
+      fromAddress: this.smtpFrom, recipientAddress: this.recipientAddress, enabled: this.smtpEnabled,
     }, {headers: {'X-CSRF-TOKEN': status.csrfToken}}).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: saved => {
         this.emailStatus.set({...saved, csrfToken: status.csrfToken});

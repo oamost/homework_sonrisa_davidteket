@@ -1,0 +1,81 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 1.13kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for mcr.microsoft.com/dotnet/sdk:10.0
+#2 ...
+
+#3 [internal] load metadata for mcr.microsoft.com/dotnet/aspnet:10.0
+#3 DONE 0.4s
+
+#2 [internal] load metadata for mcr.microsoft.com/dotnet/sdk:10.0
+#2 DONE 0.4s
+
+#4 [verified 1/6] FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:0d99ebf1ccad15037b5c98c9fe8979d6b8dbac23812feae2277a0b277b5c5ffa
+#4 resolve mcr.microsoft.com/dotnet/sdk:10.0@sha256:0d99ebf1ccad15037b5c98c9fe8979d6b8dbac23812feae2277a0b277b5c5ffa 0.0s done
+#4 DONE 0.0s
+
+#5 [verified 2/6] WORKDIR /work
+#5 CACHED
+
+#6 [stage-1 1/4] FROM mcr.microsoft.com/dotnet/aspnet:10.0@sha256:d5633778c754e89a386882eddf8dbee6942447a8a4b8267c19cf1e1158d0b0ac
+#6 resolve mcr.microsoft.com/dotnet/aspnet:10.0@sha256:d5633778c754e89a386882eddf8dbee6942447a8a4b8267c19cf1e1158d0b0ac 0.0s done
+#6 DONE 0.0s
+
+#7 [stage-1 2/4] WORKDIR /app
+#7 CACHED
+
+#8 [internal] load build context
+#8 transferring context: 354.74kB done
+#8 DONE 0.0s
+
+#9 [verified 3/6] COPY src/WorldAlerts.sln src/WorldAlerts.sln
+#9 DONE 0.0s
+
+#10 [verified 4/6] COPY src/api/ src/api/
+#10 DONE 0.2s
+
+#11 [verified 5/6] COPY src/tests/WorldAlerts.Api.Tests/ src/tests/WorldAlerts.Api.Tests/
+#11 DONE 0.0s
+
+#12 [verified 6/6] RUN dotnet restore src/WorldAlerts.sln     && dotnet build src/WorldAlerts.sln --configuration Release --no-restore     && dotnet test src/WorldAlerts.sln --configuration Release --no-build --no-restore     && dotnet publish src/api/WorldAlerts.Api.csproj --configuration Release --no-build --no-restore --output /publish
+#12 0.684   Determining projects to restore...
+#12 6.272   Restored /work/src/api/WorldAlerts.Api.csproj (in 5.32 sec).
+#12 9.396   Restored /work/src/tests/WorldAlerts.Api.Tests/WorldAlerts.Api.Tests.csproj (in 8.45 sec).
+#12 12.63   WorldAlerts.Api -> /work/src/api/bin/Release/net10.0/WorldAlerts.Api.dll
+#12 14.01   WorldAlerts.Api.Tests -> /work/src/tests/WorldAlerts.Api.Tests/bin/Release/net10.0/WorldAlerts.Api.Tests.dll
+#12 14.04 
+#12 14.04 Build succeeded.
+#12 14.04     0 Warning(s)
+#12 14.04     0 Error(s)
+#12 14.04 
+#12 14.04 Time Elapsed 00:00:04.46
+#12 14.64 Test run for /work/src/tests/WorldAlerts.Api.Tests/bin/Release/net10.0/WorldAlerts.Api.Tests.dll (.NETCoreApp,Version=v10.0)
+#12 14.77 A total of 1 test files matched the specified pattern.
+#12 18.72 
+#12 18.72 Passed!  - Failed:     0, Passed:   541, Skipped:     0, Total:   541, Duration: 3 s - WorldAlerts.Api.Tests.dll (net10.0)
+#12 19.33   WorldAlerts.Api -> /publish/
+#12 DONE 19.4s
+
+#13 [stage-1 3/4] COPY --from=verified /publish/ ./
+#13 DONE 0.1s
+
+#14 [stage-1 4/4] RUN mkdir -p /app/data /home/app/.aspnet/DataProtection-Keys     && chown app:app /app/data /home/app/.aspnet /home/app/.aspnet/DataProtection-Keys     && chmod 700 /home/app/.aspnet/DataProtection-Keys
+#14 DONE 0.1s
+
+#15 exporting to image
+#15 exporting layers
+#15 exporting layers 0.6s done
+#15 exporting manifest sha256:9581a9cd5810b82e9b138de61dbe727f81cac40cfab1f918e8c04918ba285b6f done
+#15 exporting config sha256:bc748318768a1502cc33a0e97a2ddbcde9d90198fe10d2007eb49ae4e3c871a0 done
+#15 exporting attestation manifest sha256:612fd12f4e93093d0effca7ce8dcb678f5a5a7bf037da97096826cb63b09e5fb 0.0s done
+#15 exporting manifest list sha256:97d020cd1dafabd300e05dc003b45d76a96125e8994bfca2f8bcdade3d5c7c19 0.0s done
+#15 naming to docker.io/library/task26-current-check:verified done
+#15 unpacking to docker.io/library/task26-current-check:verified
+#15 unpacking to docker.io/library/task26-current-check:verified 0.2s done
+#15 DONE 0.9s
+task26-current-check-data
+task26-current-check-keys
+0f7a4dcc550f14589869e200ce686a739dca5d81602cb84afef461a7cdcb4c88

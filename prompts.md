@@ -567,3 +567,132 @@ plus this: [Image 1]  look up the baseline on the internet
 ## Prompt 105
 
 I still don't see market related important news in the feed. I see these now: [Image 1]
+
+## Prompt 106
+
+what is the importance score baseline?
+
+## Prompt 107
+
+values closer to 1 should have high importance. meaning > 0.7 is important event and anything below is ignored (no notification or feed publication). is this a bad direction? my idea
+
+## Prompt 108
+
+phrase a commit message according to the current changeset. mark the tasks involved with each change.
+
+## Prompt 109
+
+"I recommend adding a macro/financial-news category and consequential-event rule, rather than misclassifying articles as market-price observations. Approve that addition? It changes the previously agreed taxonomy. " - approved. I want to see important news like that in the feed
+
+## Prompt 110
+
+also update tasks.md according to latest state on WIP and TESTING tasks. list them here.
+
+## Prompt 111
+
+set the associated task to done. I see it, nice work!
+
+## Prompt 112
+
+test task 12, 19 and 20, and 26. if they pass you can mark them as done
+
+## Prompt 113
+
+continue
+
+## Prompt 114
+
+continue from here (limit exhauste for a few hours on deepseek and gpt)
+
+## Prompt 115
+
+continue
+
+## Prompt 116
+
+please start the application. let's test an email notification
+
+## Prompt 117
+
+before I start requesting changes, could you:
+
+1. take a look at task 21 and see if its done
+2. spawn an agent to implement task 23
+3. mark task 25 as done
+4. put task 30 on TESTING status? 
+
+## Prompt 118
+
+I just registered a slack account and I'm currently signed in. here are the things I would like to get fixed:
+
+1. this is the feed: [Image 1]  the area marked with a green rectangle should be hidden by default and only a  small debug checkmark should make it visible
+2. refresh events should never be manual, make it automatic
+3. in alert setup, I want to have a straightforward way to setup email AND slack alerts. I'm signed into my email and my slack for testing purposes. make sure, that the progress will be seamless
+4. by default all types of events should be the default subscription - also no need to list all these: [Image 2]  - the user should just able to add-remove event type tags (compact tags next to each other, clickable)
+5. slack/email address fields are dotted (password field) by default: these are bad. change them. [Image 3]  - again, there must be a way to make the notification setup to be much less hassle. fix this, then after done
+we will send a test notification to both channels. slack and email should never be disabled by default
+6. I don't see the preparation being done for plugging in additional notification channels
+7. admin operations: nothing is being refreshed: [Image 4] 
+8. give the feed homepage a hidden test button (available with the checkmark discussed in 1.) so when I click it the server emits a test event (test important news item) so I can test the notifs landing on all designated platforms
+[Attached image/png: clipboard]
+[Attached image/png: clipboard]
+[Attached image/png: clipboard]
+[Attached image/png: clipboard]
+
+## Prompt 119
+
+it should be a default setting meaning the user is subbed to all event types. then they can remove/add those types and save the setting if they would like
+
+## Prompt 120
+
+both
+
+## Prompt 121
+
+I mean  "should automatic alerts begin immediately—including eligible catch-up events" << always on and always should work
+test notif: I must be able to test any time
+thats how I meant "both"
+
+## Prompt 122
+
+anyone
+
+## Prompt 123
+
+follow the saved event type selection, every channel by default
+
+## Prompt 124
+
+you CAN edit the UI and the affected backend, no need to do isolated changes
+
+## Prompt 125
+
+and you must address all of those 8 requests
+
+## Prompt 126
+
+continue the work. for reference, this is what I requested. all must be done, no isolated edits, fix these issues so I can test it: I just registered a slack account and I'm currently signed in. here are the things I would like to get fixed:
+
+1. this is the feed: [Image 1]  the area marked with a green rectangle should be hidden by default and only a  small debug checkmark should make it visible
+2. refresh events should never be manual, make it automatic
+3. in alert setup, I want to have a straightforward way to setup email AND slack alerts. I'm signed into my email and my slack for testing purposes. make sure, that the progress will be seamless
+4. by default all types of events should be the default subscription - also no need to list all these: [Image 2]  - the user should just able to add-remove event type tags (compact tags next to each other, clickable)
+5. slack/email address fields are dotted (password field) by default: these are bad. change them. [Image 3]  - again, there must be a way to make the notification setup to be much less hassle. fix this, then after done
+we will send a test notification to both channels. slack and email should never be disabled by default
+6. I don't see the preparation being done for plugging in additional notification channels
+7. admin operations: nothing is being refreshed: [Image 4] 
+8. give the feed homepage a hidden test button (available with the checkmark discussed in 1.) so when I click it the server emits a test event (test important news item) so I can test the notifs landing on all designated platforms [Attached image/png: clipboard] [Attached image/png: clipboard] [Attached image/png: clipboard] [Attached image/png: clipboard]
+
+## Prompt 127
+
+I approve the design. yep, generic configurable webhook without any hassle.
+
+## Prompt 128
+
+the plan is good, but don't isolate it from the implementation, this is an inhouse project, not a marketable one. I want you to perform real implementations against these requirements, so 
+I can finally start testing it. you don't need to run that extensive amount of tests. let's get to it
+
+## Prompt 129
+
+also please write a meaningful message for the current git changes (mentioning which tasks were affected and by what) 
+plus make sure to update prompts.md because it fell behind since the last update

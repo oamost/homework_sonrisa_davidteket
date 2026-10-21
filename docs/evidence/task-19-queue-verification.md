@@ -1,0 +1,5 @@
+# Task 19 — queue and pacing verification
+
+The human authorized marking task 19 DONE if testing succeeds. On the current tree, the parent ran the serialized full backend suite (`dotnet test src/WorldAlerts.sln --nologo -m:1 /nodeReuse:false`): 541 passed, 0 failed. The queue/dispatch/pipeline filtered run (`FullyQualifiedName~NotificationQueue|FullyQualifiedName~NotificationDispatch|FullyQualifiedName~AlertPipeline|FullyQualifiedName~EmailNotificationWorker`) passed 6/6.
+
+`NotificationQueueTests` covers 50-item startup burst, subsequent 10/minute pacing across process restart, 1/5/15-minute bounded retry followed by terminal failure, and quarantining unacknowledged external sends as `uncertain` rather than automatically replaying them. `NotificationDispatchTests` covers both channel jobs, acknowledged restart suppression, and temporary transport failure without persisting secret-bearing exception messages. These are offline controlled tests, not claims of an external provider accepting delivery. An external send that succeeded just before a local crash cannot be proven exactly once; its `uncertain` state requires administrator investigation.

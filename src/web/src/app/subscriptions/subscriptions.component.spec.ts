@@ -21,14 +21,70 @@ describe('Alert setup', () => {
     expect(fixture.nativeElement.textContent).toContain('Loading');
     http.expectOne('/api/subscriptions').flush(items);
     http.expectOne('/api/admin/email').flush(null, {status: 401, statusText: 'Unauthorized'});
+    http.expectOne('/api/alert-settings/types').flush({isCustomized: false, csrfToken: 'type-csrf', selectedTypes: [
+      'world-news', 'conflict', 'politics', 'diplomacy', 'disaster.earthquake', 'disaster.flood',
+      'disaster.cyclone', 'disaster.wildfire', 'disaster.volcano', 'disaster.drought',
+      'disaster.tsunami', 'disaster.landslide', 'disaster.epidemic', 'market.crypto', 'market.fx',
+      'market.indices', 'health.humanitarian', 'tech.cyber', 'tech.ai', 'tech.acquisitions',
+      'tech.critical-infrastructure', 'environment.energy', 'science.transformative', 'economy.financial']});
+    http.expectOne('/api/admin/slack').flush(null, {status: 401, statusText: 'Unauthorized'});
+    http.expectOne('/api/admin/webhooks').flush(null, {status: 401, statusText: 'Unauthorized'});
     fixture.detectChanges();
     return fixture;
   }
+
+  it('shows compact selected tags and saves the edited selection once for every channel', () => {
+    const fixture = page();
+    const tags = fixture.nativeElement.querySelectorAll('[data-event-tag]') as NodeListOf<HTMLButtonElement>;
+    expect(tags.length).toBe(24);
+    expect([...tags].every(tag => tag.getAttribute('aria-pressed') === 'true')).toBe(true);
+    tags[0].click(); fixture.detectChanges();
+    expect(tags[0].getAttribute('aria-pressed')).toBe('false');
+    (fixture.nativeElement.querySelector('[data-save-types]') as HTMLButtonElement).click();
+    const save = http.expectOne('/api/alert-settings/types');
+    expect(save.request.method).toBe('PUT');
+    expect(save.request.headers.get('X-CSRF-TOKEN')).toBe('type-csrf');
+    expect(save.request.body.selectedTypes).not.toContain('world-news');
+    save.flush({isCustomized: true, selectedTypes: save.request.body.selectedTypes});
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Saved event types');
+  });
+
+  it('does not allow editing tags before the saved preference has loaded', () => {
+    const fixture = TestBed.createComponent(SubscriptionsComponent);
+    fixture.detectChanges();
+    const tags = fixture.nativeElement.querySelectorAll('[data-event-tag]') as NodeListOf<HTMLButtonElement>;
+    expect(tags.length).toBe(24);
+    expect(tags[0].disabled).toBe(true);
+    http.expectOne('/api/subscriptions').flush([]);
+    http.expectOne('/api/admin/email').flush(null, {status: 401, statusText: 'Unauthorized'});
+    http.expectOne('/api/admin/slack').flush(null, {status: 401, statusText: 'Unauthorized'});
+    http.expectOne('/api/admin/webhooks').flush(null, {status: 401, statusText: 'Unauthorized'});
+    http.expectOne('/api/alert-settings/types').flush({isCustomized: false, selectedTypes: ['world-news'], csrfToken: 'csrf'});
+    fixture.detectChanges();
+    expect(tags[0].disabled).toBe(false);
+    expect(tags[0].getAttribute('aria-pressed')).toBe('true');
+  });
 
   it('shows admin login guidance rather than SMTP credentials to a visitor', () => {
     const fixture = page();
     expect(fixture.nativeElement.textContent).toContain('Admin login');
     expect(fixture.nativeElement.querySelector('[name="smtpPassword"]')).toBeNull();
+  });
+
+  it('keeps Slack and webhook setup available when email settings fail', () => {
+    const fixture = TestBed.createComponent(SubscriptionsComponent);
+    fixture.detectChanges();
+    http.expectOne('/api/subscriptions').flush([]);
+    http.expectOne('/api/admin/email').flush(null, {status: 503, statusText: 'Unavailable'});
+    http.expectOne('/api/alert-settings/types').flush({isCustomized: false, selectedTypes: [], csrfToken: 'csrf'});
+    fixture.detectChanges();
+    http.expectOne('/api/admin/slack').flush({configured: false, enabled: false,
+      configId: 'default', target: 'not configured', csrfToken: 'slack-csrf'});
+    http.expectOne('/api/admin/webhooks').flush({channels: [], csrfToken: 'webhook-csrf'});
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[name="slackWebhook"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[name="webhookId"]')).not.toBeNull();
   });
 
   it('saves private SMTP configuration with CSRF and explicitly tests a chosen recipient', async () => {
@@ -37,13 +93,15 @@ describe('Alert setup', () => {
     http.expectOne('/api/subscriptions').flush([]);
     http.expectOne('/api/admin/email').flush({configured: false, enabled: false, host: null, port: null,
       tlsMode: null, fromAddress: null, hasCredentials: false, csrfToken: 'csrf-test'});
+    http.expectOne('/api/alert-settings/types').flush({isCustomized: false, csrfToken: 'type-csrf', selectedTypes: []});
+    http.expectOne('/api/admin/slack').flush(null, {status: 401, statusText: 'Unauthorized'});
+    http.expectOne('/api/admin/webhooks').flush({channels: [], csrfToken: 'webhook-csrf'});
     fixture.detectChanges();
     await select(fixture, 'smtpHost', 'mail.example.org');
     await select(fixture, 'smtpUsername', 'sender');
     await select(fixture, 'smtpPassword', 'private-secret');
     await select(fixture, 'smtpFrom', 'alerts@example.org');
-    const enabled = fixture.nativeElement.querySelector('[name="smtpEnabled"]') as HTMLInputElement;
-    enabled.click(); fixture.detectChanges();
+    await select(fixture, 'smtpRecipient', 'receiver@example.org');
     (fixture.nativeElement.querySelector('#smtp-heading')!.closest('section')!.querySelector('button[type="submit"]') as HTMLButtonElement).click();
     const save = http.expectOne('/api/admin/email');
     expect(save.request.method).toBe('PUT');
@@ -76,11 +134,12 @@ describe('Alert setup', () => {
   it('lists only approved event types and explains eligibility and current delivery limitations', () => {
     const fixture = page();
     const text = fixture.nativeElement.textContent;
-    expect(fixture.nativeElement.querySelectorAll('option[data-event-type]').length).toBe(23);
+    expect(fixture.nativeElement.querySelectorAll('option[data-event-type]').length).toBe(24);
     expect(text).toContain('Earthquake');
     expect(text).toContain('World news');
+    expect(text).toContain('Economy and financial news');
     expect(text).toContain('24 hours');
-    expect(text).toContain('not yet');
+    expect(text).toContain('not proven');
     expect(text).toContain('No subscriptions');
   });
 
@@ -145,7 +204,7 @@ describe('Alert setup', () => {
     const fixture = page([{id: 7, eventType: 'market.fx', channel: 'slack', destination: 'channel:#private', enabled: true}]);
     expect(fixture.nativeElement.textContent).not.toContain('channel:#private');
     const destination = fixture.nativeElement.querySelector('[name="destination"]') as HTMLInputElement;
-    expect(destination.type).toBe('password');
+    expect(destination.type).toBe('email');
     expect(destination.value).toBe('');
     (fixture.nativeElement.querySelector('[data-subscription] button[data-edit]') as HTMLButtonElement).click();
     fixture.detectChanges();
@@ -168,6 +227,9 @@ describe('Alert setup', () => {
     const fixture = TestBed.createComponent(SubscriptionsComponent);
     fixture.detectChanges();
     http.expectOne('/api/admin/email').flush(null, {status: 401, statusText: 'Unauthorized'});
+    http.expectOne('/api/alert-settings/types').flush({isCustomized: false, csrfToken: 'type-csrf', selectedTypes: []});
+    http.expectOne('/api/admin/slack').flush(null, {status: 401, statusText: 'Unauthorized'});
+    http.expectOne('/api/admin/webhooks').flush(null, {status: 401, statusText: 'Unauthorized'});
     http.expectOne('/api/subscriptions').flush('secret-error', {status: 503, statusText: 'Unavailable'});
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Unable to load');

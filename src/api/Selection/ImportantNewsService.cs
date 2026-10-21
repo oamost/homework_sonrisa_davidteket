@@ -1,7 +1,9 @@
+using WorldAlerts.Api.Queue;
+
 namespace WorldAlerts.Api.Selection;
 
 /// <summary>Public read-only cross-family preview, independent of subscriptions and delivery.</summary>
-public sealed class ImportantNewsService(AlertSelectionService selection)
+public sealed class ImportantNewsService(AlertSelectionService selection, TestEventService? tests = null)
 {
     private const int DisplayLimit = 100;
 
@@ -9,11 +11,13 @@ public sealed class ImportantNewsService(AlertSelectionService selection)
     {
         var preview = await selection.PreviewPublicAsync(cancellationToken);
         var eligible = preview.Events.Where(e => e.Eligibility.IsEligible && e.Importance.IsImportant).ToArray();
-        var displayed = eligible.Take(DisplayLimit).Select(e => new ImportantNewsItem(
+        var realItems = eligible.Take(DisplayLimit).Select(e => new ImportantNewsItem(
             e.Title, e.Summary, e.SourceId, e.SourceName, e.SourceItemId,
             e.Link ?? e.ProvenanceUrl, e.ProvenanceUrl, e.PublishedTimeUtc,
             e.Importance.RuleId, e.Importance.Factors, e.Family, e.EventTypes,
             e.EventTimeUtc, e.Importance.Score)).ToArray();
+        var synthetic = tests is null ? [] : await tests.RecentAsync(cancellationToken);
+        var displayed = synthetic.Concat(realItems).Take(DisplayLimit).ToArray();
         return new ImportantNewsResponse(preview.EvaluatedUtc, displayed,
             eligible.Length - displayed.Length, preview.Limitations,
             preview.MissingMarketBaselineCount, preview.OmittedRejectedCount,

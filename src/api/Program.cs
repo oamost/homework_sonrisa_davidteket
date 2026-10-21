@@ -1,10 +1,13 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Antiforgery;
 using WorldAlerts.Api.Admin;
 using WorldAlerts.Api.Advisories;
 using WorldAlerts.Api.Collection;
 using WorldAlerts.Api.Disasters;
 using WorldAlerts.Api.Delivery;
+using WorldAlerts.Api.Delivery.Slack;
+using WorldAlerts.Api.Delivery.Webhooks;
 using WorldAlerts.Api.Dedupe;
 using WorldAlerts.Api.Markets;
 using WorldAlerts.Api.News;
@@ -28,6 +31,11 @@ builder.Services.AddSingleton(database);
 var subscriptionStore = new SubscriptionStore(databasePath);
 subscriptionStore.TryInitialize();
 builder.Services.AddSingleton(subscriptionStore);
+var preferenceStore = new EventTypePreferenceStore(databasePath);
+try { preferenceStore.Initialize(); }
+catch (Exception exception) when (exception is SqliteException or IOException)
+{ Console.Error.WriteLine($"SQLite event-type preferences unavailable: {exception.GetType().Name}"); }
+builder.Services.AddSingleton(preferenceStore);
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<AlertSelectionService>();
 builder.Services.AddSingleton<ImportantNewsService>();
@@ -41,6 +49,11 @@ catch (Exception exception) when (exception is SqliteException or IOException)
     Console.Error.WriteLine($"SQLite notification queue initialization failed: {exception.GetType().Name}");
 }
 builder.Services.AddSingleton(queueStore);
+builder.Services.AddSingleton(sp => new TestEventService(databasePath,
+    sp.GetRequiredService<EventTypePreferenceStore>(), sp.GetRequiredService<SubscriptionStore>(),
+    sp.GetRequiredService<EmailSettingsStore>(), sp.GetRequiredService<SlackSettingsStore>(),
+    sp.GetRequiredService<NotificationQueueStore>(), sp.GetRequiredService<TimeProvider>(),
+    sp.GetRequiredService<WebhookSettingsStore>()));
 var dedupeStore = new DedupeStore(databasePath);
 dedupeStore.TryInitialize();
 builder.Services.AddSingleton(dedupeStore);
@@ -64,8 +77,22 @@ builder.Services.AddDataProtection().PersistKeysToFileSystem(keyDirectory)
     .SetApplicationName("WorldAlerts.Email");
 builder.Services.AddSingleton(sp => new EmailSettingsStore(databasePath,
     sp.GetRequiredService<Microsoft.AspNetCore.DataProtection.IDataProtectionProvider>()));
+builder.Services.AddSingleton(sp => new SlackSettingsStore(databasePath,
+    sp.GetRequiredService<Microsoft.AspNetCore.DataProtection.IDataProtectionProvider>()));
+builder.Services.AddHttpClient<SlackWebhookSender>();
+builder.Services.AddSingleton<StoredSlackSender>();
+builder.Services.AddSingleton<ISlackSender, ProtectedSlackSender>();
+builder.Services.AddSingleton<SlackNotificationTransport>();
+builder.Services.AddSingleton(sp => new WebhookSettingsStore(databasePath,
+    sp.GetRequiredService<Microsoft.AspNetCore.DataProtection.IDataProtectionProvider>()));
+builder.Services.AddSingleton<WebhookSender>();
+builder.Services.AddSingleton<WebhookNotificationTransport>();
 builder.Services.AddSingleton<ISmtpTransport, SmtpClientTransport>();
-builder.Services.AddSingleton<INotificationTransport, EmailNotificationTransport>();
+builder.Services.AddSingleton<IChannelNotificationTransport, EmailNotificationTransport>();
+builder.Services.AddSingleton<IChannelNotificationTransport>(sp => sp.GetRequiredService<SlackNotificationTransport>());
+builder.Services.AddSingleton<IChannelNotificationTransport>(sp => sp.GetRequiredService<WebhookNotificationTransport>());
+builder.Services.AddSingleton<INotificationTransport>(sp => new RegisteredNotificationTransport(
+    sp.GetServices<IChannelNotificationTransport>().ToArray()));
 builder.Services.AddSingleton<NotificationDispatcher>();
 builder.Services.AddSingleton<AlertPipeline>();
 builder.Services.AddHostedService<EmailNotificationWorker>();
@@ -124,12 +151,50 @@ builder.Services.AddHttpClient<AdvisoryIngestionService>((services, client) =>
 builder.Services.AddHostedService<AdvisoryPollingService>();
 
 var app = builder.Build();
+try { app.Services.GetRequiredService<TestEventService>().Initialize(); }
+catch (Exception exception) when (exception is SqliteException or IOException)
+{ Console.Error.WriteLine($"SQLite TEST event store unavailable: {exception.GetType().Name}"); }
+var frontendIndex = Path.Combine(app.Environment.WebRootPath ??
+    Path.Combine(app.Environment.ContentRootPath, "wwwroot"), "index.html");
+if (File.Exists(frontendIndex))
+{
+    app.UseDefaultFiles();
+    app.UseStaticFiles();
+    app.MapFallback((HttpContext context) =>
+        context.Request.Path.StartsWithSegments("/api")
+        || context.Request.Path.StartsWithSegments("/admin/login")
+        || context.Request.Path.StartsWithSegments("/admin/logout")
+            ? Results.NotFound() : Results.File(frontendIndex, "text/html"));
+}
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapAdminWall();
+app.MapAdminWall(hostFrontend: File.Exists(frontendIndex));
 app.MapEmailSettings();
+app.MapSlackSettings();
+app.MapWebhookSettings();
+app.MapGet("/api/test-events/token", (HttpContext context, IAntiforgery antiforgery) =>
+{
+    context.Response.Headers.CacheControl = "no-store";
+    return Results.Ok(new { csrfToken = antiforgery.GetAndStoreTokens(context).RequestToken });
+});
+app.MapPost("/api/test-events", async (HttpContext context, IAntiforgery antiforgery,
+    TestEventService tests, CancellationToken ct) =>
+{
+    context.Response.Headers.CacheControl = "no-store";
+    var origin = context.Request.Headers.Origin.ToString();
+    if (!string.IsNullOrEmpty(origin) && !string.Equals(origin,
+        $"{context.Request.Scheme}://{context.Request.Host}", StringComparison.OrdinalIgnoreCase))
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    var fetchSite = context.Request.Headers["Sec-Fetch-Site"].ToString();
+    if (!string.IsNullOrEmpty(fetchSite) && fetchSite != "same-origin")
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    if (!await antiforgery.IsRequestValidAsync(context))
+        return Results.BadRequest(new { message = "Security token missing or expired. Reload and try again." });
+    var (limited, message) = await tests.EmitAsync(ct);
+    return Results.Json(new { message }, statusCode: limited ? StatusCodes.Status429TooManyRequests : StatusCodes.Status200OK);
+});
 
-app.MapGet("/", () => "World Alerts API");
+if (!File.Exists(frontendIndex)) app.MapGet("/", () => "World Alerts API");
 app.MapGet("/api/health", async (SqliteDatabase db, CancellationToken cancellationToken) =>
     await db.CanConnectAsync(cancellationToken)
         ? Results.Ok(new HealthResponse("ok"))
@@ -166,6 +231,25 @@ app.MapGet("/api/subscriptions", async (SubscriptionStore store, string? eventTy
 {
     var items = await store.ListAsync(Subscription.DefaultUserId, eventType, cancellationToken);
     return Results.Ok(items);
+});
+app.MapGet("/api/alert-settings/types", async (HttpContext context, IAntiforgery antiforgery,
+    EventTypePreferenceStore store, CancellationToken cancellationToken) =>
+{
+    context.Response.Headers.CacheControl = "no-store";
+    var current = await store.GetAsync(Subscription.DefaultUserId, cancellationToken);
+    return Results.Ok(new { current.IsCustomized, current.SelectedTypes,
+        csrfToken = antiforgery.GetAndStoreTokens(context).RequestToken });
+});
+app.MapPut("/api/alert-settings/types", async (HttpContext context, IAntiforgery antiforgery,
+    EventTypePreferenceUpdate? update, EventTypePreferenceStore store, CancellationToken cancellationToken) =>
+{
+    context.Response.Headers.CacheControl = "no-store";
+    if (!await antiforgery.IsRequestValidAsync(context))
+        return Results.BadRequest(new { error = "Security token missing or expired. Reload and try again." });
+    if (update?.SelectedTypes is null) return Results.BadRequest(new { error = "Selected types are required." });
+    try { await store.SaveAsync(Subscription.DefaultUserId, update.SelectedTypes, cancellationToken); }
+    catch (ArgumentException) { return Results.BadRequest(new { error = "Unknown or duplicate event type." }); }
+    return Results.Ok(await store.GetAsync(Subscription.DefaultUserId, cancellationToken));
 });
 app.MapPost("/api/subscriptions", async (
     SubscriptionRequest? request,
@@ -215,6 +299,7 @@ internal sealed record SubscriptionRequest(
     bool? Enabled);
 
 internal sealed record SubscriptionError(string Error);
+internal sealed record EventTypePreferenceUpdate(string[]? SelectedTypes);
 
 /// <summary>
 /// Owns the local SQLite file. Initialization failure is recorded, not thrown, so the API still starts

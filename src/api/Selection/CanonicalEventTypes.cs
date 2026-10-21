@@ -37,6 +37,19 @@ public static class CanonicalEventTypes
         ("science.transformative", ["clinical trial", "fusion reactor", "scientific breakthrough"]),
     ];
 
+    /// <summary>
+    /// Provider topic tags that name a financial or macroeconomic subject. A tag marks the topic
+    /// of a story; it never makes the story important, and a generic tag such as "Business" is
+    /// deliberately not accepted.
+    /// </summary>
+    private static readonly string[] FinancialCategoryTokens =
+    [
+        "economy", "inflation", "interest rate", "gdp", "recession", "unemployment",
+        "jobs report", "payrolls", "central bank", "monetary policy", "federal reserve", "ecb",
+        "imf", "world bank", "sovereign debt", "banking", "stock market", "bond market",
+        "currency market", "financial market", "credit market", "ipo",
+    ];
+
     public static string[] News(NewsItem item)
     {
         var types = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "world-news" };
@@ -47,7 +60,22 @@ public static class CanonicalEventTypes
         var headline = ScoringText.Normalize(item.Title);
         foreach (var (code, words) in NewsSubjectHints)
             if (words.Any(word => ScoringText.ContainsTokenSequence(headline, word.Trim()))) types.Add(code);
+        // Economy and financial news: a consequential financial event in the headline, or a
+        // provider topic tag that names a financial subject.
+        if (NewsImportanceScorer.AnalyzeFinancialEvent(item).IsConsequentialEvent
+            || item.Categories.Any(IsFinancialCategory))
+        {
+            types.Add("economy.financial");
+        }
+
         return types.OrderBy(code => code, StringComparer.Ordinal).ToArray();
+    }
+
+    private static bool IsFinancialCategory(string category)
+    {
+        if (string.IsNullOrWhiteSpace(category)) return false;
+        var normalized = ScoringText.Normalize(category);
+        return FinancialCategoryTokens.Any(token => NewsImportanceScorer.ContainsApprovedToken(normalized, token));
     }
 
     public static string[] Disaster(DisasterEvent item)

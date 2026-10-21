@@ -59,11 +59,30 @@ export class LandingComponent {
   protected readonly loading = signal(false);
   protected readonly error = signal(false);
   protected readonly showScoreDebug = signal(false);
+  protected readonly testBusy = signal(false);
+  protected readonly testMessage = signal('');
+  protected readonly differentNewsMessage = signal('');
+  private readonly newsBatch = signal(0);
+  private differentNewsRequested = false;
 
   protected toggleScoreDebug(): void { this.showScoreDebug.update(value => !value); }
 
   protected countFamily(items: ImportantNewsItem[], family: string): number {
     return items.filter(item => (item.family || 'News') === family).length;
+  }
+
+  protected visibleItems(items: ImportantNewsItem[]): ImportantNewsItem[] {
+    const news = items.filter(item => (item.family || 'News') === 'News');
+    const page = Math.min(this.newsBatch(), Math.max(0, Math.ceil(news.length / 5) - 1));
+    const shown = new Set(news.slice(page * 5, (page + 1) * 5));
+    return items.filter(item => (item.family || 'News') !== 'News' || shown.has(item));
+  }
+
+  protected refreshDifferentNews(): void {
+    if (this.loading()) return;
+    this.differentNewsRequested = true;
+    this.differentNewsMessage.set('Checking other real stored news…');
+    this.refresh();
   }
 
   protected noQualified(response: ImportantNewsResponse, family: string): boolean {
@@ -103,7 +122,9 @@ export class LandingComponent {
 
   constructor() {
     this.refresh();
-    this.refreshTimer = setInterval(() => this.refresh(), 60_000);
+    this.refreshTimer = setInterval(() => {
+      if (document.visibilityState === 'visible') this.refresh();
+    }, 60_000);
     this.destroyRef.onDestroy(() => clearInterval(this.refreshTimer));
   }
 
@@ -115,13 +136,43 @@ export class LandingComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: result => {
+          if (this.differentNewsRequested) {
+            const newsCount = result.items.filter(item => (item.family || 'News') === 'News').length;
+            const batches = Math.ceil(newsCount / 5);
+            if (batches > 1) {
+              this.newsBatch.update(page => (page + 1) % batches);
+              this.differentNewsMessage.set('Showing different stored news from connected feeds; no story was invented.');
+            } else {
+              this.differentNewsMessage.set('No other eligible stored news is available yet. Automatic refresh will keep checking.');
+            }
+            this.differentNewsRequested = false;
+          }
           this.response.set(result);
           this.loading.set(false);
         },
         error: () => {
+          if (this.differentNewsRequested) {
+            this.differentNewsRequested = false;
+            this.differentNewsMessage.set('Could not check other news yet; automatic refresh will retry.');
+          }
           this.error.set(true);
           this.loading.set(false);
         },
+      });
+  }
+
+  protected sendTestEvent(): void {
+    if (this.testBusy()) return;
+    this.testBusy.set(true);
+    this.testMessage.set('Requesting a TEST event…');
+    this.http.get<{csrfToken: string}>('/api/test-events/token').pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({csrfToken}) => this.http.post<{message: string}>('/api/test-events', {},
+          {headers: {'X-CSRF-TOKEN': csrfToken}}).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+            next: response => { this.testMessage.set(response.message); this.testBusy.set(false); this.newsBatch.set(0); this.refresh(); },
+            error: () => { this.testMessage.set('TEST event was not accepted. Check channel setup or wait for the send limit to reset.'); this.testBusy.set(false); },
+          }),
+        error: () => { this.testMessage.set('TEST event is unavailable.'); this.testBusy.set(false); },
       });
   }
 }

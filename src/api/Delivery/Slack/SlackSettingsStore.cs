@@ -3,9 +3,18 @@ using Microsoft.AspNetCore.DataProtection;
 
 namespace WorldAlerts.Api.Delivery.Slack;
 
-public sealed record SlackSettings(string WebhookUrl, bool Enabled);
-public sealed record SlackSettingsUpdate(string? WebhookUrl, bool Enabled);
-public sealed record SlackSettingsStatus(bool Configured, bool Enabled, string ConfigId, string Target);
+public sealed record SlackSettings(string WebhookUrl, bool Enabled)
+{
+    public string? ChannelLabel { get; init; }
+}
+public sealed record SlackSettingsUpdate(string? WebhookUrl, bool Enabled)
+{
+    public string? ChannelLabel { get; init; }
+}
+public sealed record SlackSettingsStatus(bool Configured, bool Enabled, string ConfigId, string Target)
+{
+    public string? ChannelLabel { get; init; }
+}
 
 /// <summary>Protected on-disk configuration; share the host's persistent DataProtection key ring.</summary>
 public sealed class SlackSettingsStore(string databasePath, IDataProtectionProvider protection)
@@ -49,12 +58,16 @@ public sealed class SlackSettingsStore(string databasePath, IDataProtectionProvi
 
     public static SlackSettingsStatus Redact(SlackSettings? settings) => settings is null
         ? new(false, false, ConfigId, SlackWebhookRedactor.NotConfigured)
-        : new(true, settings.Enabled, ConfigId, "Slack incoming webhook configured");
+        : new SlackSettingsStatus(true, settings.Enabled, ConfigId, "Slack incoming webhook configured")
+        { ChannelLabel = settings.ChannelLabel };
 
     public static (SlackSettings? Settings, string? Error) Validate(SlackSettingsUpdate update, SlackSettings? previous)
     {
         var url = string.IsNullOrWhiteSpace(update.WebhookUrl) ? previous?.WebhookUrl ?? "" : update.WebhookUrl.Trim();
+        var label = update.ChannelLabel?.Trim() ?? previous?.ChannelLabel;
+        if (label is { Length: > 80 } || label?.Contains("://", StringComparison.Ordinal) == true)
+            return (null, "Enter a short non-secret Slack channel label.");
         var errors = new SlackOptions { WebhookUrl = url }.Validate();
-        return errors.Count == 0 ? (new SlackSettings(url, update.Enabled), null) : (null, string.Join(" ", errors));
+        return errors.Count == 0 ? (new SlackSettings(url, update.Enabled) { ChannelLabel = label }, null) : (null, string.Join(" ", errors));
     }
 }

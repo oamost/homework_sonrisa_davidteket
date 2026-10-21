@@ -102,6 +102,42 @@ public sealed class CoverageGapTests
             scorer.Score(bbc, Now, NewsStoryCorroboration.For(bbc, [bbc, bbcVariant, nyt])).RuleId);
     }
 
+    [Theory]
+    [InlineData("Reserve Bank of Australia raises interest rates by half a point", true)]
+    [InlineData("Billionaire Mukesh Ambani launches India's biggest-ever IPO", true)]
+    [InlineData("Odds of fifth interest rate hike this year shorten", false)]
+    [InlineData("Local startup announces $4 million IPO", false)]
+    [InlineData("Routine gallery update", false)]
+    [InlineData("Markets close mixed after quiet session", false)]
+    public void Financial_news_code_is_assigned_only_for_consequential_financial_events(
+        string headline, bool expected)
+    {
+        var item = new NewsItem("guardian-world", "The Guardian World", "id", headline,
+            "https://example.org/story", Now.AddHours(-1), Now, "world-news", Array.Empty<string>(),
+            "https://example.org/feed");
+        var codes = CanonicalEventTypes.News(item);
+        if (expected) Assert.Contains("economy.financial", codes);
+        else Assert.DoesNotContain("economy.financial", codes);
+    }
+
+    [Fact]
+    public void Provider_financial_topic_tags_assign_the_financial_code()
+    {
+        var item = new NewsItem("guardian-world", "The Guardian World", "id",
+            "Interest rate outlook discussed at the Reserve Bank", "https://example.org/story", Now.AddHours(-1),
+            Now, "world-news", ["Interest rates", "Inflation", "Australian economy"], "https://example.org/feed");
+        Assert.Contains("economy.financial", CanonicalEventTypes.News(item));
+    }
+
+    [Fact]
+    public void A_generic_business_tag_does_not_assign_the_financial_code()
+    {
+        var item = new NewsItem("guardian-world", "The Guardian World", "id", "Routine gallery update",
+            "https://example.org/story", Now.AddHours(-1), Now, "world-news", ["Business", "World news"],
+            "https://example.org/feed");
+        Assert.DoesNotContain("economy.financial", CanonicalEventTypes.News(item));
+    }
+
     [Fact]
     public void Numeric_strengths_are_finite_bounded_and_rank_provider_evidence_without_changing_boolean_rules()
     {

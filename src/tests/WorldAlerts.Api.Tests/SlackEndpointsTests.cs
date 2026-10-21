@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Builder;
@@ -41,12 +42,15 @@ public sealed class SlackEndpointsTests
         var rejected = await host.Client.SendAsync(invalid);
         Assert.Equal(HttpStatusCode.BadRequest, rejected.StatusCode);
         Assert.Contains("incoming-webhook", await rejected.Content.ReadAsStringAsync());
-        var save = new HttpRequestMessage(HttpMethod.Put, "/api/admin/slack") { Content = JsonContent.Create(new { webhookUrl = webhook, enabled = true }) };
+        var save = new HttpRequestMessage(HttpMethod.Put, "/api/admin/slack") { Content = JsonContent.Create(new { webhookUrl = webhook, enabled = true, channelLabel = "#alerts" }) };
         save.Headers.Add("X-CSRF-TOKEN", token);
         var saved = await host.Client.SendAsync(save);
         Assert.True(saved.StatusCode == HttpStatusCode.OK,
             $"Expected Slack settings save to succeed, got {(int)saved.StatusCode}: {await saved.Content.ReadAsStringAsync()}");
         Assert.DoesNotContain(webhook, await saved.Content.ReadAsStringAsync());
+        using var statusResponse = await host.Client.GetAsync("/api/admin/slack");
+        using var statusJson = JsonDocument.Parse(await statusResponse.Content.ReadAsStringAsync());
+        Assert.Equal("#alerts", statusJson.RootElement.GetProperty("channelLabel").GetString());
         var missingConsent = await host.TestAsync(false, token);
         Assert.Equal(HttpStatusCode.BadRequest, missingConsent.StatusCode);
         Assert.Equal(0, host.Handler.Count);

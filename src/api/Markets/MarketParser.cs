@@ -53,13 +53,36 @@ public static class MarketParser
             return new MarketParseResult(Array.Empty<MarketObservation>(), 1);
         }
 
-        var observation = UnixMilliseconds(root, "closeTime") ?? fetchedUtc;
+        var closeTime = UnixMilliseconds(root, "closeTime");
+        var observation = closeTime ?? fetchedUtc;
+        var openPrice = DoubleValue(root, "openPrice");
+        var openTime = UnixMilliseconds(root, "openTime");
+        // Binance's 24hr ticker opens a rolling window, not the previous UTC day's close.
+        // The minute tolerance accounts for Binance's rolling-window alignment.
+        var window = closeTime - openTime;
+        var valid = source.Interval == "24h"
+            && openPrice is > 0 and { } price && double.IsFinite(price)
+            && openTime.HasValue && closeTime.HasValue
+            && window >= TimeSpan.FromHours(24) - TimeSpan.FromMinutes(1)
+            && window <= TimeSpan.FromHours(24) + TimeSpan.FromMinutes(1);
+        var diagnostic = valid ? null
+            : openPrice is null || openTime is null || closeTime is null
+                ? "Binance ticker baseline missing openPrice/openTime/closeTime."
+                : openPrice <= 0 || !double.IsFinite(openPrice.Value)
+                    ? "Binance ticker baseline invalid openPrice (must be finite and positive)."
+                    : "Binance ticker baseline window invalid: openTime/closeTime do not describe a rolling 24h window.";
         return new MarketParseResult(
             new[]
             {
-                Create(source, source.Instrument, value.Value, observation, fetchedUtc),
+                Create(source, source.Instrument, value.Value, observation, fetchedUtc) with
+                {
+                    BaselineValue = valid ? openPrice : null,
+                    BaselineUtc = valid ? openTime : null,
+                    ComparisonKind = valid ? "rolling-24h-open" : null,
+                },
             },
-            0);
+            0,
+            diagnostic);
     }
 
     private static MarketParseResult ParseBinanceKlines(
