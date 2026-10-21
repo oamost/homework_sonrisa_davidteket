@@ -18,6 +18,7 @@ if (-not (Test-Path -LiteralPath $config -PathType Leaf)) {
 
 $config = (Resolve-Path -LiteralPath $config).Path
 $volume = "$instance-data"
+$keys = "$instance-keys"
 $image = "${instance}:verified"
 $label = "org.worldalerts.instance=$instance"
 
@@ -26,14 +27,20 @@ $label = "org.worldalerts.instance=$instance"
 docker build --no-cache -f $dockerfile -t $image $PSScriptRoot
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-$owner = docker volume inspect --format '{{ index .Labels "org.worldalerts.instance" }}' $volume 2>$null
-if ($LASTEXITCODE -eq 0) {
-    if ($owner -cne $instance) {
-        [Console]::Error.WriteLine("Refusing to use a volume not owned by this instance: $volume")
-        exit 1
+$missing = @()
+foreach ($name in @($volume, $keys)) {
+    $owner = docker volume inspect --format '{{ index .Labels "org.worldalerts.instance" }}' $name 2>$null
+    if ($LASTEXITCODE -eq 0) {
+        if ($owner -cne $instance) {
+            [Console]::Error.WriteLine("Refusing to use a volume not owned by this instance: $name")
+            exit 1
+        }
+    } else {
+        $missing += $name
     }
-} else {
-    docker volume create --label $label $volume
+}
+foreach ($name in $missing) {
+    docker volume create --label $label $name
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 
@@ -51,5 +58,6 @@ if ($LASTEXITCODE -eq 0) {
 
 docker run -d --name $instance --label $label --env-file $config `
     -e 'ASPNETCORE_URLS=http://+:8080' -e 'WorldAlerts__DatabasePath=/app/data/worldalerts.sqlite' `
-    -p "127.0.0.1:${port}:8080" -v "${volume}:/app/data" --restart unless-stopped $image
+    -p "127.0.0.1:${port}:8080" -v "${volume}:/app/data" `
+    -v "${keys}:/home/app/.aspnet/DataProtection-Keys" --restart unless-stopped $image
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

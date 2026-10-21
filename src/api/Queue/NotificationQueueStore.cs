@@ -61,7 +61,7 @@ public sealed class NotificationQueueStore(string databasePath)
     }
 
     public async Task<IReadOnlyList<NotificationJob>> ClaimAsync(DateTimeOffset now, int maximum,
-        bool startupBurst = false, CancellationToken cancellationToken = default)
+        bool startupBurst = false, CancellationToken cancellationToken = default, bool emailOnly = false)
     {
         if (maximum <= 0) return [];
         await using var connection = new SqliteConnection(_connectionString);
@@ -85,9 +85,10 @@ public sealed class NotificationQueueStore(string databasePath)
             read.CommandText = """
                 SELECT Id, IdentityKey, Revision, SubscriberId, Channel, Destination, Subject, Body,
                        State, Attempts, DueUtc, FailureType FROM NotificationJobs
-                WHERE State = 'pending' AND DueUtc <= $now ORDER BY DueUtc, Id LIMIT $limit;
+                WHERE State = 'pending' AND ($emailOnly = 0 OR Channel = 'email') AND DueUtc <= $now ORDER BY DueUtc, Id LIMIT $limit;
                 """;
             read.Parameters.AddWithValue("$now", Stamp(now));
+            read.Parameters.AddWithValue("$emailOnly", emailOnly ? 1 : 0);
             read.Parameters.AddWithValue("$limit", capacity);
             await using var reader = await read.ExecuteReaderAsync(cancellationToken);
             while (await reader.ReadAsync(cancellationToken))

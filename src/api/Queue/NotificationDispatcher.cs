@@ -21,9 +21,9 @@ public sealed class ConfiguredNotificationTransport(SmtpEmailSender smtp, ISlack
 public sealed class NotificationDispatcher(NotificationQueueStore queue, INotificationTransport transport)
 {
     public async Task<int> DispatchAsync(DateTimeOffset now, bool startupBurst = false,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default, bool emailOnly = false)
     {
-        var jobs = await queue.ClaimAsync(now, startupBurst ? 50 : 10, startupBurst, cancellationToken);
+        var jobs = await queue.ClaimAsync(now, startupBurst ? 50 : 10, startupBurst, cancellationToken, emailOnly);
         foreach (var job in jobs)
         {
             try

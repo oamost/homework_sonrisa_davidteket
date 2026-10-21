@@ -7,3 +7,6 @@
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
+*.email.protected
+*.slack.protected
+*.keys/

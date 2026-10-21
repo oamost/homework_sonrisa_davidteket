@@ -17,7 +17,8 @@ public sealed class MarketImportanceScorerTests
 
         Assert.True(decision.IsImportant);
         Assert.Equal(MarketImportanceRuleIds.MoveThreshold, decision.RuleId);
-        Assert.Equal(1.0, decision.Score);
+        Assert.InRange(decision.Score, 0.60, 0.95);
+        Assert.True(double.IsFinite(decision.Score));
     }
 
     [Fact]
@@ -27,6 +28,7 @@ public sealed class MarketImportanceScorerTests
 
         Assert.False(decision.IsImportant);
         Assert.Equal(MarketImportanceRuleIds.BelowThreshold, decision.RuleId);
+        Assert.InRange(decision.Score, 0, 0.45);
     }
 
     [Fact]

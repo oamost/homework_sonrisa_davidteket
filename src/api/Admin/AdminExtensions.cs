@@ -56,11 +56,14 @@ public static class AdminExtensions
             return Html(context, $"<h1>Admin login</h1><form action='/admin/login' method='post'><label>Password <input type='password' name='password' autocomplete='current-password' required></label><input type='hidden' name='csrf' value=\"{WebUtility.HtmlEncode(token)}\"><button type='submit'>Sign in</button></form>");
         });
 
-        app.MapPost("/admin/login", async (HttpContext context, IAntiforgery antiforgery, IConfiguration configuration) =>
+        app.MapPost("/admin/login", async (HttpContext context, IAntiforgery antiforgery, IConfiguration configuration, IWebHostEnvironment environment) =>
         {
             if (!await ValidCsrfAsync(context, antiforgery)) return Results.BadRequest();
             var form = await context.Request.ReadFormAsync();
             var hash = configuration["WorldAlerts:Admin:PasswordHash"];
+            if (string.IsNullOrWhiteSpace(hash) && environment.IsDevelopment()
+                && context.Connection.RemoteIpAddress is { } remote && IPAddress.IsLoopback(remote))
+                hash = AdminPassword.DevelopmentHash;
             if (!AdminPassword.Verify(form["password"], hash)) return Results.Unauthorized();
             var identity = new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "local-admin")], Scheme);
             await context.SignInAsync(Scheme, new ClaimsPrincipal(identity));

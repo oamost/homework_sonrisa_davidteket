@@ -1,0 +1,18 @@
+# Task 21: Slack runtime slice (integration pending)
+
+- Secret storage: `SlackSettingsStore(databasePath, IDataProtectionProvider)` writes `databasePath + ".slack.protected"` encrypted with purpose `WorldAlerts.SlackSettings.v1`, in the same persistent private volume as the database and the existing ASP.NET DataProtection key ring. No webhook belongs in appsettings, subscription destinations, browser storage, or Git. Keep the existing DataProtection application name and persistent key directory unchanged. Unreadable keys/ciphertext are a 503, never a send.
+- Admin API (requires existing cookie admin wall and antiforgery header `X-CSRF-TOKEN`): `GET /api/admin/slack` returns `{configured, enabled, configId: "default", target, csrfToken}` without webhook; `PUT /api/admin/slack` accepts `{webhookUrl, enabled}`; blank URL retains saved URL; `POST /api/admin/slack/test` accepts `{consent: true}` and sends exactly one fixed test message only for saved enabled settings. Save without explicit `enabled: true` remains disabled. HTTP 400, 429, timeout and network failures return safe responses and never expose target URL or remote body. No retries on a test send.
+- Host registration **to be done by the parent/email integration owner** (after existing `databasePath` and data protection setup):
+  ```csharp
+  builder.Services.AddSingleton(sp => new WorldAlerts.Api.Delivery.Slack.SlackSettingsStore(databasePath,
+      sp.GetRequiredService<Microsoft.AspNetCore.DataProtection.IDataProtectionProvider>()));
+  builder.Services.Configure<WorldAlerts.Api.Delivery.SlackOptions>(_ => { });
+  builder.Services.AddHttpClient<WorldAlerts.Api.Delivery.SlackWebhookSender>()
+      .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+  builder.Services.AddSingleton<WorldAlerts.Api.Delivery.Slack.StoredSlackSender>();
+  // After UseAuthentication/UseAuthorization:
+  app.MapSlackSettings(); // using WorldAlerts.Api.Delivery.Slack;
+  ```
+  Disable redirects on the Slack HTTP handler: redirects otherwise permit forwarding to unapproved hosts even though URL validation only permits official Slack HTTPS incoming-webhook paths. Register a distinct typed client, not the legacy `ISlackSender` config-bound instance. `StoredSlackSender.SendAsync(configId, text, ct)` returns `false` and sends nothing if the reference is not `default`, the webhook is absent, or it is disabled; it performs one send and propagates `SlackDeliveryException` for the queue to handle with approved 1/5/15 retry policy. For subscription `channel = "slack"`, store **only** destination/reference `default`, never a webhook URL or channel name. The saved incoming webhook controls the target channel.
+- UI integration by the frontend subscriptions owner: import `SlackSetupComponent` from `../slack/slack-setup.component` into the standalone `SubscriptionsComponent.imports` and render `<app-slack-setup />` after email setup. Update existing “Slack disabled” notice and destination form only after runtime queue integration is connected; currently the isolated component does not claim automatic delivery is wired. No browser persistence; the password input is cleared after success/failure; explicit test consent resets after use.
+- Automated evidence: targeted Angular test `npm test -- --watch=false --include='src/app/slack/slack-setup.component.spec.ts'`: 2 passed. Backend tests are prepared in `SlackOptionsTests`, `SlackSettingsStoreTests`, and `SlackEndpointsTests`; final serialized backend run remains parent-owned. No real Slack send occurred. Live webhook/channel verification and human approval are pending.

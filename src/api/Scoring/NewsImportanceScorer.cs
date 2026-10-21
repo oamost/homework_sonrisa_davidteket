@@ -134,15 +134,52 @@ public sealed class NewsImportanceScorer
 
         if (isTierOne && keyword is not null)
         {
-            return ImportanceDecision.Important(NewsImportanceRuleIds.TierOneUrgencyKeyword, factors.ToArray());
+            var strength = 0.70 + (item.PublishedUtc is { } time && time <= nowUtc ? 0.05 : 0);
+            factors.Add("Strength heuristic: tier-1 urgency 0.70; usable provider publication time adds 0.05.");
+            return ImportanceDecision.Important(NewsImportanceRuleIds.TierOneUrgencyKeyword, strength, factors.ToArray());
         }
 
         if (HasCorroboration(item, nowUtc, corroboratingSources, isTierOne, factors))
         {
-            return ImportanceDecision.Important(NewsImportanceRuleIds.TierOneCorroboration, factors.ToArray());
+            factors.Add("Strength heuristic: independently corroborated tier-1 same-story reports 0.85.");
+            return ImportanceDecision.Important(NewsImportanceRuleIds.TierOneCorroboration, 0.85, factors.ToArray());
         }
 
+        var topic = ConsequentialTopic(item);
+        if (topic is not null)
+        {
+            factors.Add($"Headline reports consequential {topic} action; topic/source alone does not qualify.");
+            factors.Add("Strength heuristic: explicit consequential headline subject and action 0.65; not verified independently.");
+            return ImportanceDecision.Important("news.consequential-topic", 0.65, factors.ToArray());
+        }
+
+        factors.Add("Strength heuristic: no approved trigger; source tier alone has no importance score.");
         return ImportanceDecision.NotImportant(NewsImportanceRuleIds.NoApprovedTrigger, factors.ToArray());
+    }
+
+    // Explicit headline action + topic, not a broad feed label or an isolated noun.
+    // These are deterministic editorial indicators, not a probability or universal weight.
+    private static string? ConsequentialTopic(NewsItem item)
+    {
+        var text = ScoringText.Normalize(item.Title);
+        if (ScoringText.FindTokenSequence(text, ["opinion", "analysis", "review", "explainer", "how to", "advertisement", "sponsored", "promoted"]) is not null)
+            return null;
+        (string Topic, string[] Subject, string[] Action)[] rules =
+        [
+            ("politics", ["government", "president", "parliament", "election"], ["resigns", "ousted", "dissolves", "announces election", "election result"]),
+            ("diplomacy", ["treaty", "sanctions", "ceasefire", "diplomatic relations"], ["signed", "imposed", "agreed", "suspended", "lifted"]),
+            ("cybersecurity", ["ransomware", "cyberattack", "data breach", "hackers"], ["shuts down", "disrupts", "exposes", "breached", "compromised"]),
+            ("AI", ["ai model", "artificial intelligence", "ai system"], ["banned", "mandated", "deployed nationwide", "recalls", "regulator approves"]),
+            ("acquisitions", ["acquisition", "merger", "acquires"], ["completed", "approved", "blocked", "agreed", "announces"]),
+            ("critical infrastructure", ["power grid", "water supply", "telecom network", "hospital network"], ["shuts down", "outage", "disrupted", "restored after"]),
+            ("environment/energy", ["oil spill", "power plant", "emissions", "energy grid"], ["shuts down", "leaks", "banned", "emergency", "mandated"]),
+            ("transformative science", ["clinical trial", "fusion reactor", "scientific breakthrough"], ["succeeds", "approved", "demonstrates", "achieves"]),
+            ("conflict", ["troops", "armed forces", "ceasefire"], ["invade", "invaded", "attack", "collapsed"]),
+        ];
+        foreach (var (topic, subjects, actions) in rules)
+            if (ScoringText.FindTokenSequence(text, subjects) is not null
+                && ScoringText.FindTokenSequence(text, actions) is not null) return topic;
+        return null;
     }
 
     private bool HasCorroboration(
@@ -176,7 +213,7 @@ public sealed class NewsImportanceScorer
         {
             AddPublication(
                 publications,
-                item.SourceId,
+                Organization(item.SourceId, item.SourceName),
                 primaryLabel,
                 item.PublishedUtc,
                 nowUtc,
@@ -198,7 +235,7 @@ public sealed class NewsImportanceScorer
 
             AddPublication(
                 publications,
-                source.SourceId,
+                Organization(source.SourceId, source.SourceName),
                 label,
                 source.PublishedUtc,
                 nowUtc,
@@ -286,6 +323,16 @@ public sealed class NewsImportanceScorer
         }
 
         return string.IsNullOrWhiteSpace(sourceId) ? "(unknown source)" : sourceId;
+    }
+
+    private static string Organization(string? id, string? name)
+    {
+        var value = ScoringText.Normalize(id) + " " + ScoringText.Normalize(name);
+        if (ScoringText.ContainsTokenSequence(value, "bbc")) return "bbc";
+        if (ScoringText.ContainsTokenSequence(value, "nyt") || ScoringText.ContainsTokenSequence(value, "new york times")) return "nyt";
+        if (ScoringText.ContainsTokenSequence(value, "aljazeera") || ScoringText.ContainsTokenSequence(value, "al jazeera")) return "aljazeera";
+        if (ScoringText.ContainsTokenSequence(value, "guardian")) return "guardian";
+        return id ?? string.Empty;
     }
 
     private static string FormatInstant(DateTimeOffset value)

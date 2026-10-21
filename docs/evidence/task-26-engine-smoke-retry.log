@@ -1,0 +1,87 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 973B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for mcr.microsoft.com/dotnet/sdk:10.0
+#2 DONE 0.4s
+
+#3 [internal] load metadata for mcr.microsoft.com/dotnet/aspnet:10.0
+#3 DONE 0.4s
+
+#4 [stage-1 1/4] FROM mcr.microsoft.com/dotnet/aspnet:10.0@sha256:d5633778c754e89a386882eddf8dbee6942447a8a4b8267c19cf1e1158d0b0ac
+#4 resolve mcr.microsoft.com/dotnet/aspnet:10.0@sha256:d5633778c754e89a386882eddf8dbee6942447a8a4b8267c19cf1e1158d0b0ac 0.0s done
+#4 DONE 0.0s
+
+#5 [stage-1 2/4] WORKDIR /app
+#5 CACHED
+
+#6 [verified 1/6] FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:0d99ebf1ccad15037b5c98c9fe8979d6b8dbac23812feae2277a0b277b5c5ffa
+#6 resolve mcr.microsoft.com/dotnet/sdk:10.0@sha256:0d99ebf1ccad15037b5c98c9fe8979d6b8dbac23812feae2277a0b277b5c5ffa 0.0s done
+#6 DONE 0.0s
+
+#7 [verified 2/6] WORKDIR /work
+#7 CACHED
+
+#8 [internal] load build context
+#8 transferring context: 18.39kB done
+#8 DONE 0.0s
+
+#9 [verified 3/6] COPY src/WorldAlerts.sln src/WorldAlerts.sln
+#9 DONE 0.0s
+
+#10 [verified 4/6] COPY src/api/ src/api/
+#10 DONE 0.1s
+
+#11 [verified 5/6] COPY src/tests/WorldAlerts.Api.Tests/ src/tests/WorldAlerts.Api.Tests/
+#11 DONE 0.1s
+
+#12 [verified 6/6] RUN dotnet restore src/WorldAlerts.sln     && dotnet build src/WorldAlerts.sln --configuration Release --no-restore     && dotnet test src/WorldAlerts.sln --configuration Release --no-build --no-restore     && dotnet publish src/api/WorldAlerts.Api.csproj --configuration Release --no-build --no-restore --output /publish
+#12 1.032   Determining projects to restore...
+#12 36.04   Restored /work/src/api/WorldAlerts.Api.csproj (in 34.66 sec).
+#12 36.16   Restored /work/src/tests/WorldAlerts.Api.Tests/WorldAlerts.Api.Tests.csproj (in 34.79 sec).
+#12 39.19   WorldAlerts.Api -> /work/src/api/bin/Release/net10.0/WorldAlerts.Api.dll
+#12 40.41   WorldAlerts.Api.Tests -> /work/src/tests/WorldAlerts.Api.Tests/bin/Release/net10.0/WorldAlerts.Api.Tests.dll
+#12 40.44 
+#12 40.44 Build succeeded.
+#12 40.44     0 Warning(s)
+#12 40.44     0 Error(s)
+#12 40.44 
+#12 40.44 Time Elapsed 00:00:04.09
+#12 41.08 Test run for /work/src/tests/WorldAlerts.Api.Tests/bin/Release/net10.0/WorldAlerts.Api.Tests.dll (.NETCoreApp,Version=v10.0)
+#12 41.21 A total of 1 test files matched the specified pattern.
+#12 42.52 [xUnit.net 00:00:00.97]     WorldAlerts.Api.Tests.AdminWallTests.Authorized_snapshot_redacts_secrets_and_logout_requires_csrf_then_revokes_session [FAIL]
+#12 42.65   Failed WorldAlerts.Api.Tests.AdminWallTests.Authorized_snapshot_redacts_secrets_and_logout_requires_csrf_then_revokes_session [223 ms]
+#12 42.65   Error Message:
+#12 42.65    Assert.Contains() Failure: Filter not matched in collection
+#12 42.65 Collection: ["__Host-WorldAlertsAdmin=CfDJ8DI08zkds5RBmvvcDqIc4d"···]
+#12 42.65   Stack Trace:
+#12 42.65      at WorldAlerts.Api.Tests.AdminWallTests.Authorized_snapshot_redacts_secrets_and_logout_requires_csrf_then_revokes_session() in /work/src/tests/WorldAlerts.Api.Tests/AdminWallTests.cs:line 64
+#12 42.65 --- End of stack trace from previous location ---
+#12 43.22 
+#12 43.23 Failed!  - Failed:     1, Passed:   380, Skipped:     0, Total:   381, Duration: 1 s - WorldAlerts.Api.Tests.dll (net10.0)
+#12 ERROR: process "/bin/sh -c dotnet restore src/WorldAlerts.sln     && dotnet build src/WorldAlerts.sln --configuration Release --no-restore     && dotnet test src/WorldAlerts.sln --configuration Release --no-build --no-restore     && dotnet publish src/api/WorldAlerts.Api.csproj --configuration Release --no-build --no-restore --output /publish" did not complete successfully: exit code: 1
+------
+ > [verified 6/6] RUN dotnet restore src/WorldAlerts.sln     && dotnet build src/WorldAlerts.sln --configuration Release --no-restore     && dotnet test src/WorldAlerts.sln --configuration Release --no-build --no-restore     && dotnet publish src/api/WorldAlerts.Api.csproj --configuration Release --no-build --no-restore --output /publish:
+42.52 [xUnit.net 00:00:00.97]     WorldAlerts.Api.Tests.AdminWallTests.Authorized_snapshot_redacts_secrets_and_logout_requires_csrf_then_revokes_session [FAIL]
+42.65   Failed WorldAlerts.Api.Tests.AdminWallTests.Authorized_snapshot_redacts_secrets_and_logout_requires_csrf_then_revokes_session [223 ms]
+42.65   Error Message:
+42.65    Assert.Contains() Failure: Filter not matched in collection
+42.65 Collection: ["__Host-WorldAlertsAdmin=CfDJ8DI08zkds5RBmvvcDqIc4d"···]
+42.65   Stack Trace:
+42.65      at WorldAlerts.Api.Tests.AdminWallTests.Authorized_snapshot_redacts_secrets_and_logout_requires_csrf_then_revokes_session() in /work/src/tests/WorldAlerts.Api.Tests/AdminWallTests.cs:line 64
+42.65 --- End of stack trace from previous location ---
+43.22 
+43.23 Failed!  - Failed:     1, Passed:   380, Skipped:     0, Total:   381, Duration: 1 s - WorldAlerts.Api.Tests.dll (net10.0)
+------
+Dockerfile:6
+--------------------
+   5 |     COPY src/tests/WorldAlerts.Api.Tests/ src/tests/WorldAlerts.Api.Tests/
+   6 | >>> RUN dotnet restore src/WorldAlerts.sln \
+   7 | >>>     && dotnet build src/WorldAlerts.sln --configuration Release --no-restore \
+   8 | >>>     && dotnet test src/WorldAlerts.sln --configuration Release --no-build --no-restore \
+   9 | >>>     && dotnet publish src/api/WorldAlerts.Api.csproj --configuration Release --no-build --no-restore --output /publish
+  10 |     
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c dotnet restore src/WorldAlerts.sln     && dotnet build src/WorldAlerts.sln --configuration Release --no-restore     && dotnet test src/WorldAlerts.sln --configuration Release --no-build --no-restore     && dotnet publish src/api/WorldAlerts.Api.csproj --configuration Release --no-build --no-restore --output /publish" did not complete successfully: exit code: 1

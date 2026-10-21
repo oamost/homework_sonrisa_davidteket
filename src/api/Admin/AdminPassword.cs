@@ -7,6 +7,9 @@ namespace WorldAlerts.Api.Admin;
 public static class AdminPassword
 {
     private const int Iterations = 310_000;
+    // Deliberate local-development-only default. Never put a plaintext password
+    // or a generated-at-startup value in the application configuration.
+    internal const string DevelopmentHash = "310000:jwwH10vKGLyjAnG7nzlVZb8W5L5tDsu3mCFyPYPPYdk=:JwVdeaL7dujISNljEpW/duFs5rxWAFOFKiAL/VAPV6w=";
 
     public static string Hash(string password)
     {

@@ -484,3 +484,86 @@ fix those in task 26
 ## Prompt 85
 
 plus please commit uncommited changes from the git tree. you forgot to commit them along the way. commit = task as defined per global rule
+
+## Prompt 86
+
+I see the admin interface. could we make sure that the landing page dynamically loads the important news? it would be great because it would be a glimpse to the app without having to rely on 3rd party providers and their notification arrivals. 
+again you have not commited anything. given the changeset, just provide a meaningful commit message for me and I will do it manually.
+
+## Prompt 87
+
+add the task numbers to this commit message
+
+## Prompt 88
+
+account switched, continue (some subagents have been distrupted due to that)
+
+## Prompt 89
+
+print the status of the overall work according to tasks.md
+
+## Prompt 90
+
+task 24 admin wall/view has not been picked up yet? spawn a subagent for it and implement it. same goes for task 23
+
+## Prompt 91
+
+I see this: [Image 1]  on one hand: excellent progress. on another hand: I suspect that not all types of important news have been mixed into the feed (and the upcoming notification mechanism)?
+
+## Prompt 92
+
+address all 3 gaps, those are crucial to adhere for the base requirement. also put a debug toggle on the page that makes it available to see the importance score for each entry
+
+## Prompt 93
+
+scoring decision: no drafting. just put it there in the way I asked. 
+can you first get the email notif working available via alert setup? then I will create a slack acc and we will resolve that one as well
+
+## Prompt 94
+
+I still see these types of news only, nothing else: is this fine? see screenshot: [Image 1]
+
+## Prompt 95
+
+right, sounds good
+
+## Prompt 96
+
+also add the missing prompts to prompts.md as I see that you have not updated that file for a while
+
+## Prompt 97
+
+another agent can be spawned to implement 21 (sending slack notifications)
+
+## Prompt 98
+
+on the home page, "show score debug" only expands source feed, see screenshots: [Image 1] [Image 2] and I still don't see any other types of news
+
+## Prompt 99
+
+whats the local admin password may I asK?
+
+## Prompt 100
+
+change it to repo-baked in "admin"
+
+## Prompt 101
+
+I still don't see all the types of important news covered here: [Image 1] 
+also I don't see the importance score in 0-1 range (float) : [Image 2]
+
+## Prompt 102
+
+thus please update tasks.md's open (WIP/TESTING) tasks to their latest statuses
+
+## Prompt 103
+
+delegáld ki légyszi egy openrouter modellnek (free modellnek), hogy tegye rendbe a page-en megjelenő hireket, hogy minden important hir tipus meg tudjon jelenni. továbbá adj a qwennek a 25-ös, majd a 27.es feladatot. (csak ha a 25-ös végzett, utána a 27-est)
+
+## Prompt 104
+
+plus this: [Image 1]  look up the baseline on the internet
+
+## Prompt 105
+
+I still don't see market related important news in the feed. I see these now: [Image 1]

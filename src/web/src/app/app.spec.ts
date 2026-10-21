@@ -57,6 +57,24 @@ describe('App', () => {
     expect(fixture.nativeElement.querySelector('form[data-testid="admin-login"]')).toBeNull();
   });
 
+  it('navigates to alert setup while retaining news and admin navigation', async () => {
+    const fixture = createApp();
+    httpMock.expectOne('/api/health').flush({ status: 'ok' });
+    const nav: HTMLElement = fixture.nativeElement.querySelector('nav[aria-label="Site navigation"]');
+    expect(nav.querySelector('a[routerLink="/"]')).toBeTruthy();
+    expect(nav.querySelector('a[routerLink="/admin"]')).toBeTruthy();
+    const setupLink = nav.querySelector<HTMLAnchorElement>('a[routerLink="/subscriptions"]');
+    expect(setupLink?.textContent).toContain('Alert setup');
+
+    await TestBed.inject(Router).navigateByUrl('/subscriptions');
+    fixture.detectChanges();
+    httpMock.expectOne('/api/subscriptions').flush([]);
+    httpMock.expectOne('/api/admin/email').flush(null, { status: 401, statusText: 'Unauthorized' });
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#subscriptions-heading')?.textContent).toContain('Alert setup');
+  });
+
   it('reports connecting while the backend health check is pending', () => {
     const fixture = createApp();
 

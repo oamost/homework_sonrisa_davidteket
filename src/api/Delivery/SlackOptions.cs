@@ -73,6 +73,15 @@ public sealed class SlackOptions
             {
                 errors.Add("Slack webhook URL must not embed credentials.");
             }
+            else if (uri.Scheme == Uri.UriSchemeHttps &&
+                (!string.Equals(uri.Host, "hooks.slack.com", StringComparison.OrdinalIgnoreCase)
+                 && !string.Equals(uri.Host, "hooks.slack-gov.com", StringComparison.OrdinalIgnoreCase)
+                 || !uri.IsDefaultPort || !string.IsNullOrEmpty(uri.Query) || !string.IsNullOrEmpty(uri.Fragment)
+                 || !System.Text.RegularExpressions.Regex.IsMatch(uri.AbsolutePath,
+                     @"\A/services/[A-Za-z0-9_-]+/[A-Za-z0-9_-]+/[A-Za-z0-9_-]+\z", System.Text.RegularExpressions.RegexOptions.CultureInvariant)))
+            {
+                errors.Add("Slack webhook URL must be an official incoming-webhook endpoint without a port, query, or fragment.");
+            }
         }
 
         if (TimeoutSeconds is < 1 or > MaxTimeoutSeconds)

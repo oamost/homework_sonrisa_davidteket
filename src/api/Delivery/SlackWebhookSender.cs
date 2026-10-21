@@ -49,13 +49,17 @@ public sealed class SlackWebhookSender : ISlackSender
     /// <exception cref="InvalidOperationException">Slack options are incomplete or invalid.</exception>
     /// <exception cref="SlackDeliveryException">The post did not succeed.</exception>
     public async Task SendAsync(string text, CancellationToken cancellationToken = default)
+        => await SendAsync(text, _options, cancellationToken);
+
+    /// <summary>Send with privately loaded settings, without sharing a mutable options instance.</summary>
+    public async Task SendAsync(string text, SlackOptions options, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(text))
         {
             throw new ArgumentException("Slack message text is required.", nameof(text));
         }
 
-        var errors = _options.Validate();
+        var errors = options.Validate();
         if (errors.Count > 0)
         {
             throw new InvalidOperationException(
@@ -66,14 +70,14 @@ public sealed class SlackWebhookSender : ISlackSender
         {
             ["text"] = text,
         };
-        if (!string.IsNullOrWhiteSpace(_options.Channel))
+        if (!string.IsNullOrWhiteSpace(options.Channel))
         {
-            payload["channel"] = _options.Channel;
+            payload["channel"] = options.Channel;
         }
 
-        var target = _options.Describe();
+        var target = options.Describe();
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, _options.WebhookUrl)
+        using var request = new HttpRequestMessage(HttpMethod.Post, options.WebhookUrl)
         {
             Content = new StringContent(
                 JsonSerializer.Serialize(payload),
@@ -84,7 +88,7 @@ public sealed class SlackWebhookSender : ISlackSender
         // The options timeout is enforced per send so a shared HttpClient can
         // never silently use a different deadline.
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeout.CancelAfter(_options.Timeout);
+        timeout.CancelAfter(options.Timeout);
 
         HttpResponseMessage response;
         try
@@ -98,9 +102,9 @@ public sealed class SlackWebhookSender : ISlackSender
             _logger.LogError(
                 "Slack delivery to {Target} timed out after {TimeoutSeconds} seconds.",
                 target,
-                _options.Timeout.TotalSeconds);
+                 options.Timeout.TotalSeconds);
             throw new SlackDeliveryException(
-                $"Slack webhook delivery to {target} timed out after {_options.Timeout.TotalSeconds:0} seconds.",
+                 $"Slack webhook delivery to {target} timed out after {options.Timeout.TotalSeconds:0} seconds.",
                 safeTarget: target);
         }
         catch (HttpRequestException exception)

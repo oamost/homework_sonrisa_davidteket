@@ -60,6 +60,20 @@ public sealed class SlackOptionsTests
         Assert.DoesNotContain("user:pass", error, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData("https://internal.example/services/T/B/XXXXXXXXXXXXXXXXXXXXXXXX")]
+    [InlineData("https://hooks.slack.com.evil.test/services/T/B/XXXXXXXXXXXXXXXXXXXXXXXX")]
+    [InlineData("https://hooks.slack.com:8443/services/T/B/XXXXXXXXXXXXXXXXXXXXXXXX")]
+    [InlineData("https://hooks.slack.com/other/T/B/XXXXXXXXXXXXXXXXXXXXXXXX")]
+    [InlineData("https://hooks.slack.com/services/T/B/XXXXXXXXXXXXXXXXXXXXXXXX?redirect=1")]
+    [InlineData("https://hooks.slack.com/services/T/B/XXXXXXXXXXXXXXXXXXXXXXXX#fragment")]
+    public void Validate_rejects_non_slack_destinations_without_echoing_the_url(string url)
+    {
+        var errors = new SlackOptions { WebhookUrl = url }.Validate();
+        Assert.NotEmpty(errors);
+        Assert.All(errors, error => Assert.DoesNotContain(url, error));
+    }
+
     [Fact]
     public void Validate_bounds_timeout_and_rejects_a_channel_with_whitespace()
     {

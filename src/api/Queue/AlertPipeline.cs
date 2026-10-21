@@ -44,6 +44,8 @@ public sealed class AlertPipeline(AlertSelectionService selection, NewsStore new
                 // Slack webhook stays in protected application configuration, never in subscription destination.
                 // Email must have a selected recipient; do not silently use the SMTP sender address.
                 if (subscriber.Channel == "email" && string.IsNullOrWhiteSpace(subscriber.Destination)) continue;
+                // Slack jobs stay pending for the separately configured Slack dispatcher;
+                // the email worker claims email only and can never send these jobs.
                 if (subscriber.Channel is not ("email" or "slack")) continue;
                 if (await queue.EnqueueAsync(revision.CanonicalKey, revision.Fingerprint,
                     subscriberId, subscriber.Channel,

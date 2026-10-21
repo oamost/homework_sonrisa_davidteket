@@ -1,8 +1,11 @@
 using Microsoft.Data.Sqlite;
+using Microsoft.AspNetCore.DataProtection;
 using WorldAlerts.Api.Admin;
 using WorldAlerts.Api.Advisories;
 using WorldAlerts.Api.Collection;
 using WorldAlerts.Api.Disasters;
+using WorldAlerts.Api.Delivery;
+using WorldAlerts.Api.Dedupe;
 using WorldAlerts.Api.Markets;
 using WorldAlerts.Api.News;
 using WorldAlerts.Api.Queue;
@@ -27,6 +30,7 @@ subscriptionStore.TryInitialize();
 builder.Services.AddSingleton(subscriptionStore);
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<AlertSelectionService>();
+builder.Services.AddSingleton<ImportantNewsService>();
 var collectionStore = new CollectionStateStore(databasePath);
 collectionStore.TryInitialize();
 builder.Services.AddSingleton(collectionStore);
@@ -37,8 +41,38 @@ catch (Exception exception) when (exception is SqliteException or IOException)
     Console.Error.WriteLine($"SQLite notification queue initialization failed: {exception.GetType().Name}");
 }
 builder.Services.AddSingleton(queueStore);
+var dedupeStore = new DedupeStore(databasePath);
+dedupeStore.TryInitialize();
+builder.Services.AddSingleton(dedupeStore);
+builder.Services.AddSingleton(sp => new EventDedupeService(dedupeStore,
+    () => sp.GetRequiredService<TimeProvider>().GetUtcNow()));
+// Keep encryption keys on the same persistent private volume as the database.
+var keyDirectory = new DirectoryInfo(databasePath + ".keys");
+try
+{
+    Directory.CreateDirectory(keyDirectory.FullName);
+    if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+        File.SetUnixFileMode(keyDirectory.FullName, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+}
+catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+{
+    // Preserve the foundation's unhealthy host response. Never substitute ephemeral keys:
+    // settings must stay unavailable until the persistent private volume is repaired.
+    Console.Error.WriteLine($"Persistent email encryption keys unavailable: {exception.GetType().Name}");
+}
+builder.Services.AddDataProtection().PersistKeysToFileSystem(keyDirectory)
+    .SetApplicationName("WorldAlerts.Email");
+builder.Services.AddSingleton(sp => new EmailSettingsStore(databasePath,
+    sp.GetRequiredService<Microsoft.AspNetCore.DataProtection.IDataProtectionProvider>()));
+builder.Services.AddSingleton<ISmtpTransport, SmtpClientTransport>();
+builder.Services.AddSingleton<INotificationTransport, EmailNotificationTransport>();
+builder.Services.AddSingleton<NotificationDispatcher>();
+builder.Services.AddSingleton<AlertPipeline>();
+builder.Services.AddHostedService<EmailNotificationWorker>();
 builder.Services.AddSingleton<IAdminOperationsReader, RuntimeAdminOperationsReader>();
 builder.Services.AddAdminWall();
+builder.Services.Configure<Microsoft.AspNetCore.Antiforgery.AntiforgeryOptions>(options =>
+    options.HeaderName = "X-CSRF-TOKEN");
 
 // News and health share the one configured SQLite file; there is no second default.
 var newsOptions = builder.Configuration.GetSection("WorldAlerts:News").Get<NewsOptions>() ?? new NewsOptions();
@@ -93,6 +127,7 @@ var app = builder.Build();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapAdminWall();
+app.MapEmailSettings();
 
 app.MapGet("/", () => "World Alerts API");
 app.MapGet("/api/health", async (SqliteDatabase db, CancellationToken cancellationToken) =>
@@ -101,6 +136,8 @@ app.MapGet("/api/health", async (SqliteDatabase db, CancellationToken cancellati
         : Results.Json(new HealthResponse("unavailable"), statusCode: StatusCodes.Status503ServiceUnavailable));
 app.MapGet("/api/alerts/selection", async (AlertSelectionService selection, CancellationToken cancellationToken) =>
     Results.Ok(await selection.SelectAsync(cancellationToken)));
+app.MapGet("/api/news/important", async (ImportantNewsService importantNews, CancellationToken cancellationToken) =>
+    Results.Ok(await importantNews.GetAsync(cancellationToken)));
 app.MapGet("/api/news", async (NewsStore store, int? limit, CancellationToken cancellationToken) =>
 {
     var clamped = Math.Clamp(limit ?? NewsStore.DefaultLimit, NewsStore.MinLimit, NewsStore.MaxLimit);

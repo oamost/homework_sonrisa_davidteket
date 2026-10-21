@@ -11,7 +11,9 @@ RUN dotnet restore src/WorldAlerts.sln \
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=verified /publish/ ./
-RUN mkdir -p /app/data && chown app:app /app/data
+RUN mkdir -p /app/data /home/app/.aspnet/DataProtection-Keys \
+    && chown app:app /app/data /home/app/.aspnet /home/app/.aspnet/DataProtection-Keys \
+    && chmod 700 /home/app/.aspnet/DataProtection-Keys
 USER app
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "WorldAlerts.Api.dll"]

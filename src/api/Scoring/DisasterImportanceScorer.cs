@@ -46,8 +46,7 @@ public sealed class DisasterImportanceScorer
     /// <summary>Scores one normalized disaster event against the approved rules.</summary>
     /// <param name="disaster">Normalized disaster event; only metadata is read.</param>
     /// <returns>
-    /// A binary decision with a stable rule id and human-readable factors. The
-    /// score is 1.0 when important and 0.0 otherwise.
+    /// Rule eligibility is unchanged; strength uses bounded provider severity metadata.
     /// </returns>
     public ImportanceDecision Score(DisasterEvent disaster)
     {
@@ -83,9 +82,24 @@ public sealed class DisasterImportanceScorer
             ? DisasterImportanceRuleIds.NoApprovedTrigger
             : matchedRules[0];
 
-        return matchedRules.Count > 0
-            ? ImportanceDecision.Important(ruleId, factors.ToArray())
-            : ImportanceDecision.NotImportant(ruleId, factors.ToArray());
+        var strengths = new List<double>();
+        if (isGdacs && alert == "red") strengths.Add(0.95);
+        if (isGdacs && alert == "orange") strengths.Add(0.80);
+        if (disaster.Tsunami is true) strengths.Add(0.90);
+        if (matchedRules.Contains(DisasterImportanceRuleIds.EarthquakeMagnitude)
+            && disaster.Severity is { } magnitude && double.IsFinite(magnitude))
+            strengths.Add(0.70 + 0.25 * Math.Clamp((magnitude - EarthquakeMagnitudeThreshold) / 3.0, 0, 1));
+        if (matchedRules.Contains(DisasterImportanceRuleIds.IfrcSeverity)
+            && disaster.Severity is { } severity && double.IsFinite(severity))
+            strengths.Add(0.65 + 0.25 * Math.Clamp((severity - IfrcSeverityThreshold) / 3.0, 0, 1));
+        if (strengths.Count > 0)
+        {
+            factors.Add("Strength heuristic: maximum of provider alert (Orange 0.80, Red 0.95), tsunami 0.90, "
+                + "magnitude 0.70–0.95 over three units above 6, IFRC 0.65–0.90 over three levels above 2.");
+            return ImportanceDecision.Important(ruleId, strengths.Max(), factors.ToArray());
+        }
+        factors.Add("Strength heuristic: no approved disaster trigger; missing or low severity is not inferred.");
+        return ImportanceDecision.NotImportant(ruleId, factors.ToArray());
     }
 
     private static void EvaluateGdacsAlert(

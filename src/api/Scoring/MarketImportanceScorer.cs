@@ -294,11 +294,20 @@ public sealed class MarketImportanceScorer
         if (MeetsThreshold(input.CurrentValue, baseline, threshold.Percent))
         {
             factors.Add($"Move meets the configured {FormatNumber(threshold.Percent)}% threshold.");
-            return ImportanceDecision.Important(MarketImportanceRuleIds.MoveThreshold, factors.ToArray());
+            var ratio = double.IsFinite(movePercent) ? movePercent / threshold.Percent : double.PositiveInfinity;
+            var excess = double.IsFinite(ratio) ? Math.Clamp((ratio - 1) / (ratio + 1), 0, 1) : 1;
+            var freshness = Math.Clamp(1 - age.TotalHours / freshnessLimitHours, 0, 1);
+            var strength = 0.60 + 0.30 * excess + 0.05 * freshness;
+            factors.Add("Strength heuristic: 0.60 at approved move threshold, up to 0.30 for relative excess "
+                + "(ratio−1)/(ratio+1), up to 0.05 for remaining freshness; eligibility uses raw values.");
+            return ImportanceDecision.Important(MarketImportanceRuleIds.MoveThreshold, strength, factors.ToArray());
         }
 
         factors.Add($"Move is below the configured {FormatNumber(threshold.Percent)}% threshold.");
-        return ImportanceDecision.NotImportant(MarketImportanceRuleIds.BelowThreshold, factors.ToArray());
+        var belowRatio = double.IsFinite(movePercent) ? Math.Clamp(movePercent / threshold.Percent, 0, 1) : 0;
+        factors.Add("Strength heuristic: below-threshold move scaled to at most 0.45; not an importance trigger.");
+        return ImportanceDecision.NotImportantWithStrength(MarketImportanceRuleIds.BelowThreshold,
+            0.45 * belowRatio, factors.ToArray());
     }
 
     private static bool MeetsThreshold(double current, double baseline, double thresholdPercent)

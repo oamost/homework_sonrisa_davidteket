@@ -20,20 +20,28 @@ fi
 
 config="$(realpath -- "$config")"
 volume="$instance-data"
+keys="$instance-keys"
 image="$instance:verified"
 label="org.worldalerts.instance=$instance"
 
 # Never modify an existing container or volume before the verified image exists.
 docker build --no-cache -f "$root/src/container/Dockerfile" -t "$image" "$root"
 
-if owner="$(docker volume inspect --format '{{ index .Labels "org.worldalerts.instance" }}' "$volume" 2>/dev/null)"; then
-  if [[ "$owner" != "$instance" ]]; then
-    printf 'Refusing to use a volume not owned by this instance: %s\n' "$volume" >&2
-    exit 1
+# Inspect both volumes before creating either; never mix with someone else's
+# existing volume even if its name collides with our configured instance.
+for name in "$volume" "$keys"; do
+  if owner="$(docker volume inspect --format '{{ index .Labels "org.worldalerts.instance" }}' "$name" 2>/dev/null)"; then
+    if [[ "$owner" != "$instance" ]]; then
+      printf 'Refusing to use a volume not owned by this instance: %s\n' "$name" >&2
+      exit 1
+    fi
   fi
-else
-  docker volume create --label "$label" "$volume"
-fi
+done
+for name in "$volume" "$keys"; do
+  if ! docker volume inspect --format '{{ .Name }}' "$name" >/dev/null 2>&1; then
+    docker volume create --label "$label" "$name"
+  fi
+done
 
 if owner="$(docker container inspect --format '{{ index .Config.Labels "org.worldalerts.instance" }}' "$instance" 2>/dev/null)"; then
   if [[ "$owner" != "$instance" ]]; then
@@ -48,4 +56,5 @@ docker run -d --name "$instance" --label "$label" \
   --env-file "$config" -e 'ASPNETCORE_URLS=http://+:8080' \
   -e 'WorldAlerts__DatabasePath=/app/data/worldalerts.sqlite' \
   -p "127.0.0.1:$port:8080" -v "$volume:/app/data" \
+  -v "$keys:/home/app/.aspnet/DataProtection-Keys" \
   --restart unless-stopped "$image"

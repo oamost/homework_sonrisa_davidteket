@@ -18,7 +18,7 @@ public sealed class DisasterImportanceScorerTests
 
         Assert.True(decision.IsImportant);
         Assert.Equal(DisasterImportanceRuleIds.GdacsOrangeRed, decision.RuleId);
-        Assert.Equal(1.0, decision.Score);
+        Assert.Equal(0.80, decision.Score, 6);
         Assert.Contains(decision.Factors, factor => factor.Contains("Orange/Red", StringComparison.Ordinal));
         Assert.Contains(decision.Factors, factor => factor.Contains("magnitude is missing", StringComparison.OrdinalIgnoreCase));
     }
@@ -30,7 +30,8 @@ public sealed class DisasterImportanceScorerTests
 
         Assert.True(decision.IsImportant);
         Assert.Equal(DisasterImportanceRuleIds.EarthquakeMagnitude, decision.RuleId);
-        Assert.Equal(1.0, decision.Score);
+        Assert.InRange(decision.Score, 0.70, 0.95);
+        Assert.True(double.IsFinite(decision.Score));
     }
 
     [Fact]

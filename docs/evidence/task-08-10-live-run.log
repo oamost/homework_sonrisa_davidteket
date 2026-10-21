@@ -1524,3 +1524,1046 @@ info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
       End processing HTTP request after 301.4173ms - 200
 info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
       Disaster source emsc polled: parsed 50, inserted 3, duplicates 47, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://feeds.bbci.co.uk/news/world/rss.xml
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://feeds.bbci.co.uk/news/world/rss.xml
+info: System.Net.Http.HttpClient.AdvisoryIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json
+info: System.Net.Http.HttpClient.AdvisoryIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.gdacs.org/xml/rss.xml
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.gdacs.org/xml/rss.xml
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.binance.com/api/v3/ticker/24hr?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.binance.com/api/v3/ticker/24hr?*
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 213.9292ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 214.0331ms - 200
+info: System.Net.Http.HttpClient.AdvisoryIngestionService.ClientHandler[101]
+      Received HTTP response headers after 239.0443ms - 200
+info: System.Net.Http.HttpClient.AdvisoryIngestionService.LogicalHandler[101]
+      End processing HTTP request after 239.0718ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 259.1138ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 259.1419ms - 200
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed bbc-world polled: parsed 35, inserted 0, duplicates 35, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://rss.nytimes.com/services/xml/rss/nyt/World.xml
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://rss.nytimes.com/services/xml/rss/nyt/World.xml
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[101]
+      Received HTTP response headers after 421.1158ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[101]
+      End processing HTTP request after 421.1668ms - 200
+info: WorldAlerts.Api.Markets.MarketIngestionService[0]
+      Market source binance-btcusdt-ticker polled: parsed 1, inserted 1, duplicates 0, skipped 0.
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.binance.com/api/v3/klines?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.binance.com/api/v3/klines?*
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 481.1983ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 481.2277ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[101]
+      Received HTTP response headers after 378.2335ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[101]
+      End processing HTTP request after 378.3036ms - 200
+info: WorldAlerts.Api.Markets.MarketIngestionService[0]
+      Market source binance-btcusdt-1h polled: parsed 25, inserted 0, duplicates 25, skipped 0.
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.frankfurter.app/latest?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.frankfurter.app/latest?*
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed nyt-world polled: parsed 53, inserted 0, duplicates 53, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.aljazeera.com/xml/rss/all.xml
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.aljazeera.com/xml/rss/all.xml
+info: WorldAlerts.Api.Advisories.AdvisoryIngestionService[0]
+      Advisory source cisa-kev polled: parsed 1754, inserted 0, duplicates 1754, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 498.8049ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 498.8592ms - 200
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed aljazeera-all polled: parsed 25, inserted 0, duplicates 25, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.theguardian.com/world/rss
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.theguardian.com/world/rss
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[101]
+      Received HTTP response headers after 975.7987ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[101]
+      End processing HTTP request after 975.9057ms - 200
+info: WorldAlerts.Api.Markets.MarketIngestionService[0]
+      Market source frankfurter-eurusd polled: parsed 1, inserted 0, duplicates 1, skipped 0.
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://cdn-api.cboe.com/api/global/delayed_quotes/quotes/_SPX.json
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://cdn-api.cboe.com/api/global/delayed_quotes/quotes/_SPX.json
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 235.6001ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 235.6352ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source gdacs polled: parsed 248, inserted 0, duplicates 248, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://eonet.gsfc.nasa.gov/api/v3/events?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://eonet.gsfc.nasa.gov/api/v3/events?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[101]
+      Received HTTP response headers after 378.8431ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[101]
+      End processing HTTP request after 378.8875ms - 200
+info: WorldAlerts.Api.Markets.MarketIngestionService[0]
+      Market source cboe-spx-delayed polled: parsed 1, inserted 0, duplicates 1, skipped 0.
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_AVG_ALL
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_AVG_ALL
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed guardian-world polled: parsed 45, inserted 0, duplicates 45, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://feeds.arstechnica.com/arstechnica/index
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://feeds.arstechnica.com/arstechnica/index
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 490.0629ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 490.2374ms - 200
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed ars-technica polled: parsed 20, inserted 0, duplicates 20, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.nature.com/nature.rss
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.nature.com/nature.rss
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 938.9821ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 939.0467ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 199.0261ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 199.0668ms - 200
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed nature polled: parsed 75, inserted 0, duplicates 75, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.state.gov/rss-feed/press-releases/feed/
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.state.gov/rss-feed/press-releases/feed/
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://eonet.gsfc.nasa.gov/api/v3/events?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://eonet.gsfc.nasa.gov/api/v3/events?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 220.8578ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 220.9029ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://eonet.gsfc.nasa.gov/api/v3/events?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://eonet.gsfc.nasa.gov/api/v3/events?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 192.1231ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 192.2062ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source eonet polled: parsed 32, inserted 0, duplicates 32, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 524.6037ms - 403
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 524.6459ms - 403
+fail: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed state-dept failed with HttpRequestException: parsed 0, inserted 0, skipped 0.
+      System.Net.Http.HttpRequestException: Response status code does not indicate success: 403 (Forbidden).
+         at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+         at WorldAlerts.Api.News.NewsIngestionService.PollFeedAsync(NewsFeed feed, DateTimeOffset firstSeenUtc, CancellationToken cancellationToken) in /prod/sonrisa_homework/src/api/News/NewsIngestionService.cs:line 69
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://press.un.org/en/rss.xml
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://press.un.org/en/rss.xml
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 289.3115ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 289.3692ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source usgs polled: parsed 215, inserted 3, duplicates 212, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://goadmin.ifrc.org/api/v2/event/
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://goadmin.ifrc.org/api/v2/event/
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 534.9444ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 534.9923ms - 200
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed un-press polled: parsed 10, inserted 0, duplicates 10, skipped 0.
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[101]
+      Received HTTP response headers after 2248.9137ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[101]
+      End processing HTTP request after 2248.9585ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 771.236ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 771.2928ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source ifrc-go polled: parsed 50, inserted 0, duplicates 50, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.dwd.de/DWD/warnungen/warnapp/json/warnings.json
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.dwd.de/DWD/warnungen/warnapp/json/warnings.json
+info: WorldAlerts.Api.Markets.MarketIngestionService[0]
+      Market source twse-eod polled: parsed 1, inserted 0, duplicates 1, skipped 33237.
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://iss.moex.com/iss/engines/stock/markets/index/boards/SNDX/securities/IMOEX.json?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://iss.moex.com/iss/engines/stock/markets/index/boards/SNDX/securities/IMOEX.json?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 292.0954ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 292.1405ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source dwd-warnings polled: parsed 0, inserted 0, duplicates 0, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[101]
+      Received HTTP response headers after 408.6313ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[101]
+      End processing HTTP request after 408.6807ms - 200
+info: WorldAlerts.Api.Markets.MarketIngestionService[0]
+      Market source moex-imoex polled: parsed 1, inserted 0, duplicates 1, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 354.9705ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 355.0084ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 224.8002ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 224.8379ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 242.9653ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 243.0124ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 234.2749ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 234.3214ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source nws-alerts polled: parsed 0, inserted 0, duplicates 0, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 369.5164ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 369.5637ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 166.7564ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 166.8091ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 147.0944ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 147.1369ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source copernicus-ems polled: parsed 268, inserted 0, duplicates 268, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.seismicportal.eu/fdsnws/event/1/query?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.seismicportal.eu/fdsnws/event/1/query?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 361.6147ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 361.6563ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source emsc polled: parsed 50, inserted 1, duplicates 49, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.gdacs.org/xml/rss.xml
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.gdacs.org/xml/rss.xml
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.binance.com/api/v3/ticker/24hr?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.binance.com/api/v3/ticker/24hr?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[101]
+      Received HTTP response headers after 378.0991ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[101]
+      End processing HTTP request after 378.1415ms - 200
+info: WorldAlerts.Api.Markets.MarketIngestionService[0]
+      Market source binance-btcusdt-ticker polled: parsed 1, inserted 1, duplicates 0, skipped 0.
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.binance.com/api/v3/klines?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.binance.com/api/v3/klines?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 578.2907ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 578.3289ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[101]
+      Received HTTP response headers after 283.2708ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[101]
+      End processing HTTP request after 283.2976ms - 200
+info: WorldAlerts.Api.Markets.MarketIngestionService[0]
+      Market source binance-btcusdt-1h polled: parsed 25, inserted 0, duplicates 25, skipped 0.
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.frankfurter.app/latest?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.frankfurter.app/latest?*
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source gdacs polled: parsed 248, inserted 0, duplicates 248, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://eonet.gsfc.nasa.gov/api/v3/events?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://eonet.gsfc.nasa.gov/api/v3/events?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[101]
+      Received HTTP response headers after 507.4099ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[101]
+      End processing HTTP request after 507.4366ms - 200
+info: WorldAlerts.Api.Markets.MarketIngestionService[0]
+      Market source frankfurter-eurusd polled: parsed 1, inserted 0, duplicates 1, skipped 0.
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://cdn-api.cboe.com/api/global/delayed_quotes/quotes/_SPX.json
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://cdn-api.cboe.com/api/global/delayed_quotes/quotes/_SPX.json
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[101]
+      Received HTTP response headers after 180.1774ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[101]
+      End processing HTTP request after 180.1971ms - 200
+info: WorldAlerts.Api.Markets.MarketIngestionService[0]
+      Market source cboe-spx-delayed polled: parsed 1, inserted 0, duplicates 1, skipped 0.
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_AVG_ALL
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_AVG_ALL
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 751.364ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 751.3896ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://eonet.gsfc.nasa.gov/api/v3/events?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://eonet.gsfc.nasa.gov/api/v3/events?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 186.7952ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 186.8489ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://eonet.gsfc.nasa.gov/api/v3/events?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://eonet.gsfc.nasa.gov/api/v3/events?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 188.0248ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 188.0552ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source eonet polled: parsed 32, inserted 0, duplicates 32, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 309.7159ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 309.7471ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source usgs polled: parsed 214, inserted 0, duplicates 214, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://goadmin.ifrc.org/api/v2/event/
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://goadmin.ifrc.org/api/v2/event/
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[101]
+      Received HTTP response headers after 1687.3629ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[101]
+      End processing HTTP request after 1687.3937ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 766.3755ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 766.4048ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source ifrc-go polled: parsed 50, inserted 0, duplicates 50, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.dwd.de/DWD/warnungen/warnapp/json/warnings.json
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.dwd.de/DWD/warnungen/warnapp/json/warnings.json
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 1454.9705ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 1455.0035ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source dwd-warnings polled: parsed 0, inserted 0, duplicates 0, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.weather.gov/alerts/active?*
+info: WorldAlerts.Api.Markets.MarketIngestionService[0]
+      Market source twse-eod polled: parsed 1, inserted 0, duplicates 1, skipped 33237.
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://iss.moex.com/iss/engines/stock/markets/index/boards/SNDX/securities/IMOEX.json?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://iss.moex.com/iss/engines/stock/markets/index/boards/SNDX/securities/IMOEX.json?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 382.6721ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 382.7049ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[101]
+      Received HTTP response headers after 398.3358ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[101]
+      End processing HTTP request after 398.3686ms - 200
+info: WorldAlerts.Api.Markets.MarketIngestionService[0]
+      Market source moex-imoex polled: parsed 1, inserted 0, duplicates 1, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 224.8015ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 224.8337ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 205.9791ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 206.0073ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 312.7837ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 312.8135ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source nws-alerts polled: parsed 0, inserted 0, duplicates 0, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 418.8384ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 418.87ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 169.9963ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 170.0221ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 147.5582ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 147.5804ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source copernicus-ems polled: parsed 268, inserted 0, duplicates 268, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.seismicportal.eu/fdsnws/event/1/query?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.seismicportal.eu/fdsnws/event/1/query?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 375.7247ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 375.7476ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source emsc polled: parsed 50, inserted 4, duplicates 46, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://feeds.bbci.co.uk/news/world/rss.xml
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://feeds.bbci.co.uk/news/world/rss.xml
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 154.2879ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 154.3271ms - 200
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed bbc-world polled: parsed 35, inserted 0, duplicates 35, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://rss.nytimes.com/services/xml/rss/nyt/World.xml
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://rss.nytimes.com/services/xml/rss/nyt/World.xml
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 205.4207ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 205.442ms - 200
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed nyt-world polled: parsed 53, inserted 0, duplicates 53, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.aljazeera.com/xml/rss/all.xml
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.aljazeera.com/xml/rss/all.xml
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 168.3975ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 168.4229ms - 200
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed aljazeera-all polled: parsed 25, inserted 1, duplicates 24, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.theguardian.com/world/rss
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.theguardian.com/world/rss
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 204.4597ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 204.4833ms - 200
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed guardian-world polled: parsed 45, inserted 0, duplicates 45, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://feeds.arstechnica.com/arstechnica/index
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://feeds.arstechnica.com/arstechnica/index
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 198.0847ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 198.1113ms - 200
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed ars-technica polled: parsed 20, inserted 1, duplicates 19, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.nature.com/nature.rss
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.nature.com/nature.rss
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 180.4271ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 180.4599ms - 200
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed nature polled: parsed 75, inserted 0, duplicates 75, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.state.gov/rss-feed/press-releases/feed/
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.state.gov/rss-feed/press-releases/feed/
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 556.9715ms - 403
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 556.9967ms - 403
+fail: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed state-dept failed with HttpRequestException: parsed 0, inserted 0, skipped 0.
+      System.Net.Http.HttpRequestException: Response status code does not indicate success: 403 (Forbidden).
+         at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+         at WorldAlerts.Api.News.NewsIngestionService.PollFeedAsync(NewsFeed feed, DateTimeOffset firstSeenUtc, CancellationToken cancellationToken) in /prod/sonrisa_homework/src/api/News/NewsIngestionService.cs:line 69
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://press.un.org/en/rss.xml
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://press.un.org/en/rss.xml
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 536.6506ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 536.6811ms - 200
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed un-press polled: parsed 10, inserted 0, duplicates 10, skipped 0.
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.binance.com/api/v3/ticker/24hr?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.binance.com/api/v3/ticker/24hr?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.gdacs.org/xml/rss.xml
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.gdacs.org/xml/rss.xml
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 224.7396ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 224.92ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[101]
+      Received HTTP response headers after 413.6064ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[101]
+      End processing HTTP request after 413.6573ms - 200
+info: WorldAlerts.Api.Markets.MarketIngestionService[0]
+      Market source binance-btcusdt-ticker polled: parsed 1, inserted 1, duplicates 0, skipped 0.
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.binance.com/api/v3/klines?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.binance.com/api/v3/klines?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[101]
+      Received HTTP response headers after 278.5461ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[101]
+      End processing HTTP request after 278.5787ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source gdacs polled: parsed 249, inserted 1, duplicates 248, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://eonet.gsfc.nasa.gov/api/v3/events?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://eonet.gsfc.nasa.gov/api/v3/events?*
+info: WorldAlerts.Api.Markets.MarketIngestionService[0]
+      Market source binance-btcusdt-1h polled: parsed 25, inserted 0, duplicates 25, skipped 0.
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.frankfurter.app/latest?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.frankfurter.app/latest?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[101]
+      Received HTTP response headers after 290.8868ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[101]
+      End processing HTTP request after 290.9217ms - 200
+info: WorldAlerts.Api.Markets.MarketIngestionService[0]
+      Market source frankfurter-eurusd polled: parsed 1, inserted 0, duplicates 1, skipped 0.
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://cdn-api.cboe.com/api/global/delayed_quotes/quotes/_SPX.json
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://cdn-api.cboe.com/api/global/delayed_quotes/quotes/_SPX.json
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[101]
+      Received HTTP response headers after 188.6997ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[101]
+      End processing HTTP request after 188.7241ms - 200
+info: WorldAlerts.Api.Markets.MarketIngestionService[0]
+      Market source cboe-spx-delayed polled: parsed 1, inserted 0, duplicates 1, skipped 0.
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_AVG_ALL
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_AVG_ALL
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 1900.1983ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 1900.234ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://eonet.gsfc.nasa.gov/api/v3/events?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://eonet.gsfc.nasa.gov/api/v3/events?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 202.0704ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 202.103ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://eonet.gsfc.nasa.gov/api/v3/events?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://eonet.gsfc.nasa.gov/api/v3/events?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[101]
+      Received HTTP response headers after 1621.3552ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[101]
+      End processing HTTP request after 1621.3791ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 199.8419ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 199.8667ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source eonet polled: parsed 32, inserted 0, duplicates 32, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 295.2739ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 295.3029ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source usgs polled: parsed 211, inserted 1, duplicates 210, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://goadmin.ifrc.org/api/v2/event/
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://goadmin.ifrc.org/api/v2/event/
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 1249.2876ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 1249.3131ms - 200
+info: WorldAlerts.Api.Markets.MarketIngestionService[0]
+      Market source twse-eod polled: parsed 1, inserted 0, duplicates 1, skipped 33237.
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://iss.moex.com/iss/engines/stock/markets/index/boards/SNDX/securities/IMOEX.json?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://iss.moex.com/iss/engines/stock/markets/index/boards/SNDX/securities/IMOEX.json?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[101]
+      Received HTTP response headers after 428.2853ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[101]
+      End processing HTTP request after 428.3143ms - 200
+info: WorldAlerts.Api.Markets.MarketIngestionService[0]
+      Market source moex-imoex polled: parsed 1, inserted 0, duplicates 1, skipped 0.
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source ifrc-go polled: parsed 50, inserted 0, duplicates 50, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.dwd.de/DWD/warnungen/warnapp/json/warnings.json
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.dwd.de/DWD/warnungen/warnapp/json/warnings.json
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 297.2395ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 297.2666ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source dwd-warnings polled: parsed 0, inserted 0, duplicates 0, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 385.2555ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 385.2838ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 224.4064ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 224.4328ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 210.1063ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 210.1335ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 239.9678ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 239.9951ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source nws-alerts polled: parsed 0, inserted 0, duplicates 0, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 372.9874ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 373.0137ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 174.8455ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 174.8697ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 138.6596ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 138.6841ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source copernicus-ems polled: parsed 268, inserted 0, duplicates 268, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.seismicportal.eu/fdsnws/event/1/query?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.seismicportal.eu/fdsnws/event/1/query?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 397.9718ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 397.9969ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source emsc polled: parsed 50, inserted 5, duplicates 45, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://feeds.bbci.co.uk/news/world/rss.xml
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://feeds.bbci.co.uk/news/world/rss.xml
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.binance.com/api/v3/ticker/24hr?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.binance.com/api/v3/ticker/24hr?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.gdacs.org/xml/rss.xml
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.gdacs.org/xml/rss.xml
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 171.4742ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 171.5592ms - 200
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed bbc-world polled: parsed 35, inserted 0, duplicates 35, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://rss.nytimes.com/services/xml/rss/nyt/World.xml
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://rss.nytimes.com/services/xml/rss/nyt/World.xml
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[101]
+      Received HTTP response headers after 398.3857ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[101]
+      End processing HTTP request after 398.4588ms - 200
+info: WorldAlerts.Api.Markets.MarketIngestionService[0]
+      Market source binance-btcusdt-ticker polled: parsed 1, inserted 1, duplicates 0, skipped 0.
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.binance.com/api/v3/klines?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.binance.com/api/v3/klines?*
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 207.3062ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 207.3468ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 493.1645ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 493.2293ms - 200
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed nyt-world polled: parsed 53, inserted 0, duplicates 53, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.aljazeera.com/xml/rss/all.xml
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.aljazeera.com/xml/rss/all.xml
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[101]
+      Received HTTP response headers after 275.7783ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[101]
+      End processing HTTP request after 275.831ms - 200
+info: WorldAlerts.Api.Markets.MarketIngestionService[0]
+      Market source binance-btcusdt-1h polled: parsed 25, inserted 0, duplicates 25, skipped 0.
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.frankfurter.app/latest?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.frankfurter.app/latest?*
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 172.4912ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 172.559ms - 200
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed aljazeera-all polled: parsed 25, inserted 0, duplicates 25, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.theguardian.com/world/rss
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.theguardian.com/world/rss
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source gdacs polled: parsed 249, inserted 0, duplicates 249, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://eonet.gsfc.nasa.gov/api/v3/events?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://eonet.gsfc.nasa.gov/api/v3/events?*
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 339.8996ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 339.9644ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[101]
+      Received HTTP response headers after 394.5518ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[101]
+      End processing HTTP request after 394.6103ms - 200
+info: WorldAlerts.Api.Markets.MarketIngestionService[0]
+      Market source frankfurter-eurusd polled: parsed 1, inserted 0, duplicates 1, skipped 0.
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://cdn-api.cboe.com/api/global/delayed_quotes/quotes/_SPX.json
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://cdn-api.cboe.com/api/global/delayed_quotes/quotes/_SPX.json
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed guardian-world polled: parsed 45, inserted 0, duplicates 45, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://feeds.arstechnica.com/arstechnica/index
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://feeds.arstechnica.com/arstechnica/index
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[101]
+      Received HTTP response headers after 193.2471ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[101]
+      End processing HTTP request after 193.3488ms - 200
+info: WorldAlerts.Api.Markets.MarketIngestionService[0]
+      Market source cboe-spx-delayed polled: parsed 1, inserted 0, duplicates 1, skipped 0.
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_AVG_ALL
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_AVG_ALL
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 524.9009ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 525.0069ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 757.3502ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 757.4199ms - 200
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed ars-technica polled: parsed 20, inserted 0, duplicates 20, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.nature.com/nature.rss
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.nature.com/nature.rss
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://eonet.gsfc.nasa.gov/api/v3/events?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://eonet.gsfc.nasa.gov/api/v3/events?*
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 193.5758ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 193.6643ms - 200
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed nature polled: parsed 75, inserted 0, duplicates 75, skipped 0.
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.state.gov/rss-feed/press-releases/feed/
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.state.gov/rss-feed/press-releases/feed/
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 198.6769ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 198.8006ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://eonet.gsfc.nasa.gov/api/v3/events?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://eonet.gsfc.nasa.gov/api/v3/events?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 188.5422ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 188.594ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source eonet polled: parsed 32, inserted 0, duplicates 32, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 337.2923ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 337.37ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 580.8827ms - 403
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 580.9321ms - 403
+fail: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed state-dept failed with HttpRequestException: parsed 0, inserted 0, skipped 0.
+      System.Net.Http.HttpRequestException: Response status code does not indicate success: 403 (Forbidden).
+         at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+         at WorldAlerts.Api.News.NewsIngestionService.PollFeedAsync(NewsFeed feed, DateTimeOffset firstSeenUtc, CancellationToken cancellationToken) in /prod/sonrisa_homework/src/api/News/NewsIngestionService.cs:line 69
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://press.un.org/en/rss.xml
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://press.un.org/en/rss.xml
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source usgs polled: parsed 211, inserted 3, duplicates 208, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://goadmin.ifrc.org/api/v2/event/
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://goadmin.ifrc.org/api/v2/event/
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[101]
+      Received HTTP response headers after 1667.9614ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[101]
+      End processing HTTP request after 1668.0146ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.ClientHandler[101]
+      Received HTTP response headers after 574.8179ms - 200
+info: System.Net.Http.HttpClient.NewsIngestionService.LogicalHandler[101]
+      End processing HTTP request after 574.8747ms - 200
+info: WorldAlerts.Api.News.NewsIngestionService[0]
+      News feed un-press polled: parsed 10, inserted 0, duplicates 10, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 798.1396ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 798.2019ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source ifrc-go polled: parsed 50, inserted 0, duplicates 50, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.dwd.de/DWD/warnungen/warnapp/json/warnings.json
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.dwd.de/DWD/warnungen/warnapp/json/warnings.json
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 1379.1917ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 1379.2363ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source dwd-warnings polled: parsed 0, inserted 0, duplicates 0, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.weather.gov/alerts/active?*
+info: WorldAlerts.Api.Markets.MarketIngestionService[0]
+      Market source twse-eod polled: parsed 1, inserted 0, duplicates 1, skipped 33237.
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://iss.moex.com/iss/engines/stock/markets/index/boards/SNDX/securities/IMOEX.json?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://iss.moex.com/iss/engines/stock/markets/index/boards/SNDX/securities/IMOEX.json?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 351.6643ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 351.6976ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.MarketIngestionService.ClientHandler[101]
+      Received HTTP response headers after 402.6713ms - 200
+info: System.Net.Http.HttpClient.MarketIngestionService.LogicalHandler[101]
+      End processing HTTP request after 402.7397ms - 200
+info: WorldAlerts.Api.Markets.MarketIngestionService[0]
+      Market source moex-imoex polled: parsed 1, inserted 0, duplicates 1, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 220.2128ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 220.2622ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 220.1648ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 220.2398ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://api.weather.gov/alerts/active?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 226.2813ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 226.3344ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source nws-alerts polled: parsed 0, inserted 0, duplicates 0, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 383.134ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 383.1796ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 189.4318ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 189.4912ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 157.7769ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 157.8277ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source copernicus-ems polled: parsed 268, inserted 0, duplicates 268, skipped 0.
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[100]
+      Start processing HTTP request GET https://www.seismicportal.eu/fdsnws/event/1/query?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[100]
+      Sending HTTP request GET https://www.seismicportal.eu/fdsnws/event/1/query?*
+info: System.Net.Http.HttpClient.DisasterIngestionService.ClientHandler[101]
+      Received HTTP response headers after 343.9035ms - 200
+info: System.Net.Http.HttpClient.DisasterIngestionService.LogicalHandler[101]
+      End processing HTTP request after 343.9574ms - 200
+info: WorldAlerts.Api.Disasters.DisasterIngestionService[0]
+      Disaster source emsc polled: parsed 50, inserted 1, duplicates 49, skipped 0.

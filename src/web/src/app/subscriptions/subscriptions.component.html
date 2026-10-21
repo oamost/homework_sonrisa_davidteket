@@ -1,0 +1,96 @@
+<section aria-labelledby="subscriptions-heading" class="pb-5">
+  <h2 id="subscriptions-heading" class="h3">Alert setup</h2>
+  <p class="text-secondary">Choose an event type and channel. Only events assessed as important are eligible. New items published within the previous 24 hours may qualify even if the event happened earlier; items with no provider time or a future timestamp do not qualify.</p>
+  <p class="alert alert-warning" role="note">Email notifications require an explicitly enabled SMTP setup and an enabled email subscription. Source coverage varies; worldwide or 24-hour completeness is not proven. Slack delivery is not yet available; existing Slack subscriptions remain saved but will not send.</p>
+
+  <section class="card mb-4" aria-labelledby="smtp-heading"><div class="card-body">
+    <h3 id="smtp-heading" class="h5">Private email delivery setup</h3>
+    @if (emailAccess() === 'loading') { <p>Checking admin access…</p> }
+    @if (emailAccess() === 'login') { <p>Sign in as the local administrator at <a href="/admin/login">Admin login</a>, then return here and refresh the page to configure SMTP and send a test email.</p> }
+    @if (emailAccess() === 'error') { <p class="alert alert-danger">SMTP configuration unavailable. Reload to retry.</p> }
+    @if (emailAccess() === 'admin') {
+      <p class="small text-secondary">Saved: {{ emailStatus()?.configured ? (emailStatus()?.enabled ? 'enabled' : 'disabled') : 'not configured' }}. Password is never displayed. Private settings and encryption keys must survive server restarts. STARTTLS (typically port 587) is required; implicit TLS port 465 is unsupported.</p>
+      <form (submit)="$event.preventDefault(); saveEmail()" novalidate>
+        <div class="row g-2 mb-2"><div class="col-md-8"><label class="form-label" for="smtp-host">SMTP host</label><input id="smtp-host" name="smtpHost" class="form-control" autocomplete="off" [value]="smtpHost" (input)="smtpHost = $any($event.target).value" [disabled]="emailBusy()"></div><div class="col-md-4"><label class="form-label" for="smtp-port">Port</label><input id="smtp-port" name="smtpPort" type="number" min="1" max="65535" class="form-control" [value]="smtpPort" (input)="smtpPort = +$any($event.target).value" [disabled]="emailBusy()"></div></div>
+        <div class="row g-2 mb-2"><div class="col-md-6"><label class="form-label" for="smtp-user">Username</label><input id="smtp-user" name="smtpUsername" class="form-control" autocomplete="off" [value]="smtpUsername" (input)="smtpUsername = $any($event.target).value" [disabled]="emailBusy()"></div><div class="col-md-6"><label class="form-label" for="smtp-password">Password</label><input id="smtp-password" name="smtpPassword" type="password" class="form-control" autocomplete="new-password" [value]="smtpPassword" (input)="smtpPassword = $any($event.target).value" [disabled]="emailBusy()"><div class="form-text">Leave blank to retain the saved password.</div></div></div>
+        <div class="mb-2"><label class="form-label" for="smtp-from">From address</label><input id="smtp-from" name="smtpFrom" type="email" class="form-control" autocomplete="off" [value]="smtpFrom" (input)="smtpFrom = $any($event.target).value" [disabled]="emailBusy()"></div>
+        <div class="form-check mb-2"><input id="smtp-enabled" name="smtpEnabled" type="checkbox" class="form-check-input" [checked]="smtpEnabled" (change)="smtpEnabled = $any($event.target).checked" [disabled]="emailBusy()"><label for="smtp-enabled" class="form-check-label">Enable automatic email delivery (may send pending eligible alerts)</label></div>
+        <button type="submit" class="btn btn-primary" [disabled]="emailBusy()">Save SMTP settings</button>
+      </form>
+      <form class="mt-3" (submit)="$event.preventDefault(); sendTestEmail()" novalidate>
+        <label class="form-label" for="smtp-test">Test destination (explicit send only)</label>
+        <div class="input-group"><input id="smtp-test" name="smtpTest" type="email" class="form-control" autocomplete="off" [value]="testDestination" (input)="testDestination = $any($event.target).value" [disabled]="emailBusy() || !emailStatus()?.enabled"><button class="btn btn-outline-primary" type="submit" [disabled]="emailBusy() || !emailStatus()?.enabled">Send test email</button></div>
+      </form>
+      <div role="status" aria-live="polite" class="mt-2">@if (emailMessage()) { <p class="alert alert-success">{{ emailMessage() }}</p> } @if (emailError()) { <p class="alert alert-danger">{{ emailError() }}</p> }</div>
+    }
+  </div></section>
+
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <h3 class="h5">Available event types</h3>
+      <ul class="list-group mb-4">
+        @for (type of eventTypes; track type.code) {
+          <li class="list-group-item"><strong>{{ type.name }}</strong> <small class="text-secondary">({{ type.code }})</small><div class="small text-secondary">{{ type.description }}</div></li>
+        }
+      </ul>
+    </div>
+    <div class="col-lg-5">
+      <h3 class="h5">{{ editing ? 'Update subscription' : 'Add or update subscription' }}</h3>
+      <p class="small text-secondary">One subscription per event type and channel. Saving the same pair updates it rather than creating a duplicate.</p>
+      <form (submit)="$event.preventDefault(); save()" novalidate>
+        <div class="mb-3">
+          <label for="eventType" class="form-label">Event type</label>
+          <select id="eventType" name="eventType" class="form-select" [value]="eventType" (change)="eventType = $any($event.target).value" [disabled]="pending() || loading()">
+            <option value="">Choose an event type</option>
+            @for (type of eventTypes; track type.code) { <option data-event-type [value]="type.code">{{ type.name }}</option> }
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="channel" class="form-label">Channel</label>
+          <select id="channel" name="channel" class="form-select" [value]="channel" (change)="channel = $any($event.target).value" [disabled]="pending() || loading()">
+            <option value="email">Email</option><option value="slack">Slack (disabled)</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="destination" class="form-label">{{ channel === 'slack' ? 'Slack channel reference' : 'Email address' }}</label>
+          <input id="destination" name="destination" class="form-control" type="password" autocomplete="off" [value]="destination" (input)="destination = $any($event.target).value" [disabled]="pending() || loading()" aria-describedby="destination-help">
+          <div id="destination-help" class="form-text">{{ channel === 'slack' ? 'Enter a non-secret reference such as channel:#alerts. Never paste a Slack webhook URL here.' : 'Private entry: the address will not appear in the subscription list.' }} @if (editing) { Leave blank to keep the saved destination; enter a new one to replace it. }</div>
+        </div>
+        <div class="form-check mb-3">
+          <input id="enabled" name="enabled" class="form-check-input" type="checkbox" [checked]="enabled" (change)="enabled = $any($event.target).checked" [disabled]="pending() || loading()">
+          <label for="enabled" class="form-check-label">Enabled (email eligible when SMTP is enabled; Slack remains disabled)</label>
+        </div>
+        <button type="submit" class="btn btn-primary" [disabled]="pending() || loading()">{{ pending() ? 'Working…' : 'Save subscription' }}</button>
+      </form>
+      <div role="status" aria-live="polite" class="mt-3">
+        @if (validation()) { <p class="alert alert-warning">{{ validation() }}</p> }
+        @if (actionError()) { <p class="alert alert-danger">{{ actionError() }}</p> }
+        @if (notice()) { <p class="alert alert-success">{{ notice() }}</p> }
+      </div>
+    </div>
+  </div>
+
+  <section aria-labelledby="saved-heading" class="mt-4">
+    <div class="d-flex align-items-center gap-3 mb-3"><h3 id="saved-heading" class="h5 mb-0">Saved subscriptions</h3><button type="button" class="btn btn-sm btn-outline-secondary" (click)="refresh()" [disabled]="loading() || pending()">Refresh</button></div>
+    <div role="status" aria-live="polite">
+      @if (loading()) { <p>Loading subscriptions…</p> }
+      @if (loadError()) { <p class="alert alert-danger">Unable to load subscriptions. <button type="button" data-retry class="btn btn-sm btn-outline-danger" (click)="refresh()">Retry</button></p> }
+      @if (!loading() && !loadError() && items()?.length === 0) { <p class="alert alert-light border">No subscriptions saved yet.</p> }
+    </div>
+    <div class="list-group">
+      @for (item of items() ?? []; track item.id) {
+        <div class="list-group-item" data-subscription>
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div><strong>{{ nameFor(item.eventType) }}</strong> · {{ item.channel === 'email' ? 'Email' : 'Slack' }} <span class="badge" [class.text-bg-secondary]="!item.enabled" [class.text-bg-primary]="item.enabled">{{ item.enabled ? 'Enabled' : 'Paused' }}</span><div class="small text-secondary">Destination saved privately; not shown here.</div></div>
+            <div class="d-flex gap-2"><button type="button" data-edit class="btn btn-sm btn-outline-primary" (click)="edit(item)" [disabled]="pending() || loading()" [attr.aria-label]="'Edit ' + nameFor(item.eventType) + ' ' + item.channel">Edit</button><button type="button" data-delete class="btn btn-sm btn-outline-danger" (click)="delete(item)" [disabled]="pending() || loading()" [attr.aria-label]="'Delete ' + nameFor(item.eventType) + ' ' + item.channel">Delete</button></div>
+          </div>
+          @if (confirmId() === item.id) {
+            <div class="mt-2" role="group" [attr.aria-label]="'Confirm deletion of ' + nameFor(item.eventType) + ' ' + item.channel">
+              <span class="me-2">Delete this subscription?</span><button type="button" data-confirm-delete class="btn btn-sm btn-danger me-2" (click)="confirmDelete(item.id)" [disabled]="pending()">Yes, delete</button><button type="button" class="btn btn-sm btn-outline-secondary" (click)="cancelDelete()" [disabled]="pending()">Cancel</button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </section>
+</section>

@@ -78,7 +78,7 @@ class StartupScripts(unittest.TestCase):
                     self.assertIn("--env-file", args)
                 state = json.loads(self.state.read_text())
                 self.assertEqual(list(state["containers"]), ["task26-test-instance"])
-                self.assertEqual(list(state["volumes"]), ["task26-test-instance-data"])
+                self.assertEqual(list(state["volumes"]), ["task26-test-instance-data", "task26-test-instance-keys"])
 
     def test_failed_rebuild_preserves_existing_container(self):
         for launcher in self.launchers():
@@ -111,6 +111,21 @@ class StartupScripts(unittest.TestCase):
                 result = self.launch(launcher)
                 self.assertNotEqual(result.returncode, 0)
                 self.assertFalse(any(args[0] == "run" for args in self.calls()))
+
+    def test_data_protection_keys_survive_container_replacement(self):
+        for launcher in self.launchers():
+            with self.subTest(launcher=launcher):
+                self.log.unlink(missing_ok=True)
+                self.state.unlink(missing_ok=True)
+                for _ in range(2):
+                    result = self.launch(launcher)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                runs = [args for args in self.calls() if args[0] == "run"]
+                self.assertEqual(len(runs), 2)
+                for args in runs:
+                    self.assertIn("task26-test-instance-keys:/home/app/.aspnet/DataProtection-Keys", args)
+                volumes = json.loads(self.state.read_text())["volumes"]
+                self.assertEqual(volumes["task26-test-instance-keys"], "task26-test-instance")
 
     def test_invalid_instance_or_port_never_calls_engine(self):
         for launcher in self.launchers():

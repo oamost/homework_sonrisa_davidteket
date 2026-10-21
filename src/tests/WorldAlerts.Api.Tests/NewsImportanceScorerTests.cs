@@ -19,7 +19,7 @@ public sealed class NewsImportanceScorerTests
 
         Assert.True(decision.IsImportant);
         Assert.Equal(NewsImportanceRuleIds.TierOneUrgencyKeyword, decision.RuleId);
-        Assert.Equal(1.0, decision.Score);
+        Assert.Equal(0.75, decision.Score, 6);
         Assert.Contains(decision.Factors, factor => factor.Contains("breaking", StringComparison.Ordinal));
     }
 
@@ -31,7 +31,7 @@ public sealed class NewsImportanceScorerTests
 
         Assert.True(decision.IsImportant);
         Assert.Equal(NewsImportanceRuleIds.TierOneCorroboration, decision.RuleId);
-        Assert.Equal(1.0, decision.Score);
+        Assert.Equal(0.85, decision.Score, 6);
         Assert.Contains(decision.Factors, factor => factor.Contains("2 independent tier-1 sources", StringComparison.Ordinal));
     }
 

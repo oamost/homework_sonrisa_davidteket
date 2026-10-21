@@ -1,0 +1,106 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 973B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for mcr.microsoft.com/dotnet/sdk:10.0
+#2 DONE 0.4s
+
+#3 [internal] load metadata for mcr.microsoft.com/dotnet/aspnet:10.0
+#3 DONE 0.4s
+
+#4 [stage-1 1/4] FROM mcr.microsoft.com/dotnet/aspnet:10.0@sha256:d5633778c754e89a386882eddf8dbee6942447a8a4b8267c19cf1e1158d0b0ac
+#4 resolve mcr.microsoft.com/dotnet/aspnet:10.0@sha256:d5633778c754e89a386882eddf8dbee6942447a8a4b8267c19cf1e1158d0b0ac 0.0s done
+#4 DONE 0.0s
+
+#5 [stage-1 2/4] WORKDIR /app
+#5 CACHED
+
+#6 [verified 1/6] FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:0d99ebf1ccad15037b5c98c9fe8979d6b8dbac23812feae2277a0b277b5c5ffa
+#6 resolve mcr.microsoft.com/dotnet/sdk:10.0@sha256:0d99ebf1ccad15037b5c98c9fe8979d6b8dbac23812feae2277a0b277b5c5ffa 0.0s done
+#6 DONE 0.0s
+
+#7 [verified 2/6] WORKDIR /work
+#7 CACHED
+
+#8 [internal] load build context
+#8 transferring context: 72.11kB 0.0s done
+#8 DONE 0.0s
+
+#9 [verified 3/6] COPY src/WorldAlerts.sln src/WorldAlerts.sln
+#9 DONE 0.0s
+
+#10 [verified 4/6] COPY src/api/ src/api/
+#10 DONE 0.1s
+
+#11 [verified 5/6] COPY src/tests/WorldAlerts.Api.Tests/ src/tests/WorldAlerts.Api.Tests/
+#11 DONE 0.1s
+
+#12 [verified 6/6] RUN dotnet restore src/WorldAlerts.sln     && dotnet build src/WorldAlerts.sln --configuration Release --no-restore     && dotnet test src/WorldAlerts.sln --configuration Release --no-build --no-restore     && dotnet publish src/api/WorldAlerts.Api.csproj --configuration Release --no-build --no-restore --output /publish
+#12 1.060   Determining projects to restore...
+#12 22.33   Restored /work/src/api/WorldAlerts.Api.csproj (in 20.83 sec).
+#12 33.95   Restored /work/src/tests/WorldAlerts.Api.Tests/WorldAlerts.Api.Tests.csproj (in 32.46 sec).
+#12 39.27   WorldAlerts.Api -> /work/src/api/bin/Release/net10.0/WorldAlerts.Api.dll
+#12 41.54   WorldAlerts.Api.Tests -> /work/src/tests/WorldAlerts.Api.Tests/bin/Release/net10.0/WorldAlerts.Api.Tests.dll
+#12 41.63 
+#12 41.63 Build succeeded.
+#12 41.63     0 Warning(s)
+#12 41.64     0 Error(s)
+#12 41.64 
+#12 41.64 Time Elapsed 00:00:07.32
+#12 42.78 Test run for /work/src/tests/WorldAlerts.Api.Tests/bin/Release/net10.0/WorldAlerts.Api.Tests.dll (.NETCoreApp,Version=v10.0)
+#12 42.96 A total of 1 test files matched the specified pattern.
+#12 44.49 [xUnit.net 00:00:01.06]     WorldAlerts.Api.Tests.AdminWallTests.Registered_operational_snapshot_exposes_only_safe_projection [FAIL]
+#12 44.51   Failed WorldAlerts.Api.Tests.AdminWallTests.Registered_operational_snapshot_exposes_only_safe_projection [577 ms]
+#12 44.51   Error Message:
+#12 44.51    Admin page must render a CSRF token in its form
+#12 44.51   Stack Trace:
+#12 44.51      at WorldAlerts.Api.Tests.AdminWallTests.ParseToken(String html) in /work/src/tests/WorldAlerts.Api.Tests/AdminWallTests.cs:line 107
+#12 44.51    at WorldAlerts.Api.Tests.AdminWallTests.LoginTokenAsync(HttpClient client) in /work/src/tests/WorldAlerts.Api.Tests/AdminWallTests.cs:line 102
+#12 44.51    at WorldAlerts.Api.Tests.AdminWallTests.Registered_operational_snapshot_exposes_only_safe_projection() in /work/src/tests/WorldAlerts.Api.Tests/AdminWallTests.cs:line 88
+#12 44.51 --- End of stack trace from previous location ---
+#12 44.68 [xUnit.net 00:00:01.25]     WorldAlerts.Api.Tests.AdminWallTests.Authorized_snapshot_redacts_secrets_and_logout_requires_csrf_then_revokes_session [FAIL]
+#12 44.68   Failed WorldAlerts.Api.Tests.AdminWallTests.Authorized_snapshot_redacts_secrets_and_logout_requires_csrf_then_revokes_session [194 ms]
+#12 44.68   Error Message:
+#12 44.68    Admin page must render a CSRF token in its form
+#12 44.68   Stack Trace:
+#12 44.68      at WorldAlerts.Api.Tests.AdminWallTests.ParseToken(String html) in /work/src/tests/WorldAlerts.Api.Tests/AdminWallTests.cs:line 107
+#12 44.68    at WorldAlerts.Api.Tests.AdminWallTests.LoginTokenAsync(HttpClient client) in /work/src/tests/WorldAlerts.Api.Tests/AdminWallTests.cs:line 102
+#12 44.68    at WorldAlerts.Api.Tests.AdminWallTests.Authorized_snapshot_redacts_secrets_and_logout_requires_csrf_then_revokes_session() in /work/src/tests/WorldAlerts.Api.Tests/AdminWallTests.cs:line 61
+#12 44.68 --- End of stack trace from previous location ---
+#12 45.53 [xUnit.net 00:00:02.10]     WorldAlerts.Api.Tests.AdminWallTests.Login_requires_csrf_rejects_wrong_password_and_unconfigured_hash [FAIL]
+#12 46.10   Failed WorldAlerts.Api.Tests.AdminWallTests.Login_requires_csrf_rejects_wrong_password_and_unconfigured_hash [249 ms]
+#12 46.10   Error Message:
+#12 46.10    Admin page must render a CSRF token in its form
+#12 46.10   Stack Trace:
+#12 46.10      at WorldAlerts.Api.Tests.AdminWallTests.ParseToken(String html) in /work/src/tests/WorldAlerts.Api.Tests/AdminWallTests.cs:line 107
+#12 46.10    at WorldAlerts.Api.Tests.AdminWallTests.LoginTokenAsync(HttpClient client) in /work/src/tests/WorldAlerts.Api.Tests/AdminWallTests.cs:line 102
+#12 46.10    at WorldAlerts.Api.Tests.AdminWallTests.Login_requires_csrf_rejects_wrong_password_and_unconfigured_hash() in /work/src/tests/WorldAlerts.Api.Tests/AdminWallTests.cs:line 45
+#12 46.10 --- End of stack trace from previous location ---
+#12 46.10 
+#12 46.10 Failed!  - Failed:     3, Passed:   376, Skipped:     0, Total:   379, Duration: 2 s - WorldAlerts.Api.Tests.dll (net10.0)
+#12 ERROR: process "/bin/sh -c dotnet restore src/WorldAlerts.sln     && dotnet build src/WorldAlerts.sln --configuration Release --no-restore     && dotnet test src/WorldAlerts.sln --configuration Release --no-build --no-restore     && dotnet publish src/api/WorldAlerts.Api.csproj --configuration Release --no-build --no-restore --output /publish" did not complete successfully: exit code: 1
+------
+ > [verified 6/6] RUN dotnet restore src/WorldAlerts.sln     && dotnet build src/WorldAlerts.sln --configuration Release --no-restore     && dotnet test src/WorldAlerts.sln --configuration Release --no-build --no-restore     && dotnet publish src/api/WorldAlerts.Api.csproj --configuration Release --no-build --no-restore --output /publish:
+46.10   Failed WorldAlerts.Api.Tests.AdminWallTests.Login_requires_csrf_rejects_wrong_password_and_unconfigured_hash [249 ms]
+46.10   Error Message:
+46.10    Admin page must render a CSRF token in its form
+46.10   Stack Trace:
+46.10      at WorldAlerts.Api.Tests.AdminWallTests.ParseToken(String html) in /work/src/tests/WorldAlerts.Api.Tests/AdminWallTests.cs:line 107
+46.10    at WorldAlerts.Api.Tests.AdminWallTests.LoginTokenAsync(HttpClient client) in /work/src/tests/WorldAlerts.Api.Tests/AdminWallTests.cs:line 102
+46.10    at WorldAlerts.Api.Tests.AdminWallTests.Login_requires_csrf_rejects_wrong_password_and_unconfigured_hash() in /work/src/tests/WorldAlerts.Api.Tests/AdminWallTests.cs:line 45
+46.10 --- End of stack trace from previous location ---
+46.10 
+46.10 Failed!  - Failed:     3, Passed:   376, Skipped:     0, Total:   379, Duration: 2 s - WorldAlerts.Api.Tests.dll (net10.0)
+------
+Dockerfile:6
+--------------------
+   5 |     COPY src/tests/WorldAlerts.Api.Tests/ src/tests/WorldAlerts.Api.Tests/
+   6 | >>> RUN dotnet restore src/WorldAlerts.sln \
+   7 | >>>     && dotnet build src/WorldAlerts.sln --configuration Release --no-restore \
+   8 | >>>     && dotnet test src/WorldAlerts.sln --configuration Release --no-build --no-restore \
+   9 | >>>     && dotnet publish src/api/WorldAlerts.Api.csproj --configuration Release --no-build --no-restore --output /publish
+  10 |     
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c dotnet restore src/WorldAlerts.sln     && dotnet build src/WorldAlerts.sln --configuration Release --no-restore     && dotnet test src/WorldAlerts.sln --configuration Release --no-build --no-restore     && dotnet publish src/api/WorldAlerts.Api.csproj --configuration Release --no-build --no-restore --output /publish" did not complete successfully: exit code: 1
