@@ -79,6 +79,27 @@ internal static class ScoringFixtures
         News("bbc-world", "BBC World", "Regional talks resume", null),
         new[] { Corroboration("nyt-world", "NYT World", "2026-10-21T06:10:00Z") });
 
+    public static MarketImportanceInput Market(
+        MarketFamily family,
+        double currentValue,
+        double baselineValue,
+        string observationUtc,
+        int intervalHours = 24)
+        => new(
+            family,
+            currentValue,
+            baselineValue,
+            TimeSpan.FromHours(intervalHours),
+            At(observationUtc),
+            Now);
+
+    public static MarketImportanceInput MK1() => Market(MarketFamily.Crypto, 106.2, 100.0, "2026-10-21T08:00:00Z");
+    public static MarketImportanceInput MK2() => Market(MarketFamily.Crypto, 104.9, 100.0, "2026-10-21T08:00:00Z");
+    public static MarketImportanceInput MK3() => Market(MarketFamily.Fx, 1.013, 1.000, "2026-10-20T16:00:00Z");
+    public static MarketImportanceInput MK4() => Market(MarketFamily.Fx, 1.008, 1.000, "2026-10-20T16:00:00Z");
+    public static MarketImportanceInput MK5() => Market(MarketFamily.Index, 1024.0, 1000.0, "2026-10-19T20:00:00Z");
+    public static MarketImportanceInput MK6() => Market(MarketFamily.Crypto, 109.0, 100.0, "2026-10-18T20:00:00Z");
+
 }
 
 /// <summary>One named news case and any caller-supplied corroborating sources.</summary>
